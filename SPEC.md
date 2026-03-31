@@ -83,13 +83,15 @@ See README.md for detailed patching instructions.
 ```bash
 autoebiten input --key KeyA --action press
 autoebiten input --key KeySpace --action hold --duration_ticks 6
-autoebiten mouse --action press --x 100 --y 200 --button MouseButtonLeft
-autoebiten wheel --x 0 --y -3
+autoebiten mouse --action press -x 100 -y 200 --button MouseButtonLeft
+autoebiten wheel -x 0 -y -3
 autoebiten screenshot --output shot.png
 autoebiten run --script script.json
 autoebiten ping
 autoebiten keys
 autoebiten mouse_buttons
+autoebiten get_mouse_position
+autoebiten get_wheel_position
 ```
 
 ## JSON-RPC Protocol
@@ -123,6 +125,8 @@ autoebiten mouse_buttons
 | `screenshot` | Capture game window to file |
 | `ping` | Health check |
 | `exit` | Request game to exit |
+| `get_mouse_position` | Get injected mouse cursor position |
+| `get_wheel_position` | Get injected wheel position |
 
 ### Error Codes
 
@@ -155,8 +159,8 @@ autoebiten mouse_buttons
 | Command | Fields | Description |
 |---------|--------|-------------|
 | `input` | `action` (press/release/hold), `key`, `duration_ticks` | Keyboard input |
-| `mouse` | `action` (position/press/release/hold), `x`, `y`, `button`, `duration_ticks` | Mouse input |
-| `wheel` | `x`, `y` | Mouse wheel movement |
+| `mouse` | `action` (position/press/release/hold), `x`, `y`, `button`, `duration_ticks` | Mouse input. Defaults to `hold` when `button` is provided without `action`. Inject "-x 0 -y 0" to restore real inputs |
+| `wheel` | `x`, `y` | Mouse wheel movement. Inject "-x 0 -y 0" to restore real inputs |
 | `screenshot` | `output` | Capture screenshot |
 | `delay` | `ms` | Wait in milliseconds |
 | `repeat` | `times`, `commands` | Repeat block N times |
@@ -218,9 +222,11 @@ The library provides mode-aware wrappers for both direct input queries and input
 
 **Direct Input:**
 - `IsKeyPressed(key Key) bool`
-- `CursorPosition() (x, y int)`
-- `Wheel() (xoff, yoff float64)`
+- `CursorPosition() (x, y int)` - Returns injected position or falls back to real position based on mode
+- `Wheel() (xoff, yoff float64)` - Returns injected offset or falls back to real offset based on mode
 - `IsMouseButtonPressed(mouseButton MouseButton) bool`
+
+**Note on Position Queries:** The `get_mouse_position` and `get_wheel_position` CLI commands (and their RPC equivalents) only return the **injected** values that were previously set via the `mouse` or `wheel` commands. They do not return the real OS cursor/wheel position. To retrieve real positions, use `ebiten.CursorPosition()` and `ebiten.Wheel()` directly in your game code when in `Passthrough` or `InjectionFallback` mode.
 
 **inpututil Wrappers:**
 - `IsKeyJustPressed(key Key) bool`

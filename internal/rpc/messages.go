@@ -96,3 +96,15 @@ type ScreenshotResult struct {
 type PingResult struct {
 	OK bool `json:"ok"`
 }
+
+// GetMousePositionResult represents get_mouse_position command result.
+type GetMousePositionResult struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// GetWheelPositionResult represents get_wheel_position command result.
+type GetWheelPositionResult struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+}

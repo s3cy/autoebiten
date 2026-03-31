@@ -148,7 +148,9 @@ func (h *serverHandler) HandleMouse(params *rpc.MouseParams) (any, error) {
 		return nil, fmt.Errorf("unknown button: %s", params.Button)
 	}
 
-	input.Get().InjectCursorMove(params.X, params.Y)
+	if params.X != 0 || params.Y != 0 {
+		input.Get().InjectCursorMove(params.X, params.Y)
+	}
 
 	it := input.NewInputTimeFromTick(Tick(), h.subtick.Add(1))
 
@@ -204,6 +206,18 @@ func (h *serverHandler) HandleScreenshot(params *rpc.ScreenshotParams) (any, err
 // HandlePing handles ping command.
 func (h *serverHandler) HandlePing() (any, error) {
 	return &rpc.PingResult{OK: true}, nil
+}
+
+// HandleGetMousePosition handles get_mouse_position command.
+func (h *serverHandler) HandleGetMousePosition() (any, error) {
+	x, y := input.Get().CursorPosition()
+	return &rpc.GetMousePositionResult{X: x, Y: y}, nil
+}
+
+// HandleGetWheelPosition handles get_wheel_position command.
+func (h *serverHandler) HandleGetWheelPosition() (any, error) {
+	x, y := input.Get().Wheel()
+	return &rpc.GetWheelPositionResult{X: x, Y: y}, nil
 }
 
 // HandleExit handles exit command.

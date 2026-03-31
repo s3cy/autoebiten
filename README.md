@@ -45,11 +45,17 @@ autoebiten input --key KeyW --action press
 autoebiten input --key KeySpace --action hold
 
 # Move mouse and click
-autoebiten mouse --action position --x 100 --y 200
+autoebiten mouse --action position -x 100 -y 200
 autoebiten mouse --action press --button MouseButtonLeft
+autoebiten mouse --button MouseButtonLeft  # defaults to hold action
+autoebiten mouse -x 100 -y 200 --button MouseButtonLeft  # move to positen, then trigger the button
 
 # Scroll wheel
-autoebiten wheel --y -3
+autoebiten wheel -y -3
+
+# Get injected positions (returns last injected values, not real OS positions)
+autoebiten get_mouse_position
+autoebiten get_wheel_position
 
 # Take a screenshot
 autoebiten screenshot --output shot.png

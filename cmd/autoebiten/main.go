@@ -68,7 +68,11 @@ Actions:
   position - Move cursor to (x, y) coordinates
   press    - Press mouse button at current position
   release  - Release mouse button
-  hold     - Press and hold for duration_ticks (default when --button is used)`,
+  hold     - Press and hold for duration_ticks (default when --button is used)
+
+After injecting mouse movement, the game will ignore real mouse movement.
+Inject "-x 0 -y 0" to ask the game to use real inputs again.
+Use get_mouse_position to retrieve the injected position.`,
 		RunE: runMouseCommand,
 	}
 	mouseCmd.Flags().StringVarP(&mouseActionFlag, "action", "a", "", "Action: position, press, release, or hold (defaults to position, or hold when --button is used)")
@@ -81,7 +85,12 @@ Actions:
 	wheelCmd := &cobra.Command{
 		Use:   "wheel",
 		Short: "Send wheel input to the game",
-		RunE:  runWheelCommand,
+		Long: `Inject wheel (scroll) input into the game.
+
+After injecting wheel movement, the game will ignore real wheel movement.
+Inject "-x 0 -y 0" to ask the game to use real inputs again.
+Use get_wheel_position to retrieve the injected position.`,
+		RunE: runWheelCommand,
 	}
 	wheelCmd.Flags().Float64VarP(&wheelXFlag, "x", "x", 0, "Horizontal scroll (negative=left, positive=right)")
 	wheelCmd.Flags().Float64VarP(&wheelYFlag, "y", "y", 0, "Vertical scroll (negative=down, positive=up)")
@@ -131,6 +140,28 @@ Use --script for file path or --inline for JSON string.`,
 		RunE:  runMouseButtonsCommand,
 	}
 
+	// get_mouse_position command
+	getMousePositionCmd := &cobra.Command{
+		Use:   "get_mouse_position",
+		Short: "Get the injected mouse cursor position",
+		Long: `Get the current injected mouse cursor position.
+
+Note: This returns only the injected position set via the mouse command,
+not the real mouse cursor position from the operating system.`,
+		RunE: runGetMousePositionCommand,
+	}
+
+	// get_wheel_position command
+	getWheelPositionCmd := &cobra.Command{
+		Use:   "get_wheel_position",
+		Short: "Get the injected wheel position",
+		Long: `Get the current injected wheel (scroll) position.
+
+Note: This returns only the injected position set via the wheel command,
+not the real wheel position from the operating system.`,
+		RunE: runGetWheelPositionCommand,
+	}
+
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
 	rootCmd.AddCommand(wheelCmd)
@@ -139,6 +170,8 @@ Use --script for file path or --inline for JSON string.`,
 	rootCmd.AddCommand(pingCmd)
 	rootCmd.AddCommand(keysCmd)
 	rootCmd.AddCommand(mouseButtonsCmd)
+	rootCmd.AddCommand(getMousePositionCmd)
+	rootCmd.AddCommand(getWheelPositionCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
@@ -206,4 +239,14 @@ func runKeysCommand(cmd *cobra.Command, args []string) error {
 func runMouseButtonsCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
 	return executor.ListMouseButtonsCommand()
+}
+
+func runGetMousePositionCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.RunGetMousePositionCommand()
+}
+
+func runGetWheelPositionCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.RunGetWheelPositionCommand()
 }

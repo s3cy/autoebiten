@@ -648,6 +648,14 @@ func (h *testHandler) HandlePing() (any, error) {
 
 func (h *testHandler) HandleExit() {}
 
+func (h *testHandler) HandleGetMousePosition() (any, error) {
+	return &rpc.GetMousePositionResult{X: 0, Y: 0}, nil
+}
+
+func (h *testHandler) HandleGetWheelPosition() (any, error) {
+	return &rpc.GetWheelPositionResult{X: 0, Y: 0}, nil
+}
+
 // setupTestSocketPair creates a connected socket pair for testing.
 // Uses TCP for reliability across different systems.
 func setupTestSocketPair(t *testing.T) (net.Listener, *testClient) {

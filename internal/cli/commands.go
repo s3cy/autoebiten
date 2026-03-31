@@ -184,6 +184,56 @@ func (e *CommandExecutor) RunPingCommand() error {
 	return nil
 }
 
+// RunGetMousePositionCommand runs a get_mouse_position command.
+func (e *CommandExecutor) RunGetMousePositionCommand() error {
+	req, err := rpc.BuildRequest("get_mouse_position", nil)
+	if err != nil {
+		return fmt.Errorf("failed to build request: %w", err)
+	}
+
+	resp, err := rpc.SendRequestSocket(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("rpc error: %s", resp.Error.Message)
+	}
+
+	result, ok := resp.Result.(*rpc.GetMousePositionResult)
+	if !ok {
+		return fmt.Errorf("invalid response format")
+	}
+
+	e.writer.Success(fmt.Sprintf("mouse position: (%d, %d)", result.X, result.Y))
+	return nil
+}
+
+// RunGetWheelPositionCommand runs a get_wheel_position command.
+func (e *CommandExecutor) RunGetWheelPositionCommand() error {
+	req, err := rpc.BuildRequest("get_wheel_position", nil)
+	if err != nil {
+		return fmt.Errorf("failed to build request: %w", err)
+	}
+
+	resp, err := rpc.SendRequestSocket(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("rpc error: %s", resp.Error.Message)
+	}
+
+	result, ok := resp.Result.(*rpc.GetWheelPositionResult)
+	if !ok {
+		return fmt.Errorf("invalid response format")
+	}
+
+	e.writer.Success(fmt.Sprintf("wheel position: (%.2f, %.2f)", result.X, result.Y))
+	return nil
+}
+
 // RunScriptCommand runs a script from a file path or inline JSON string.
 func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 	// Parse the script

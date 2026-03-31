@@ -12,6 +12,8 @@ type Handler interface {
 	HandleWheel(params *WheelParams) (any, error)
 	HandleScreenshot(params *ScreenshotParams) (any, error)
 	HandlePing() (any, error)
+	HandleGetMousePosition() (any, error)
+	HandleGetWheelPosition() (any, error)
 	HandleExit()
 }
 
@@ -48,6 +50,16 @@ func (h *DefaultHandler) HandlePing() (any, error) {
 	return &PingResult{OK: true}, nil
 }
 
+// HandleGetMousePosition handles get_mouse_position command.
+func (h *DefaultHandler) HandleGetMousePosition() (any, error) {
+	return &GetMousePositionResult{X: 0, Y: 0}, nil
+}
+
+// HandleGetWheelPosition handles get_wheel_position command.
+func (h *DefaultHandler) HandleGetWheelPosition() (any, error) {
+	return &GetWheelPositionResult{X: 0, Y: 0}, nil
+}
+
 // HandleExit handles exit command.
 func (h *DefaultHandler) HandleExit() {}
 
@@ -58,6 +70,20 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	switch req.Req.Method {
 	case "ping":
 		result, err := handler.HandlePing()
+		if err != nil {
+			return errorResponse(id, ErrInvalidParams, err.Error())
+		}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+
+	case "get_mouse_position":
+		result, err := handler.HandleGetMousePosition()
+		if err != nil {
+			return errorResponse(id, ErrInvalidParams, err.Error())
+		}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+
+	case "get_wheel_position":
+		result, err := handler.HandleGetWheelPosition()
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
 		}
