@@ -272,6 +272,10 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 		return e.RunScreenshotCommand(output, async)
 	})
 
+	executor.SetCustomFunc(func(name, request string) error {
+		return e.RunCustomCommand(name, request)
+	})
+
 	// Execute
 	count, err := executor.Execute()
 	if err != nil {

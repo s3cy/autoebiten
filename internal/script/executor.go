@@ -12,6 +12,7 @@ type Executor struct {
 	mouseFunc      func(action string, x, y int, button string, durationTicks int64, async bool) error
 	wheelFunc      func(x, y float64, async bool) error
 	screenshotFunc func(output string, async bool) error
+	customFunc     func(name, request string) error
 	commandCount   int
 }
 
@@ -40,6 +41,11 @@ func (e *Executor) SetWheelFunc(f func(x, y float64, async bool) error) {
 // SetScreenshotFunc sets the function to call for screenshot commands.
 func (e *Executor) SetScreenshotFunc(f func(output string, async bool) error) {
 	e.screenshotFunc = f
+}
+
+// SetCustomFunc sets the function to call for custom commands.
+func (e *Executor) SetCustomFunc(f func(name, request string) error) {
+	e.customFunc = f
 }
 
 // Execute runs the script.
@@ -101,6 +107,15 @@ func (e *Executor) executeCommand(cmd CommandWrapper) error {
 		time.Sleep(time.Duration(c.Ms) * time.Millisecond)
 		return nil
 
+	case *CustomCmd:
+		if e.customFunc == nil {
+			return fmt.Errorf("custom function not set")
+		}
+		if err := e.customFunc(c.Name, c.Request); err != nil {
+			return fmt.Errorf("%s command failed: %w", formatCustomCmd(c), err)
+		}
+		return nil
+
 	case *RepeatCmd:
 		for i := 0; i < c.Times; i++ {
 			if err := e.executeCommands(c.Commands); err != nil {
@@ -128,4 +143,8 @@ func formatWheelCmd(cmd *WheelCmd) string {
 
 func formatScreenshotCmd(cmd *ScreenshotCmd) string {
 	return fmt.Sprintf(`{"output": %q, "async": %v}`, cmd.Output, cmd.Async)
+}
+
+func formatCustomCmd(cmd *CustomCmd) string {
+	return fmt.Sprintf(`{"custom": %q, "request": %q}`, cmd.Name, cmd.Request)
 }

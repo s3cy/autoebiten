@@ -29,7 +29,7 @@ func ParseBytes(data []byte) (*Script, error) {
 	}
 
 	if script.Version == "" {
-		return nil, fmt.Errorf("missing version field")
+		script.Version = "1.0" // Default to 1.0 if not specified
 	}
 
 	return &script, nil

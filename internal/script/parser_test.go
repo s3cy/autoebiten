@@ -60,12 +60,52 @@ func TestParseRepeat(t *testing.T) {
 	}
 }
 
+func TestParseCustom(t *testing.T) {
+	input := `{
+		"version": "1.0",
+		"commands": [
+			{"custom": {"name": "getPlayerInfo"}},
+			{"custom": {"name": "heal", "request": "+20"}}
+		]
+	}`
+
+	script, err := ParseBytes([]byte(input))
+	if err != nil {
+		t.Fatalf("Failed to parse: %v", err)
+	}
+
+	if len(script.Commands) != 2 {
+		t.Fatalf("Expected 2 commands, got %d", len(script.Commands))
+	}
+
+	cmd1, ok := script.Commands[0].(*CustomCmd)
+	if !ok {
+		t.Fatal("Expected CustomCmd for first command")
+	}
+	if cmd1.Name != "getPlayerInfo" {
+		t.Errorf("Expected name 'getPlayerInfo', got %s", cmd1.Name)
+	}
+	if cmd1.Request != "" {
+		t.Errorf("Expected empty request, got %s", cmd1.Request)
+	}
+
+	cmd2, ok := script.Commands[1].(*CustomCmd)
+	if !ok {
+		t.Fatal("Expected CustomCmd for second command")
+	}
+	if cmd2.Name != "heal" {
+		t.Errorf("Expected name 'heal', got %s", cmd2.Name)
+	}
+	if cmd2.Request != "+20" {
+		t.Errorf("Expected request '+20', got %s", cmd2.Request)
+	}
+}
+
 func TestParseInvalid(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
 	}{
-		{"missing version", `{"commands": []}`},
 		{"invalid JSON", `{invalid}`},
 		{"unknown command type", `{"version": "1.0", "commands": [{"unknown": {}}]}`},
 	}

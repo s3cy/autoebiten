@@ -62,6 +62,14 @@ type DelayCmd struct {
 
 func (DelayCmd) commandType() string { return "delay" }
 
+// CustomCmd represents a custom command.
+type CustomCmd struct {
+	Name    string `json:"name" jsonschema:"description=Name of the registered custom command"`
+	Request string `json:"request,omitempty" jsonschema:"description=Optional request data to pass to the custom command"`
+}
+
+func (CustomCmd) commandType() string { return "custom" }
+
 // RepeatCmd represents a repeat block.
 type RepeatCmd struct {
 	Times    int              `json:"times"`
@@ -77,6 +85,7 @@ type internalWrapper struct {
 	Wheel      *WheelCmd        `json:"wheel,omitempty"`
 	Screenshot *ScreenshotCmd   `json:"screenshot,omitempty"`
 	Delay      *DelayCmd        `json:"delay,omitempty"`
+	Custom     *CustomCmd       `json:"custom,omitempty"`
 	Repeat     *json.RawMessage `json:"repeat,omitempty"`
 }
 
@@ -122,6 +131,8 @@ func unmarshalCommand(data []byte) (CommandWrapper, error) {
 		return w.Screenshot, nil
 	case w.Delay != nil:
 		return w.Delay, nil
+	case w.Custom != nil:
+		return w.Custom, nil
 	case w.Repeat != nil:
 		return unmarshalRepeat(*w.Repeat)
 	default:
@@ -172,6 +183,9 @@ type CommandSchema struct {
 	// Delay command - pause execution
 	Delay *DelayCmd `json:"delay,omitempty" jsonschema:"oneof_required=delay,description=Pause execution for a duration"`
 
+	// Custom command - execute a registered custom command
+	Custom *CustomCmd `json:"custom,omitempty" jsonschema:"oneof_required=custom,description=Execute a registered custom command"`
+
 	// Repeat command - repeat a block of commands
 	Repeat *RepeatSchema `json:"repeat,omitempty" jsonschema:"oneof_required=repeat,description=Repeat a block of commands"`
 }
@@ -185,9 +199,8 @@ type RepeatSchema struct {
 // ScriptSchema represents the root script structure for schema generation.
 type ScriptSchema struct {
 	// Schema is the JSON Schema URI for this document
-	Schema string `json:"$schema,omitempty" jsonschema:"type=string,format=uri,description=JSON Schema URI for this document"`
+	Schema string `json:"$schema,omitempty" jsonschema:"type=string,format=uri-reference,description=JSON Schema URI for this document"`
 
-	// Version must be "1.0"
 	Version string `json:"version" jsonschema:"enum=1.0,description=Script format version"`
 
 	// Commands to execute in order

@@ -60,6 +60,15 @@ autoebiten get_wheel_position
 # Take a screenshot
 autoebiten screenshot --output shot.png
 
+# Run a script file
+autoebiten run --script script.json
+
+# Run an inline script
+autoebiten run --inline '{"version":"1.0","commands":[{"input":{"action":"press","key":"KeySpace"}}]}'
+
+# Get JSON Schema for IDE support
+autoebiten schema > autoebiten-schema.json
+
 # Check connection
 autoebiten ping
 
@@ -126,11 +135,27 @@ Create a JSON script for complex sequences:
 }
 ```
 
-Run it with:
+Run from a file:
 
 ```bash
 autoebiten run --script script.json
 ```
+
+Or pass an inline JSON string:
+
+```bash
+autoebiten run --inline '{"version":"1.0","commands":[{"input":{"action":"press","key":"KeySpace"}}]}'
+```
+
+### JSON Schema
+
+Generate the JSON Schema for IDE autocompletion and validation:
+
+```bash
+autoebiten schema > autoebiten-schema.json
+```
+
+The schema defines all available commands, their fields, and valid values. Use it with editors that support JSON Schema for intelligent autocomplete and inline validation.
 
 ## Multiple Game Instances
 
