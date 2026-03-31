@@ -45,28 +45,28 @@ func (e *Executor) SetScreenshotFunc(f func(output string, async bool) error) {
 // Execute runs the script.
 func (e *Executor) Execute() (int, error) {
 	e.commandCount = 0
-	return e.commandCount, e.executeNodes(e.script.Commands)
+	return e.commandCount, e.executeCommands(e.script.Commands)
 }
 
-func (e *Executor) executeNodes(nodes []Node) error {
-	for _, node := range nodes {
-		if err := e.executeNode(node); err != nil {
+func (e *Executor) executeCommands(commands []CommandWrapper) error {
+	for _, cmd := range commands {
+		if err := e.executeCommand(cmd); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (e *Executor) executeNode(node Node) error {
+func (e *Executor) executeCommand(cmd CommandWrapper) error {
 	e.commandCount++
 
-	switch cmd := node.(type) {
+	switch c := cmd.(type) {
 	case *InputCmd:
 		if e.inputFunc == nil {
 			return fmt.Errorf("input function not set")
 		}
-		if err := e.inputFunc(cmd.Key, cmd.Action, cmd.DurationTicks, cmd.Async); err != nil {
-			return fmt.Errorf("%s command failed: %w", formatInputCmd(cmd), err)
+		if err := e.inputFunc(c.Key, c.Action, c.DurationTicks, c.Async); err != nil {
+			return fmt.Errorf("%s command failed: %w", formatInputCmd(c), err)
 		}
 		return nil
 
@@ -74,8 +74,8 @@ func (e *Executor) executeNode(node Node) error {
 		if e.mouseFunc == nil {
 			return fmt.Errorf("mouse function not set")
 		}
-		if err := e.mouseFunc(cmd.Action, cmd.X, cmd.Y, cmd.Button, cmd.DurationTicks, cmd.Async); err != nil {
-			return fmt.Errorf("%s command failed: %w", formatMouseCmd(cmd), err)
+		if err := e.mouseFunc(c.Action, c.X, c.Y, c.Button, c.DurationTicks, c.Async); err != nil {
+			return fmt.Errorf("%s command failed: %w", formatMouseCmd(c), err)
 		}
 		return nil
 
@@ -83,8 +83,8 @@ func (e *Executor) executeNode(node Node) error {
 		if e.wheelFunc == nil {
 			return fmt.Errorf("wheel function not set")
 		}
-		if err := e.wheelFunc(cmd.X, cmd.Y, cmd.Async); err != nil {
-			return fmt.Errorf("%s command failed: %w", formatWheelCmd(cmd), err)
+		if err := e.wheelFunc(c.X, c.Y, c.Async); err != nil {
+			return fmt.Errorf("%s command failed: %w", formatWheelCmd(c), err)
 		}
 		return nil
 
@@ -92,25 +92,25 @@ func (e *Executor) executeNode(node Node) error {
 		if e.screenshotFunc == nil {
 			return fmt.Errorf("screenshot function not set")
 		}
-		if err := e.screenshotFunc(cmd.Output, cmd.Async); err != nil {
-			return fmt.Errorf("%s command failed: %w", formatScreenshotCmd(cmd), err)
+		if err := e.screenshotFunc(c.Output, c.Async); err != nil {
+			return fmt.Errorf("%s command failed: %w", formatScreenshotCmd(c), err)
 		}
 		return nil
 
 	case *DelayCmd:
-		time.Sleep(time.Duration(cmd.Ms) * time.Millisecond)
+		time.Sleep(time.Duration(c.Ms) * time.Millisecond)
 		return nil
 
 	case *RepeatCmd:
-		for i := 0; i < cmd.Times; i++ {
-			if err := e.executeNodes(cmd.Commands); err != nil {
+		for i := 0; i < c.Times; i++ {
+			if err := e.executeCommands(c.Commands); err != nil {
 				return err
 			}
 		}
 		return nil
 
 	default:
-		return fmt.Errorf("unknown node type: %T", node)
+		return fmt.Errorf("unknown command type: %T", cmd)
 	}
 }
 

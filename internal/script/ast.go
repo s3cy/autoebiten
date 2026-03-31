@@ -1,74 +1,192 @@
 package script
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
-// Node represents a node in the script AST.
-type Node interface {
-	nodeType() string
+// CommandWrapper is the interface for all command types.
+type CommandWrapper interface {
+	commandType() string
 }
 
 // Script is the root node of a script.
 type Script struct {
-	Version  string `json:"version"`
-	Commands []Node `json:"commands"`
+	Version  string           `json:"version"`
+	Commands []CommandWrapper `json:"commands"`
 }
 
 // InputCmd represents an input command.
 type InputCmd struct {
-	Action        string `json:"action"`
-	Key           string `json:"key"`
-	DurationTicks int64  `json:"duration_ticks"`
-	Async         bool   `json:"async"`
+	Action        string `json:"action" jsonschema:"enum=press,enum=release,enum=hold,description=Action to perform"`
+	Key           string `json:"key" jsonschema:"description=Key name (use 'autoebiten keys' to list all)"`
+	DurationTicks int64  `json:"duration_ticks" jsonschema:"default=6,description=Duration in game ticks for hold action"`
+	Async         bool   `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
 }
 
-func (InputCmd) nodeType() string { return "input" }
+func (InputCmd) commandType() string { return "input" }
 
 // MouseCmd represents a mouse command.
 type MouseCmd struct {
-	Action        string `json:"action"`
-	X             int    `json:"x"`
-	Y             int    `json:"y"`
-	Button        string `json:"button"`
-	DurationTicks int64  `json:"duration_ticks"`
-	Async         bool   `json:"async"`
+	Action        string `json:"action" jsonschema:"enum=position,enum=press,enum=release,enum=hold,description=Action to perform (default is position or hold when button is used)"`
+	X             int    `json:"x" jsonschema:"default=0,description=X coordinate (use 0 to reset to real mouse position)"`
+	Y             int    `json:"y" jsonschema:"default=0,description=Y coordinate (use 0 to reset to real mouse position)"`
+	Button        string `json:"button" jsonschema:"description=Mouse button (use 'autoebiten mouse_buttons' to list all)"`
+	DurationTicks int64  `json:"duration_ticks" jsonschema:"default=6,description=Duration in game ticks for hold action"`
+	Async         bool   `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
 }
 
-func (MouseCmd) nodeType() string { return "mouse" }
+func (MouseCmd) commandType() string { return "mouse" }
 
 // WheelCmd represents a wheel command.
 type WheelCmd struct {
-	X     float64 `json:"x"`
-	Y     float64 `json:"y"`
-	Async bool    `json:"async"`
+	X     float64 `json:"x" jsonschema:"default=0,description=Horizontal scroll (negative=left, positive=right)"`
+	Y     float64 `json:"y" jsonschema:"default=0,description=Vertical scroll (negative=down, positive=up)"`
+	Async bool    `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
 }
 
-func (WheelCmd) nodeType() string { return "wheel" }
+func (WheelCmd) commandType() string { return "wheel" }
 
 // ScreenshotCmd represents a screenshot command.
 type ScreenshotCmd struct {
-	Output string `json:"output"`
-	Async  bool   `json:"async"`
+	Output string `json:"output" jsonschema:"description=Output file path (optional, auto-generated if not provided)"`
+	Async  bool   `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
 }
 
-func (ScreenshotCmd) nodeType() string { return "screenshot" }
+func (ScreenshotCmd) commandType() string { return "screenshot" }
 
 // DelayCmd represents a delay command.
 type DelayCmd struct {
-	Ms int64 `json:"ms"`
+	Ms int64 `json:"ms" jsonschema:"minimum=0,description=Milliseconds to wait"`
 }
 
-func (DelayCmd) nodeType() string { return "delay" }
-
-// RepeatCmdRaw is used during parsing to hold raw JSON commands.
-type RepeatCmdRaw struct {
-	Times    int               `json:"times"`
-	Commands []json.RawMessage `json:"commands"`
-}
+func (DelayCmd) commandType() string { return "delay" }
 
 // RepeatCmd represents a repeat block.
 type RepeatCmd struct {
-	Times    int    `json:"times"`
-	Commands []Node `json:"commands"`
+	Times    int              `json:"times"`
+	Commands []CommandWrapper `json:"commands"`
 }
 
-func (RepeatCmd) nodeType() string { return "repeat" }
+func (RepeatCmd) commandType() string { return "repeat" }
+
+// internalWrapper is used for JSON unmarshaling.
+type internalWrapper struct {
+	Input      *InputCmd       `json:"input,omitempty"`
+	Mouse      *MouseCmd       `json:"mouse,omitempty"`
+	Wheel      *WheelCmd       `json:"wheel,omitempty"`
+	Screenshot *ScreenshotCmd  `json:"screenshot,omitempty"`
+	Delay      *DelayCmd       `json:"delay,omitempty"`
+	Repeat     *json.RawMessage `json:"repeat,omitempty"`
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for CommandWrapper.
+func (s *Script) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Version  string           `json:"version"`
+		Commands []json.RawMessage `json:"commands"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	s.Version = raw.Version
+	s.Commands = make([]CommandWrapper, 0, len(raw.Commands))
+
+	for _, cmdData := range raw.Commands {
+		cmd, err := unmarshalCommand(cmdData)
+		if err != nil {
+			return err
+		}
+		s.Commands = append(s.Commands, cmd)
+	}
+
+	return nil
+}
+
+// unmarshalCommand unmarshals a single command from JSON.
+func unmarshalCommand(data []byte) (CommandWrapper, error) {
+	var w internalWrapper
+	if err := json.Unmarshal(data, &w); err != nil {
+		return nil, err
+	}
+
+	switch {
+	case w.Input != nil:
+		return w.Input, nil
+	case w.Mouse != nil:
+		return w.Mouse, nil
+	case w.Wheel != nil:
+		return w.Wheel, nil
+	case w.Screenshot != nil:
+		return w.Screenshot, nil
+	case w.Delay != nil:
+		return w.Delay, nil
+	case w.Repeat != nil:
+		return unmarshalRepeat(*w.Repeat)
+	default:
+		return nil, fmt.Errorf("unknown command type")
+	}
+}
+
+// unmarshalRepeat unmarshals a repeat command.
+func unmarshalRepeat(data []byte) (*RepeatCmd, error) {
+	var raw struct {
+		Times    int               `json:"times"`
+		Commands []json.RawMessage `json:"commands"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, err
+	}
+
+	commands := make([]CommandWrapper, 0, len(raw.Commands))
+	for _, cmdData := range raw.Commands {
+		cmd, err := unmarshalCommand(cmdData)
+		if err != nil {
+			return nil, err
+		}
+		commands = append(commands, cmd)
+	}
+
+	return &RepeatCmd{
+		Times:    raw.Times,
+		Commands: commands,
+	}, nil
+}
+
+// CommandSchema represents a command in the script format for schema generation.
+// Only one field should be set at a time.
+type CommandSchema struct {
+	// Input command - inject keyboard input
+	Input *InputCmd `json:"input,omitempty" jsonschema:"oneof_required=input,description=Inject keyboard input"`
+
+	// Mouse command - inject mouse input
+	Mouse *MouseCmd `json:"mouse,omitempty" jsonschema:"oneof_required=mouse,description=Inject mouse input"`
+
+	// Wheel command - inject wheel/scroll input
+	Wheel *WheelCmd `json:"wheel,omitempty" jsonschema:"oneof_required=wheel,description=Inject wheel/scroll input"`
+
+	// Screenshot command - capture game screenshot
+	Screenshot *ScreenshotCmd `json:"screenshot,omitempty" jsonschema:"oneof_required=screenshot,description=Capture game screenshot"`
+
+	// Delay command - pause execution
+	Delay *DelayCmd `json:"delay,omitempty" jsonschema:"oneof_required=delay,description=Pause execution for a duration"`
+
+	// Repeat command - repeat a block of commands
+	Repeat *RepeatSchema `json:"repeat,omitempty" jsonschema:"oneof_required=repeat,description=Repeat a block of commands"`
+}
+
+// RepeatSchema represents a repeat block for schema generation.
+type RepeatSchema struct {
+	Times    int            `json:"times" jsonschema:"minimum=1,description=Number of times to repeat"`
+	Commands []CommandSchema `json:"commands" jsonschema:"description=Commands to repeat"`
+}
+
+// ScriptSchema represents the root script structure for schema generation.
+type ScriptSchema struct {
+	// Version must be "1.0"
+	Version string `json:"version" jsonschema:"enum=1.0,description=Script format version"`
+
+	// Commands to execute in order
+	Commands []CommandSchema `json:"commands" jsonschema:"description=List of commands to execute in order"`
+}

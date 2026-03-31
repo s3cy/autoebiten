@@ -117,12 +117,35 @@ If --output is not specified, a timestamped filename is generated.`,
 		Short: "Run a script file",
 		Long: `Execute a JSON script for automated game control.
 
-Scripts support: input, mouse, wheel, screenshot, delay, and repeat commands.
+Supported Commands:
+  input      - Inject keyboard input (press, release, hold)
+  mouse      - Inject mouse input (position, press, release, hold)
+  wheel      - Inject wheel/scroll input
+  screenshot - Capture game screenshot
+  delay      - Pause for milliseconds
+  repeat     - Repeat a block of commands
+
+Example Script:
+  {
+    "version": "1.0",
+    "commands": [
+      {"input": {"action": "press", "key": "KeySpace"}},
+      {"mouse": {"action": "position", "x": 100, "y": 200}},
+      {"delay": {"ms": 500}},
+      {"screenshot": {"output": "capture.png"}},
+      {"repeat": {"times": 3, "commands": [
+        {"input": {"action": "press", "key": "KeyA"}}
+      ]}}
+    ]
+  }
+
+For the full JSON Schema, run: autoebiten schema
 Use --script for file path or --inline for JSON string.`,
 		RunE: runScriptCommand,
 	}
 	runCmd.Flags().StringVarP(&scriptFlag, "script", "s", "", "Path to script file")
 	runCmd.Flags().StringVar(&inlineFlag, "inline", "", "Inline JSON script string")
+	runCmd.MarkFlagsOneRequired("script", "inline")
 
 	// ping command
 	pingCmd := &cobra.Command{
@@ -167,6 +190,21 @@ not the real wheel position from the operating system.`,
 		RunE: runGetWheelPositionCommand,
 	}
 
+	// schema command
+	schemaCmd := &cobra.Command{
+		Use:   "schema",
+		Short: "Output the JSON Schema for script files",
+		Long: `Print the JSON Schema that defines the script format.
+
+This schema can be used for validation and IDE autocompletion.
+The schema follows JSON Schema Draft 07.`,
+		RunE: runSchemaCommand,
+	}
+	schemaCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// Skip PID detection for schema command
+		return nil
+	}
+
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
 	rootCmd.AddCommand(wheelCmd)
@@ -177,6 +215,7 @@ not the real wheel position from the operating system.`,
 	rootCmd.AddCommand(mouseButtonsCmd)
 	rootCmd.AddCommand(getMousePositionCmd)
 	rootCmd.AddCommand(getWheelPositionCmd)
+	rootCmd.AddCommand(schemaCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
@@ -254,4 +293,8 @@ func runGetMousePositionCommand(cmd *cobra.Command, args []string) error {
 func runGetWheelPositionCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
 	return executor.RunGetWheelPositionCommand()
+}
+
+func runSchemaCommand(cmd *cobra.Command, args []string) error {
+	return cli.PrintSchema()
 }
