@@ -5,12 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
 	"image/png"
 	"net"
 	"os"
 	"sync"
-
-	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
@@ -41,7 +40,7 @@ func queueScreenshot(id any, path string, conn net.Conn) {
 
 // ProcessScreenshots processes pending screenshot requests.
 // Call this from the game's Draw function.
-func ProcessScreenshots(screen *ebiten.Image) {
+func ProcessScreenshots(screen image.Image) {
 	// Collect and clear queue
 	screenshotMu.Lock()
 	if len(screenshotQueue) == 0 {
@@ -57,7 +56,7 @@ func ProcessScreenshots(screen *ebiten.Image) {
 }
 
 // captureScreen captures the current screen to PNG format.
-func captureScreen(screen *ebiten.Image) ([]byte, error) {
+func captureScreen(screen image.Image) ([]byte, error) {
 	if screen == nil {
 		return nil, nil
 	}

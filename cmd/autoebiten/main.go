@@ -30,7 +30,7 @@ var (
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "github.com/s3cy/autoebiten",
+		Use:   "autoebiten",
 		Short: "CLI tool for automating Ebitengine games",
 		Long: `autoebiten is a CLI tool that enables AI agents to automate Ebitengine games.
 It communicates with games via JSON-RPC over a Unix socket.

@@ -1,0 +1,166 @@
+diff --git a/gameforui.go b/gameforui.go
+index 1f75dabcd..eb8ee5251 100644
+--- a/gameforui.go
++++ b/gameforui.go
+@@ -15,10 +15,13 @@
+ package ebiten
+ 
+ import (
++	"fmt"
+ 	"image"
+ 	"math"
+ 	"sync/atomic"
+ 
++	"github.com/s3cy/autoebiten/integrate"
++
+ 	"github.com/hajimehoshi/ebiten/v2/internal/atlas"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/inputstate"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/ui"
+@@ -99,6 +102,9 @@ func (g *gameForUI) UpdateInputState(fn func(*ui.InputState)) {
+ }
+ 
+ func (g *gameForUI) Update() error {
++	if !integrate.Update() {
++		return fmt.Errorf("exit requested")
++	}
+ 	if err := g.game.Update(); err != nil {
+ 		return err
+ 	}
+@@ -110,6 +116,7 @@ func (g *gameForUI) Update() error {
+ 
+ func (g *gameForUI) DrawOffscreen() error {
+ 	g.game.Draw(g.offscreen)
++	integrate.Capture(g.offscreen)
+ 	if err := g.imageDumper.dump(g.offscreen, g.transparent); err != nil {
+ 		return err
+ 	}
+diff --git a/input.go b/input.go
+index d71e27622..289566b0f 100644
+--- a/input.go
++++ b/input.go
+@@ -15,6 +15,8 @@
+ package ebiten
+ 
+ import (
++	"github.com/s3cy/autoebiten/integrate"
++
+ 	"github.com/hajimehoshi/ebiten/v2/internal/gamepad"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/gamepaddb"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/inputstate"
+@@ -56,6 +58,9 @@ func InputChars() []rune {
+ //
+ // On Android (ebitenmobile), EbitenView must be focusable to enable to handle keyboard keys.
+ func IsKeyPressed(key Key) bool {
++	if integrate.IsKeyPressed(integrate.Key(key)) {
++		return true
++	}
+ 	return inputstate.Get().IsKeyPressed(ui.Key(key))
+ }
+ 
+@@ -81,6 +86,10 @@ func KeyName(key Key) string {
+ //
+ // CursorPosition is concurrent-safe.
+ func CursorPosition() (x, y int) {
++	ix, iy := integrate.CursorPosition()
++	if ix != 0 || iy != 0 {
++		return ix, iy
++	}
+ 	cx, cy := inputstate.Get().CursorPosition()
+ 	return int(cx), int(cy)
+ }
+@@ -90,6 +99,10 @@ func CursorPosition() (x, y int) {
+ //
+ // Wheel is concurrent-safe.
+ func Wheel() (xoff, yoff float64) {
++	wx, wy := integrate.Wheel()
++	if wx != 0 || wy != 0 {
++		return wx, wy
++	}
+ 	return inputstate.Get().Wheel()
+ }
+ 
+@@ -100,6 +113,9 @@ func Wheel() (xoff, yoff float64) {
+ //
+ // IsMouseButtonPressed is concurrent-safe.
+ func IsMouseButtonPressed(mouseButton MouseButton) bool {
++	if integrate.IsMouseButtonPressed(integrate.MouseButton(mouseButton)) {
++		return true
++	}
+ 	return inputstate.Get().IsMouseButtonPressed(ui.MouseButton(mouseButton))
+ }
+ 
+diff --git a/inpututil/inpututil.go b/inpututil/inpututil.go
+index a4e259f57..738d6c003 100644
+--- a/inpututil/inpututil.go
++++ b/inpututil/inpututil.go
+@@ -19,6 +19,8 @@ import (
+ 	"slices"
+ 	"sync"
+ 
++	"github.com/s3cy/autoebiten/integrate"
++
+ 	"github.com/hajimehoshi/ebiten/v2"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/hook"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/inputstate"
+@@ -175,6 +177,9 @@ func AppendJustReleasedKeys(keys []ebiten.Key) []ebiten.Key {
+ //
+ // IsKeyJustPressed is concurrent safe.
+ func IsKeyJustPressed(key ebiten.Key) bool {
++	if integrate.IsKeyJustPressed(integrate.Key(key)) {
++		return true
++	}
+ 	return inputstate.Get().IsKeyJustPressed(ui.Key(key))
+ }
+ 
+@@ -185,6 +190,9 @@ func IsKeyJustPressed(key ebiten.Key) bool {
+ //
+ // IsKeyJustReleased is concurrent safe.
+ func IsKeyJustReleased(key ebiten.Key) bool {
++	if integrate.IsKeyJustReleased(integrate.Key(key)) {
++		return true
++	}
+ 	return inputstate.Get().IsKeyJustReleased(ui.Key(key))
+ }
+ 
+@@ -194,6 +202,10 @@ func IsKeyJustReleased(key ebiten.Key) bool {
+ //
+ // KeyPressDuration is concurrent safe.
+ func KeyPressDuration(key ebiten.Key) int {
++	d := integrate.KeyPressDuration(integrate.Key(key))
++	if d > 0 {
++		return d
++	}
+ 	return int(inputstate.Get().KeyPressDuration(ui.Key(key)))
+ }
+ 
+@@ -204,6 +216,9 @@ func KeyPressDuration(key ebiten.Key) int {
+ //
+ // IsMouseButtonJustPressed is concurrent safe.
+ func IsMouseButtonJustPressed(button ebiten.MouseButton) bool {
++	if integrate.IsMouseButtonJustPressed(integrate.MouseButton(button)) {
++		return true
++	}
+ 	return inputstate.Get().IsMouseButtonJustPressed(ui.MouseButton(button))
+ }
+ 
+@@ -214,6 +229,9 @@ func IsMouseButtonJustPressed(button ebiten.MouseButton) bool {
+ //
+ // IsMouseButtonJustReleased is concurrent safe.
+ func IsMouseButtonJustReleased(button ebiten.MouseButton) bool {
++	if integrate.IsMouseButtonJustReleased(integrate.MouseButton(button)) {
++		return true
++	}
+ 	return inputstate.Get().IsMouseButtonJustReleased(ui.MouseButton(button))
+ }
+ 
+@@ -223,6 +241,10 @@ func IsMouseButtonJustReleased(button ebiten.MouseButton) bool {
+ //
+ // MouseButtonPressDuration is concurrent safe.
+ func MouseButtonPressDuration(button ebiten.MouseButton) int {
++	d := integrate.MouseButtonPressDuration(integrate.MouseButton(button))
++	if d > 0 {
++		return d
++	}
+ 	return int(inputstate.Get().MouseButtonPressDuration(ui.MouseButton(button)))
+ }
+ 

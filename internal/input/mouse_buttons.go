@@ -1,21 +1,21 @@
 package input
 
-import "github.com/hajimehoshi/ebiten/v2"
+type MouseButton int
 
-type MouseButton = ebiten.MouseButton
-
-// MouseButtons
+// MouseButton constants matching ebiten.MouseButton.
 const (
 	MouseButtonLeft   MouseButton = MouseButton0
 	MouseButtonMiddle MouseButton = MouseButton1
 	MouseButtonRight  MouseButton = MouseButton2
+)
 
-	MouseButton0   MouseButton = ebiten.MouseButton0
-	MouseButton1   MouseButton = ebiten.MouseButton1
-	MouseButton2   MouseButton = ebiten.MouseButton2
-	MouseButton3   MouseButton = ebiten.MouseButton3
-	MouseButton4   MouseButton = ebiten.MouseButton4
-	MouseButtonMax MouseButton = ebiten.MouseButton4
+const (
+	MouseButton0   MouseButton = iota // The 'left' button
+	MouseButton1                      // The 'right' button
+	MouseButton2                      // The 'middle' button
+	MouseButton3                      // The additional button (usually browser-back)
+	MouseButton4                      // The additional button (usually browser-forward)
+	MouseButtonMax = MouseButton4
 )
 
 var StringMouseButtonMap = map[string]MouseButton{

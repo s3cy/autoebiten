@@ -56,6 +56,28 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 ```
 
+### Alternative: Deep Integration via Ebiten Patch
+
+For games that cannot modify input calls, autoebiten provides a patch for Ebiten itself. The patch modifies Ebiten's internal `gameforui.go`, `input.go`, and `inpututil/inpututil.go` to call into the `integrate` package:
+
+```go
+// Ebiten's internal input functions call integrate.*
+func IsKeyPressed(key Key) bool {
+    if integrate.IsKeyPressed(integrate.Key(key)) {
+        return true
+    }
+    return inputstate.Get().IsKeyPressed(ui.Key(key))
+}
+```
+
+This requires:
+1. Cloning Ebiten locally
+2. Applying `ebiten.patch`
+3. Using `replace` directive in go.mod
+4. No game code changes required
+
+See README.md for detailed patching instructions.
+
 ### 2. CLI Tool (`autoebiten`)
 
 ```bash
@@ -168,48 +190,20 @@ autoebiten/
 │       ├── server.go            # RPC request processing
 │       ├── screenshot.go        # Screenshot capture
 │       └── tick.go              # Tick management
-├── inpututil/                   # Input utilities (build-tagged)
+├── integrate/
+│   └── integrate.go             # Low-level integration API for Ebiten patch
 ├── examples/
 │   └── simple/
 │       └── main.go              # Example game
 ├── e2e/
 │   └── e2e_test.go              # End-to-end tests
+├── ebiten.patch                 # Patch for Ebiten v2.9.9 deep integration
 ├── autoebiten.go                # Mode configuration
 ├── autoebiten_default.go        # Default build (with RPC server)
 ├── autoebiten_release.go        # Release build (no-op stubs)
 ├── go.mod
+├── README.md
 └── SPEC.md
-```
-
-## Public API (`autoebiten` package)
-
-```go
-// Update processes RPC commands from the socket.
-// Call this in your game loop's Update function.
-// Returns false if the game should exit (exit command received).
-func Update() bool
-
-// Capture captures screenshots.
-// Call this at the end of your game loop's Draw function.
-func Capture(screen *ebiten.Image)
-
-// IsKeyPressed returns whether the key is pressed (real + injected).
-func IsKeyPressed(key ebiten.Key) bool
-
-// IsMouseButtonPressed returns whether the mouse button is pressed.
-func IsMouseButtonPressed(button ebiten.MouseButton) bool
-
-// CursorPosition returns the current cursor position (real + injected).
-func CursorPosition() (x, y int)
-
-// Wheel returns the wheel state.
-func Wheel() (x, y float64)
-
-// SetMode sets the input handling mode (InjectionOnly, InjectionFallback, Passthrough).
-func SetMode(mode Mode)
-
-// GetMode returns the current input handling mode.
-func GetMode() Mode
 ```
 
 ### Input Modes
@@ -217,6 +211,24 @@ func GetMode() Mode
 - `InjectionOnly` - Returns only injected input results
 - `InjectionFallback` (default) - Returns injected results if available, otherwise falls back to ebiten's native input
 - `Passthrough` - Only uses ebiten's native input handling
+
+### Input Function Support
+
+The library provides mode-aware wrappers for both direct input queries and inpututil functions:
+
+**Direct Input:**
+- `IsKeyPressed(key Key) bool`
+- `CursorPosition() (x, y int)`
+- `Wheel() (xoff, yoff float64)`
+- `IsMouseButtonPressed(mouseButton MouseButton) bool`
+
+**inpututil Wrappers:**
+- `IsKeyJustPressed(key Key) bool`
+- `IsKeyJustReleased(key Key) bool`
+- `KeyPressDuration(key Key) int`
+- `IsMouseButtonJustPressed(button MouseButton) bool`
+- `IsMouseButtonJustReleased(button MouseButton) bool`
+- `MouseButtonPressDuration(button MouseButton) int`
 
 ## Dependencies
 
