@@ -30,14 +30,16 @@ type MouseCmd struct {
 	Y             int    `json:"y"`
 	Button        string `json:"button"`
 	DurationTicks int64  `json:"duration_ticks"`
+	Async         bool   `json:"async"`
 }
 
 func (MouseCmd) nodeType() string { return "mouse" }
 
 // WheelCmd represents a wheel command.
 type WheelCmd struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
+	Async bool    `json:"async"`
 }
 
 func (WheelCmd) nodeType() string { return "wheel" }

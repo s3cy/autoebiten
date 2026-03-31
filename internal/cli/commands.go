@@ -66,7 +66,7 @@ func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int6
 }
 
 // RunMouseCommand runs a mouse command.
-func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string, durationTicks int64) error {
+func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string, durationTicks int64, async bool) error {
 	if action == "" {
 		if button != "" {
 			action = "hold"
@@ -83,6 +83,7 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 		Y:             y,
 		Button:        button,
 		DurationTicks: durationTicks,
+		Async:         async,
 	}
 
 	req, err := rpc.BuildRequest("mouse", params)
@@ -104,10 +105,11 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 }
 
 // RunWheelCommand runs a wheel command.
-func (e *CommandExecutor) RunWheelCommand(x, y float64) error {
+func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool) error {
 	params := &rpc.WheelParams{
-		X: x,
-		Y: y,
+		X:     x,
+		Y:     y,
+		Async: async,
 	}
 
 	req, err := rpc.BuildRequest("wheel", params)
@@ -258,12 +260,12 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 		return e.RunInputCommand(key, action, durationTicks, async)
 	})
 
-	executor.SetMouseFunc(func(action string, x, y int, button string, durationTicks int64) error {
-		return e.RunMouseCommand(action, x, y, button, durationTicks)
+	executor.SetMouseFunc(func(action string, x, y int, button string, durationTicks int64, async bool) error {
+		return e.RunMouseCommand(action, x, y, button, durationTicks, async)
 	})
 
-	executor.SetWheelFunc(func(x, y float64) error {
-		return e.RunWheelCommand(x, y)
+	executor.SetWheelFunc(func(x, y float64, async bool) error {
+		return e.RunWheelCommand(x, y, async)
 	})
 
 	executor.SetScreenshotFunc(func(output string, async bool) error {

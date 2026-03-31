@@ -9,8 +9,8 @@ import (
 type Executor struct {
 	script         *Script
 	inputFunc      func(key, action string, durationTicks int64, async bool) error
-	mouseFunc      func(action string, x, y int, button string, durationTicks int64) error
-	wheelFunc      func(x, y float64) error
+	mouseFunc      func(action string, x, y int, button string, durationTicks int64, async bool) error
+	wheelFunc      func(x, y float64, async bool) error
 	screenshotFunc func(output string, async bool) error
 	commandCount   int
 }
@@ -28,12 +28,12 @@ func (e *Executor) SetInputFunc(f func(key, action string, durationTicks int64, 
 }
 
 // SetMouseFunc sets the function to call for mouse commands.
-func (e *Executor) SetMouseFunc(f func(action string, x, y int, button string, durationTicks int64) error) {
+func (e *Executor) SetMouseFunc(f func(action string, x, y int, button string, durationTicks int64, async bool) error) {
 	e.mouseFunc = f
 }
 
 // SetWheelFunc sets the function to call for wheel commands.
-func (e *Executor) SetWheelFunc(f func(x, y float64) error) {
+func (e *Executor) SetWheelFunc(f func(x, y float64, async bool) error) {
 	e.wheelFunc = f
 }
 
@@ -74,7 +74,7 @@ func (e *Executor) executeNode(node Node) error {
 		if e.mouseFunc == nil {
 			return fmt.Errorf("mouse function not set")
 		}
-		if err := e.mouseFunc(cmd.Action, cmd.X, cmd.Y, cmd.Button, cmd.DurationTicks); err != nil {
+		if err := e.mouseFunc(cmd.Action, cmd.X, cmd.Y, cmd.Button, cmd.DurationTicks, cmd.Async); err != nil {
 			return fmt.Errorf("%s command failed: %w", formatMouseCmd(cmd), err)
 		}
 		return nil
@@ -83,7 +83,7 @@ func (e *Executor) executeNode(node Node) error {
 		if e.wheelFunc == nil {
 			return fmt.Errorf("wheel function not set")
 		}
-		if err := e.wheelFunc(cmd.X, cmd.Y); err != nil {
+		if err := e.wheelFunc(cmd.X, cmd.Y, cmd.Async); err != nil {
 			return fmt.Errorf("%s command failed: %w", formatWheelCmd(cmd), err)
 		}
 		return nil

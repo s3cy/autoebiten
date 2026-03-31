@@ -381,7 +381,7 @@ func TestScriptExecutorEndToEnd(t *testing.T) {
 		var mouseCalls []mouseCall
 		var mu sync.Mutex
 
-		executor.SetMouseFunc(func(action string, x, y int, button string, durationTicks int64) error {
+		executor.SetMouseFunc(func(action string, x, y int, button string, durationTicks int64, async bool) error {
 			mu.Lock()
 			mouseCalls = append(mouseCalls, mouseCall{action, x, y, button})
 			mu.Unlock()
@@ -431,7 +431,7 @@ func TestScriptExecutorEndToEnd(t *testing.T) {
 		var wheelCalls []struct{ x, y float64 }
 		var mu sync.Mutex
 
-		executor.SetWheelFunc(func(x, y float64) error {
+		executor.SetWheelFunc(func(x, y float64, async bool) error {
 			mu.Lock()
 			wheelCalls = append(wheelCalls, struct{ x, y float64 }{x, y})
 			mu.Unlock()

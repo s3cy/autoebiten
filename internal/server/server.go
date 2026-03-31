@@ -32,6 +32,8 @@ var (
 // Returns false if the game should exit (exit command received).
 func Update() bool {
 	go processInputResults()
+	go processMouseResults()
+	go processWheelResults()
 
 	globalServerHandler.incrementTick()
 
@@ -112,45 +114,12 @@ func (h *serverHandler) HandleInput(params *rpc.InputParams) (any, error) {
 
 // HandleMouse handles mouse command.
 func (h *serverHandler) HandleMouse(params *rpc.MouseParams) (any, error) {
-	if params.Action == "position" {
-		input.Get().InjectCursorMove(params.X, params.Y)
-		return &rpc.MouseResult{Success: true}, nil
-	}
-
-	if params.Button == "" {
-		return nil, fmt.Errorf("button is required for action %s", params.Action)
-	}
-
-	btn, ok := input.LookupMouseButton(params.Button)
-	if !ok {
-		return nil, fmt.Errorf("unknown button: %s", params.Button)
-	}
-
-	if params.X != 0 || params.Y != 0 {
-		input.Get().InjectCursorMove(params.X, params.Y)
-	}
-
-	it := input.NewInputTimeFromTick(Tick(), h.subtick.Add(1))
-
-	switch params.Action {
-	case "press":
-		input.Get().InjectMouseButtonPress(btn, it)
-	case "release":
-		input.Get().InjectMouseButtonRelease(btn, it)
-	case "hold":
-		duration := max(params.DurationTicks, 1)
-		input.Get().InjectMouseButtonHold(btn, it, duration)
-	default:
-		return nil, fmt.Errorf("unknown action: %s", params.Action)
-	}
-
-	return &rpc.MouseResult{Success: true}, nil
+	return processMouseRequest(params)
 }
 
 // HandleWheel handles wheel command.
 func (h *serverHandler) HandleWheel(params *rpc.WheelParams) (any, error) {
-	input.Get().InjectWheelMove(params.X, params.Y)
-	return &rpc.WheelResult{Success: true}, nil
+	return processWheelRequest(params)
 }
 
 // HandleScreenshot handles screenshot command.

@@ -81,6 +81,7 @@ Use get_mouse_position to retrieve the injected position.`,
 	mouseCmd.Flags().IntVarP(&yFlag, "y", "y", 0, "Y coordinate")
 	mouseCmd.Flags().StringVarP(&buttonFlag, "button", "b", "", "Mouse button (e.g., MouseButtonLeft, MouseButtonRight)")
 	mouseCmd.Flags().Int64VarP(&durationTicks, "duration_ticks", "d", 6, "Duration in ticks for hold action")
+	mouseCmd.Flags().BoolVarP(&asyncFlag, "async", "", false, "Async mode: return immediately without waiting for the input to be processed")
 
 	// wheel command
 	wheelCmd := &cobra.Command{
@@ -95,6 +96,7 @@ Use get_wheel_position to retrieve the injected position.`,
 	}
 	wheelCmd.Flags().Float64VarP(&wheelXFlag, "x", "x", 0, "Horizontal scroll (negative=left, positive=right)")
 	wheelCmd.Flags().Float64VarP(&wheelYFlag, "y", "y", 0, "Vertical scroll (negative=down, positive=up)")
+	wheelCmd.Flags().BoolVarP(&asyncFlag, "async", "", false, "Async mode: return immediately without waiting for the input to be processed")
 
 	// screenshot command
 	screenshotCmd := &cobra.Command{
@@ -198,12 +200,12 @@ func runInputCommand(cmd *cobra.Command, args []string) error {
 
 func runMouseCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunMouseCommand(mouseActionFlag, xFlag, yFlag, buttonFlag, durationTicks)
+	return executor.RunMouseCommand(mouseActionFlag, xFlag, yFlag, buttonFlag, durationTicks, asyncFlag)
 }
 
 func runWheelCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunWheelCommand(wheelXFlag, wheelYFlag)
+	return executor.RunWheelCommand(wheelXFlag, wheelYFlag, asyncFlag)
 }
 
 func runScreenshotCommand(cmd *cobra.Command, args []string) error {

@@ -57,12 +57,26 @@ type MouseParams struct {
 	Y             int    `json:"y"`
 	Button        string `json:"button"`
 	DurationTicks int64  `json:"duration_ticks"`
+	Async         bool   `json:"async"`
+	// ID is an internal field used by the server to track the request.
+	// This is not part of the JSON-RPC protocol.
+	ID any `json:"-"`
+	// Conn is an internal field used by the server to send responses.
+	// This is not part of the JSON-RPC protocol.
+	Conn net.Conn `json:"-"`
 }
 
 // WheelParams represents wheel command parameters.
 type WheelParams struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
+	Async bool `json:"async"`
+	// ID is an internal field used by the server to track the request.
+	// This is not part of the JSON-RPC protocol.
+	ID any `json:"-"`
+	// Conn is an internal field used by the server to send responses.
+	// This is not part of the JSON-RPC protocol.
+	Conn net.Conn `json:"-"`
 }
 
 // ScreenshotParams represents screenshot command parameters.
