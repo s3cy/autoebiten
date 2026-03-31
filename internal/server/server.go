@@ -134,10 +134,8 @@ func (h *serverHandler) HandleInput(params *rpc.InputParams) (any, error) {
 
 // HandleMouse handles mouse command.
 func (h *serverHandler) HandleMouse(params *rpc.MouseParams) (any, error) {
-	if params.Action == "position" || params.X > 0 || params.Y > 0 {
-		input.Get().InjectCursorMove(params.X, params.Y)
-	}
 	if params.Action == "position" {
+		input.Get().InjectCursorMove(params.X, params.Y)
 		return &rpc.MouseResult{Success: true}, nil
 	}
 
@@ -149,6 +147,8 @@ func (h *serverHandler) HandleMouse(params *rpc.MouseParams) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown button: %s", params.Button)
 	}
+
+	input.Get().InjectCursorMove(params.X, params.Y)
 
 	it := input.NewInputTimeFromTick(Tick(), h.subtick.Add(1))
 

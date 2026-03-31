@@ -68,10 +68,10 @@ Actions:
   position - Move cursor to (x, y) coordinates
   press    - Press mouse button at current position
   release  - Release mouse button
-  hold     - Press and hold for duration_ticks`,
+  hold     - Press and hold for duration_ticks (default when --button is used)`,
 		RunE: runMouseCommand,
 	}
-	mouseCmd.Flags().StringVarP(&mouseActionFlag, "action", "a", "position", "Action: position, press, release, or hold")
+	mouseCmd.Flags().StringVarP(&mouseActionFlag, "action", "a", "", "Action: position, press, release, or hold (defaults to position, or hold when --button is used)")
 	mouseCmd.Flags().IntVarP(&xFlag, "x", "x", 0, "X coordinate")
 	mouseCmd.Flags().IntVarP(&yFlag, "y", "y", 0, "Y coordinate")
 	mouseCmd.Flags().StringVarP(&buttonFlag, "button", "b", "", "Mouse button (e.g., MouseButtonLeft, MouseButtonRight)")

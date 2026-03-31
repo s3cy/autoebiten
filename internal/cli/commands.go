@@ -67,7 +67,11 @@ func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int6
 // RunMouseCommand runs a mouse command.
 func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string, durationTicks int64) error {
 	if action == "" {
-		action = "position"
+		if button != "" {
+			action = "hold"
+		} else {
+			action = "position"
+		}
 	}
 	if durationTicks == 0 {
 		durationTicks = 6
