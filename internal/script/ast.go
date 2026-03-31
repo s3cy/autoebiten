@@ -50,6 +50,7 @@ func (WheelCmd) commandType() string { return "wheel" }
 // ScreenshotCmd represents a screenshot command.
 type ScreenshotCmd struct {
 	Output string `json:"output" jsonschema:"description=Output file path (optional, auto-generated if not provided)"`
+	Base64 bool   `json:"base64" jsonschema:"default=false,description=Return screenshot as base64 string in the response instead of saving to a file"`
 	Async  bool   `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
 }
 

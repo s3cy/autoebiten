@@ -124,14 +124,16 @@ func (h *serverHandler) HandleWheel(params *rpc.WheelParams) (any, error) {
 
 // HandleScreenshot handles screenshot command.
 func (h *serverHandler) HandleScreenshot(params *rpc.ScreenshotParams) (any, error) {
-	if params.Output == "" {
-		params.Output = fmt.Sprintf("screenshot_%s.png", time.Now().Format("20060102150405"))
-	}
+	if !params.Base64 {
+		if params.Output == "" {
+			params.Output = fmt.Sprintf("screenshot_%s.png", time.Now().Format("20060102150405"))
+		}
 
-	var err error
-	params.Output, err = filepath.Abs(params.Output)
-	if err != nil {
-		return nil, fmt.Errorf("invalid path: %w", err)
+		var err error
+		params.Output, err = filepath.Abs(params.Output)
+		if err != nil {
+			return nil, fmt.Errorf("invalid path: %w", err)
+		}
 	}
 
 	if !params.Async {

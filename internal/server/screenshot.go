@@ -81,14 +81,17 @@ func respondScreenshot(params *rpc.ScreenshotParams, data []byte, err error) {
 			Message: err.Error(),
 		}
 	} else {
-		result := map[string]any{"success": true}
-		if params.Output != "" {
-			result["path"] = params.Output
-			os.WriteFile(params.Output, data, 0644)
-		} else if data != nil {
-			result["data"] = base64.StdEncoding.EncodeToString(data)
+		var result rpc.ScreenshotResult
+		result.Success = true
+		if data != nil && params.Base64 {
+			result.Data = base64.StdEncoding.EncodeToString(data)
 		}
-		rpcResp.Result = result
+		if params.Output != "" {
+			result.Path = params.Output
+			os.WriteFile(params.Output, data, 0644)
+		}
+		resultJSON, _ := json.Marshal(result)
+		rpcResp.Result = resultJSON
 	}
 
 	// Send response and signal completion

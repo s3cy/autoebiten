@@ -22,10 +22,11 @@ func (h *serverHandler) HandleCustom(params *rpc.CustomParams) (any, error) {
 
 	// Create command context with deferred response capability
 	ctx := custom.NewContext(params.Request, func(resp string) {
+		result, _ := json.Marshal(&rpc.CustomResult{Response: resp})
 		rpcResp := rpc.RPCResponse{
 			JSONRPC: "2.0",
 			ID:      params.ID,
-			Result:  &rpc.CustomResult{Response: resp},
+			Result:  result,
 		}
 
 		// Send response

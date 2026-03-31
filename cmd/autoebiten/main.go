@@ -24,6 +24,7 @@ var (
 	wheelYFlag      float64
 	buttonFlag      string
 	outputFlag      string
+	base64Flag      bool
 	scriptFlag      string
 	inlineFlag      string
 	asyncFlag       bool
@@ -112,6 +113,7 @@ If --output is not specified, a timestamped filename is generated.`,
 		RunE: runScreenshotCommand,
 	}
 	screenshotCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "Output file path (optional)")
+	screenshotCmd.Flags().BoolVarP(&base64Flag, "base64", "", false, "Output screenshot as base64 string instead of saving to a file")
 	screenshotCmd.Flags().BoolVarP(&asyncFlag, "async", "a", false, "Async mode: return immediately without waiting for capture")
 
 	// run command
@@ -285,7 +287,7 @@ func runWheelCommand(cmd *cobra.Command, args []string) error {
 
 func runScreenshotCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunScreenshotCommand(outputFlag, asyncFlag)
+	return executor.RunScreenshotCommand(outputFlag, base64Flag, asyncFlag)
 }
 
 func runScriptCommand(cmd *cobra.Command, args []string) error {

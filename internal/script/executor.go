@@ -11,7 +11,7 @@ type Executor struct {
 	inputFunc      func(key, action string, durationTicks int64, async bool) error
 	mouseFunc      func(action string, x, y int, button string, durationTicks int64, async bool) error
 	wheelFunc      func(x, y float64, async bool) error
-	screenshotFunc func(output string, async bool) error
+	screenshotFunc func(output string, b64, async bool) error
 	customFunc     func(name, request string) error
 	commandCount   int
 }
@@ -39,7 +39,7 @@ func (e *Executor) SetWheelFunc(f func(x, y float64, async bool) error) {
 }
 
 // SetScreenshotFunc sets the function to call for screenshot commands.
-func (e *Executor) SetScreenshotFunc(f func(output string, async bool) error) {
+func (e *Executor) SetScreenshotFunc(f func(output string, b64, async bool) error) {
 	e.screenshotFunc = f
 }
 
@@ -98,7 +98,7 @@ func (e *Executor) executeCommand(cmd CommandWrapper) error {
 		if e.screenshotFunc == nil {
 			return fmt.Errorf("screenshot function not set")
 		}
-		if err := e.screenshotFunc(c.Output, c.Async); err != nil {
+		if err := e.screenshotFunc(c.Output, c.Base64, c.Async); err != nil {
 			return fmt.Errorf("%s command failed: %w", formatScreenshotCmd(c), err)
 		}
 		return nil

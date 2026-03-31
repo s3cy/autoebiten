@@ -19,6 +19,18 @@ type Handler interface {
 	HandleListCustomCommands() (any, error)
 }
 
+// marshalResult marshals a result value to json.RawMessage.
+func marshalResult(result any) json.RawMessage {
+	if result == nil {
+		return nil
+	}
+	data, err := json.Marshal(result)
+	if err != nil {
+		return nil
+	}
+	return data
+}
+
 // ProcessRequest processes an RPC request and returns the response.
 func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	id := req.Req.ID
@@ -29,25 +41,25 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "get_mouse_position":
 		result, err := handler.HandleGetMousePosition()
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "get_wheel_position":
 		result, err := handler.HandleGetWheelPosition()
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "exit":
 		handler.HandleExit()
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: map[string]bool{"success": true}}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(map[string]bool{"success": true})}
 
 	case "custom":
 		var params CustomParams
@@ -60,14 +72,14 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "list_custom_commands":
 		result, err := handler.HandleListCustomCommands()
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "input":
 		var params InputParams
@@ -85,7 +97,7 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if result == nil {
 			return RPCResponse{}
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "mouse":
 		var params MouseParams
@@ -103,7 +115,7 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if result == nil {
 			return RPCResponse{}
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "wheel":
 		var params WheelParams
@@ -121,7 +133,7 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if result == nil {
 			return RPCResponse{}
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "screenshot":
 		var params ScreenshotParams
@@ -140,7 +152,7 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if result == nil {
 			return RPCResponse{}
 		}
-		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	default:
 		return errorResponse(id, ErrInvalidParams, fmt.Sprintf("unknown method: %s", req.Req.Method))

@@ -15,10 +15,10 @@ type RPCRequest struct {
 
 // RPCResponse represents a JSON-RPC response.
 type RPCResponse struct {
-	JSONRPC string    `json:"jsonrpc"`
-	ID      any       `json:"id"`
-	Result  any       `json:"result,omitempty"`
-	Error   *RPCError `json:"error,omitempty"`
+	JSONRPC string          `json:"jsonrpc"`
+	ID      any             `json:"id"`
+	Result  json.RawMessage `json:"result,omitempty"`
+	Error   *RPCError       `json:"error,omitempty"`
 }
 
 // RPCError represents a JSON-RPC error.
@@ -68,9 +68,9 @@ type MouseParams struct {
 
 // WheelParams represents wheel command parameters.
 type WheelParams struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-	Async bool `json:"async"`
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
+	Async bool    `json:"async"`
 	// ID is an internal field used by the server to track the request.
 	// This is not part of the JSON-RPC protocol.
 	ID any `json:"-"`
@@ -82,6 +82,7 @@ type WheelParams struct {
 // ScreenshotParams represents screenshot command parameters.
 type ScreenshotParams struct {
 	Output string `json:"output"`
+	Base64 bool   `json:"base64"`
 	Async  bool   `json:"sync"`
 	// ID is an internal field used by the server to track the request.
 	// This is not part of the JSON-RPC protocol.
@@ -99,6 +100,8 @@ type InputResult struct {
 // MouseResult represents mouse command result.
 type MouseResult struct {
 	Success bool `json:"success"`
+	X       int  `json:"x"`
+	Y       int  `json:"y"`
 }
 
 // WheelResult represents wheel command result.

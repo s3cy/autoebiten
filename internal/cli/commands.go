@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -100,7 +101,12 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
-	e.writer.Success(fmt.Sprintf("mouse %s at (%d, %d)", action, x, y))
+	var result rpc.MouseResult
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		return fmt.Errorf("invalid response format: %w", err)
+	}
+
+	e.writer.Success(fmt.Sprintf("mouse %s at (%d, %d)", action, result.X, result.Y))
 	return nil
 }
 
@@ -131,9 +137,10 @@ func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool) error {
 }
 
 // RunScreenshotCommand runs a screenshot command.
-func (e *CommandExecutor) RunScreenshotCommand(output string, async bool) error {
+func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bool) error {
 	params := &rpc.ScreenshotParams{
 		Output: output,
+		Base64: b64,
 		Async:  async,
 	}
 
@@ -151,15 +158,17 @@ func (e *CommandExecutor) RunScreenshotCommand(output string, async bool) error 
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
-	result, ok := resp.Result.(map[string]any)
-	if !ok {
-		return fmt.Errorf("invalid response format")
+	var result rpc.ScreenshotResult
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	if path, ok := result["path"].(string); ok && path != "" {
-		e.writer.Success(fmt.Sprintf("screenshot saved to %s", path))
-	} else if _, ok := result["data"]; ok {
-		e.writer.Success(fmt.Sprintf("screenshot captured (base64)\n%s", result["data"]))
+	if result.Path != "" && result.Data != "" {
+		e.writer.Success(fmt.Sprintf("screenshot saved to %s and captured (base64)\n%s", result.Path, result.Data))
+	} else if result.Path != "" {
+		e.writer.Success(fmt.Sprintf("screenshot saved to %s", result.Path))
+	} else if result.Data != "" {
+		e.writer.Success(fmt.Sprintf("screenshot captured (base64)\n%s", result.Data))
 	} else {
 		e.writer.Success("screenshot captured")
 	}
@@ -203,9 +212,9 @@ func (e *CommandExecutor) RunGetMousePositionCommand() error {
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
-	result, ok := resp.Result.(*rpc.GetMousePositionResult)
-	if !ok {
-		return fmt.Errorf("invalid response format")
+	var result rpc.GetMousePositionResult
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		return fmt.Errorf("invalid response format: %w", err)
 	}
 
 	e.writer.Success(fmt.Sprintf("mouse position: (%d, %d)", result.X, result.Y))
@@ -228,9 +237,9 @@ func (e *CommandExecutor) RunGetWheelPositionCommand() error {
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
-	result, ok := resp.Result.(*rpc.GetWheelPositionResult)
-	if !ok {
-		return fmt.Errorf("invalid response format")
+	var result rpc.GetWheelPositionResult
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		return fmt.Errorf("invalid response format: %w", err)
 	}
 
 	e.writer.Success(fmt.Sprintf("wheel position: (%.2f, %.2f)", result.X, result.Y))
@@ -268,8 +277,8 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 		return e.RunWheelCommand(x, y, async)
 	})
 
-	executor.SetScreenshotFunc(func(output string, async bool) error {
-		return e.RunScreenshotCommand(output, async)
+	executor.SetScreenshotFunc(func(output string, b64 bool, async bool) error {
+		return e.RunScreenshotCommand(output, b64, async)
 	})
 
 	executor.SetCustomFunc(func(name, request string) error {
@@ -322,24 +331,17 @@ func (e *CommandExecutor) ListCustomCommands() error {
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
-	names, ok := resp.Result.([]any)
-	if !ok {
-		return fmt.Errorf("invalid response format")
+	var names []string
+	if err := json.Unmarshal(resp.Result, &names); err != nil {
+		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	var commands []string
-	for _, name := range names {
-		if s, ok := name.(string); ok {
-			commands = append(commands, s)
-		}
-	}
-
-	if len(commands) == 0 {
+	if len(names) == 0 {
 		e.writer.Success("no custom commands registered")
 		return nil
 	}
 
-	return e.writer.PrintJSON(commands)
+	return e.writer.PrintJSON(names)
 }
 
 // RunCustomCommand runs a custom command.
@@ -363,16 +365,11 @@ func (e *CommandExecutor) RunCustomCommand(name, request string) error {
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
-	result, ok := resp.Result.(map[string]any)
-	if !ok {
-		return fmt.Errorf("invalid response format")
+	var result rpc.CustomResult
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	response, ok := result["response"].(string)
-	if !ok {
-		return fmt.Errorf("invalid response format")
-	}
-
-	e.writer.Success(response)
+	e.writer.Success(result.Response)
 	return nil
 }

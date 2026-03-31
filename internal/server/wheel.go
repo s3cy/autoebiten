@@ -35,10 +35,11 @@ func processWheelResults() {
 	// Process wheel results and send responses
 	for _, req := range queue {
 		// Sync mode - send response via connection
+		result, _ := json.Marshal(&rpc.WheelResult{Success: true})
 		rpcResp := rpc.RPCResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  &rpc.WheelResult{Success: true},
+			Result:  result,
 		}
 
 		go func() {

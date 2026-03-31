@@ -39,8 +39,8 @@ func TestRPCEndToEnd(t *testing.T) {
 			t.Errorf("Unexpected error: %s", resp.Error.Message)
 		}
 
-		result, ok := resp.Result.(map[string]any)
-		if !ok {
+		var result map[string]any
+		if err := json.Unmarshal(resp.Result, &result); err != nil {
 			t.Fatal("Expected result map")
 		}
 
@@ -76,8 +76,8 @@ func TestRPCEndToEnd(t *testing.T) {
 			t.Errorf("Unexpected error: %s", resp.Error.Message)
 		}
 
-		result, ok := resp.Result.(map[string]any)
-		if !ok {
+		var result map[string]any
+		if err := json.Unmarshal(resp.Result, &result); err != nil {
 			t.Fatal("Expected result map")
 		}
 
@@ -115,8 +115,8 @@ func TestRPCEndToEnd(t *testing.T) {
 			t.Errorf("Unexpected error: %s", resp.Error.Message)
 		}
 
-		result, ok := resp.Result.(map[string]any)
-		if !ok {
+		var result map[string]any
+		if err := json.Unmarshal(resp.Result, &result); err != nil {
 			t.Fatal("Expected result map")
 		}
 
@@ -151,8 +151,8 @@ func TestRPCEndToEnd(t *testing.T) {
 			t.Errorf("Unexpected error: %s", resp.Error.Message)
 		}
 
-		result, ok := resp.Result.(map[string]any)
-		if !ok {
+		var result map[string]any
+		if err := json.Unmarshal(resp.Result, &result); err != nil {
 			t.Fatal("Expected result map")
 		}
 

@@ -35,10 +35,12 @@ func processMouseResults() {
 	// Process mouse results and send responses
 	for _, req := range queue {
 		// Sync mode - send response via connection
+		x, y := input.Get().CursorPosition()
+		result, _ := json.Marshal(&rpc.MouseResult{Success: true, X: x, Y: y})
 		rpcResp := rpc.RPCResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  &rpc.MouseResult{Success: true},
+			Result:  result,
 		}
 
 		go func() {
@@ -60,7 +62,7 @@ func processMouseRequest(params *rpc.MouseParams) (any, error) {
 			queueMouseResult(params)
 			return nil, nil
 		}
-		return &rpc.MouseResult{Success: true}, nil
+		return &rpc.MouseResult{Success: true, X: params.X, Y: params.Y}, nil
 	}
 
 	if params.Button == "" {
@@ -95,5 +97,6 @@ func processMouseRequest(params *rpc.MouseParams) (any, error) {
 		return nil, nil
 	}
 
-	return &rpc.MouseResult{Success: true}, nil
+	x, y := input.Get().CursorPosition()
+	return &rpc.MouseResult{Success: true, X: x, Y: y}, nil
 }

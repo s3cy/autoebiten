@@ -35,10 +35,11 @@ func processInputResults() {
 	// Process inputs and send responses
 	for _, req := range queue {
 		// Sync mode - send response via connection
+		result, _ := json.Marshal(&rpc.InputResult{Success: true})
 		rpcResp := rpc.RPCResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  &rpc.InputResult{Success: true},
+			Result:  result,
 		}
 
 		go func() {
