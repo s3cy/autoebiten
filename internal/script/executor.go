@@ -8,7 +8,7 @@ import (
 // Executor executes a script.
 type Executor struct {
 	script         *Script
-	inputFunc      func(key, action string, durationTicks int64) error
+	inputFunc      func(key, action string, durationTicks int64, async bool) error
 	mouseFunc      func(action string, x, y int, button string, durationTicks int64) error
 	wheelFunc      func(x, y float64) error
 	screenshotFunc func(output string, async bool) error
@@ -23,7 +23,7 @@ func NewExecutor(s *Script) *Executor {
 }
 
 // SetInputFunc sets the function to call for input commands.
-func (e *Executor) SetInputFunc(f func(key, action string, durationTicks int64) error) {
+func (e *Executor) SetInputFunc(f func(key, action string, durationTicks int64, async bool) error) {
 	e.inputFunc = f
 }
 
@@ -65,7 +65,7 @@ func (e *Executor) executeNode(node Node) error {
 		if e.inputFunc == nil {
 			return fmt.Errorf("input function not set")
 		}
-		if err := e.inputFunc(cmd.Key, cmd.Action, cmd.DurationTicks); err != nil {
+		if err := e.inputFunc(cmd.Key, cmd.Action, cmd.DurationTicks, cmd.Async); err != nil {
 			return fmt.Errorf("%s command failed: %w", formatInputCmd(cmd), err)
 		}
 		return nil

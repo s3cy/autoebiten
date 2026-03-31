@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"sync"
@@ -32,6 +31,8 @@ var (
 //
 // Returns false if the game should exit (exit command received).
 func Update() bool {
+	go processInputResults()
+
 	globalServerHandler.incrementTick()
 
 	// Ensure socket server is started (one-time initialization)
@@ -106,30 +107,7 @@ func (h *serverHandler) incrementTick() {
 
 // HandleInput handles input command.
 func (h *serverHandler) HandleInput(params *rpc.InputParams) (any, error) {
-	if params.Key == "" {
-		return nil, fmt.Errorf("key is required")
-	}
-
-	key, ok := input.LookupKey(params.Key)
-	if !ok {
-		return nil, fmt.Errorf("unknown key: %s", params.Key)
-	}
-
-	it := input.NewInputTimeFromTick(Tick(), h.subtick.Add(1))
-
-	switch params.Action {
-	case "press":
-		input.Get().InjectKeyPress(key, it)
-	case "release":
-		input.Get().InjectKeyRelease(key, it)
-	case "hold":
-		duration := max(params.DurationTicks, 1)
-		input.Get().InjectKeyHold(key, it, duration)
-	default:
-		return nil, fmt.Errorf("unknown action: %s", params.Action)
-	}
-
-	return &rpc.InputResult{Success: true}, nil
+	return processInputRequest(params)
 }
 
 // HandleMouse handles mouse command.
@@ -177,30 +155,25 @@ func (h *serverHandler) HandleWheel(params *rpc.WheelParams) (any, error) {
 
 // HandleScreenshot handles screenshot command.
 func (h *serverHandler) HandleScreenshot(params *rpc.ScreenshotParams) (any, error) {
-	path := params.Output
-
-	if path == "" {
-		path = fmt.Sprintf("screenshot_%s.png", time.Now().Format("20060102150405"))
+	if params.Output == "" {
+		params.Output = fmt.Sprintf("screenshot_%s.png", time.Now().Format("20060102150405"))
 	}
 
-	path, err := filepath.Abs(path)
+	var err error
+	params.Output, err = filepath.Abs(params.Output)
 	if err != nil {
 		return nil, fmt.Errorf("invalid path: %w", err)
 	}
 
 	if !params.Async {
 		// Sync mode: queue request. ProcessScreenshots in Draw() will send the response
-		var conn net.Conn
-		if params.Conn != nil {
-			conn = params.Conn
-		}
-		queueScreenshot(params.ID, path, conn)
+		queueScreenshot(params)
 		return nil, nil
 	}
 
 	// Async mode: fire-and-forget, no connection needed
-	queueScreenshot(params.ID, path, nil)
-	return &rpc.ScreenshotResult{Success: true, Path: path}, nil
+	queueScreenshot(params)
+	return &rpc.ScreenshotResult{Success: true, Path: params.Output}, nil
 }
 
 // HandlePing handles ping command.

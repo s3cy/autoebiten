@@ -277,7 +277,7 @@ func TestScriptExecutorEndToEnd(t *testing.T) {
 		var executedCommands []string
 		var mu sync.Mutex
 
-		executor.SetInputFunc(func(key, action string, durationTicks int64) error {
+		executor.SetInputFunc(func(key, action string, durationTicks int64, async bool) error {
 			mu.Lock()
 			executedCommands = append(executedCommands, fmt.Sprintf("%s:%s", action, key))
 			mu.Unlock()
@@ -326,7 +326,7 @@ func TestScriptExecutorEndToEnd(t *testing.T) {
 		var executedKeys []string
 		var mu sync.Mutex
 
-		executor.SetInputFunc(func(key, action string, durationTicks int64) error {
+		executor.SetInputFunc(func(key, action string, durationTicks int64, async bool) error {
 			mu.Lock()
 			executedKeys = append(executedKeys, key)
 			mu.Unlock()
@@ -580,11 +580,11 @@ func TestRPCErrorCodes(t *testing.T) {
 
 // testHandler implements rpc.Handler for testing.
 type testHandler struct {
-	mu           sync.Mutex
-	inputCalls   []rpc.InputParams
-	mouseCalls   []rpc.MouseParams
-	wheelCalls   []rpc.WheelParams
-	pingCount    int
+	mu              sync.Mutex
+	inputCalls      []rpc.InputParams
+	mouseCalls      []rpc.MouseParams
+	wheelCalls      []rpc.WheelParams
+	pingCount       int
 	screenshotCount int
 }
 

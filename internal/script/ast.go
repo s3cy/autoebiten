@@ -18,6 +18,7 @@ type InputCmd struct {
 	Action        string `json:"action"`
 	Key           string `json:"key"`
 	DurationTicks int64  `json:"duration_ticks"`
+	Async         bool   `json:"async"`
 }
 
 func (InputCmd) nodeType() string { return "input" }

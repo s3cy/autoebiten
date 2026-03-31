@@ -33,7 +33,7 @@ func NewCommandExecutor() *CommandExecutor {
 }
 
 // RunInputCommand runs an input command.
-func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int64) error {
+func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int64, async bool) error {
 	if action == "" {
 		action = "hold"
 	}
@@ -44,6 +44,7 @@ func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int6
 		Action:        action,
 		Key:           key,
 		DurationTicks: durationTicks,
+		Async:         async,
 	}
 
 	req, err := rpc.BuildRequest("input", params)
@@ -253,8 +254,8 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 	executor := script.NewExecutor(s)
 
 	// Set up handlers that send RPC commands
-	executor.SetInputFunc(func(key, action string, durationTicks int64) error {
-		return e.RunInputCommand(key, action, durationTicks)
+	executor.SetInputFunc(func(key, action string, durationTicks int64, async bool) error {
+		return e.RunInputCommand(key, action, durationTicks, async)
 	})
 
 	executor.SetMouseFunc(func(action string, x, y int, button string, durationTicks int64) error {

@@ -7,35 +7,23 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"net"
 	"os"
 	"sync"
 
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
-// ScreenshotRequest represents a pending screenshot request.
-type ScreenshotRequest struct {
-	ID   any      // RPC request ID for response
-	Path string   // output path, empty for base64 return
-	Conn net.Conn // connection to send response on (nil for async)
-}
-
 var (
 	screenshotMu    sync.Mutex
-	screenshotQueue []ScreenshotRequest
+	screenshotQueue []*rpc.ScreenshotParams
 )
 
 // queueScreenshot queues a screenshot request to be processed in Draw.
 // Call this from Update(). For sync mode, pass conn and done channel.
-func queueScreenshot(id any, path string, conn net.Conn) {
+func queueScreenshot(params *rpc.ScreenshotParams) {
 	screenshotMu.Lock()
 	defer screenshotMu.Unlock()
-	screenshotQueue = append(screenshotQueue, ScreenshotRequest{
-		ID:   id,
-		Path: path,
-		Conn: conn,
-	})
+	screenshotQueue = append(screenshotQueue, params)
 }
 
 // ProcessScreenshots processes pending screenshot requests.
@@ -69,12 +57,12 @@ func captureScreen(screen image.Image) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func respondScreenshots(queue []ScreenshotRequest, data []byte, err error) {
+func respondScreenshots(queue []*rpc.ScreenshotParams, data []byte, err error) {
 	for _, req := range queue {
 		if req.Conn == nil {
 			// Async fire-and-forget, just save to file if path provided
-			if req.Path != "" && err == nil {
-				os.WriteFile(req.Path, data, 0644)
+			if req.Output != "" && err == nil {
+				os.WriteFile(req.Output, data, 0644)
 			}
 			continue
 		}
@@ -92,9 +80,9 @@ func respondScreenshots(queue []ScreenshotRequest, data []byte, err error) {
 			}
 		} else {
 			result := map[string]any{"success": true}
-			if req.Path != "" {
-				result["path"] = req.Path
-				os.WriteFile(req.Path, data, 0644)
+			if req.Output != "" {
+				result["path"] = req.Output
+				os.WriteFile(req.Output, data, 0644)
 			} else if data != nil {
 				result["data"] = base64.StdEncoding.EncodeToString(data)
 			}

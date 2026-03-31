@@ -98,9 +98,16 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		if err := decodeParams(req.Req.Params, &params); err != nil {
 			return errorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
 		}
+		params.ID = req.Req.ID // Track request ID for response routing
+		params.Conn = req.Conn // Store connection for response
 		result, err := handler.HandleInput(&params)
 		if err != nil {
 			return errorResponse(id, ErrInvalidParams, err.Error())
+		}
+		// For sync inputs, the response is sent by ProcessInputs in Update()
+		// so we return nil result to indicate no immediate response
+		if result == nil {
+			return RPCResponse{}
 		}
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
 

@@ -41,6 +41,13 @@ type InputParams struct {
 	Action        string `json:"action"`
 	Key           string `json:"key"`
 	DurationTicks int64  `json:"duration_ticks"`
+	Async         bool   `json:"async"`
+	// ID is an internal field used by the server to track the request.
+	// This is not part of the JSON-RPC protocol.
+	ID any `json:"-"`
+	// Conn is an internal field used by the server to send responses.
+	// This is not part of the JSON-RPC protocol.
+	Conn net.Conn `json:"-"`
 }
 
 // MouseParams represents mouse command parameters.

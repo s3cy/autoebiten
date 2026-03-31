@@ -56,6 +56,7 @@ Actions:
 	inputCmd.Flags().StringVarP(&keyFlag, "key", "k", "", "Key name (e.g., KeyA, KeySpace, KeyArrowUp)")
 	inputCmd.Flags().StringVarP(&inputActionFlag, "action", "a", "hold", "Action: press, release, or hold")
 	inputCmd.Flags().Int64VarP(&durationTicks, "duration_ticks", "d", 6, "Duration in ticks for hold action")
+	inputCmd.Flags().BoolVarP(&asyncFlag, "async", "", false, "Async mode: return immediately without waiting for the input to be processed")
 	inputCmd.MarkFlagRequired("key")
 
 	// mouse command
@@ -192,7 +193,7 @@ func persistentPreRunRootCommand(cmd *cobra.Command, args []string) error {
 
 func runInputCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunInputCommand(keyFlag, inputActionFlag, durationTicks)
+	return executor.RunInputCommand(keyFlag, inputActionFlag, durationTicks, asyncFlag)
 }
 
 func runMouseCommand(cmd *cobra.Command, args []string) error {
