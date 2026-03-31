@@ -29,8 +29,8 @@ func (InputCmd) commandType() string { return "input" }
 // MouseCmd represents a mouse command.
 type MouseCmd struct {
 	Action        string `json:"action" jsonschema:"enum=position,enum=press,enum=release,enum=hold,description=Action to perform (default is position or hold when button is used)"`
-	X             int    `json:"x" jsonschema:"default=0,description=X coordinate (use 0 to reset to real mouse position)"`
-	Y             int    `json:"y" jsonschema:"default=0,description=Y coordinate (use 0 to reset to real mouse position)"`
+	X             int    `json:"x" jsonschema:"default=0,description=X coordinate"`
+	Y             int    `json:"y" jsonschema:"default=0,description=Y coordinate"`
 	Button        string `json:"button" jsonschema:"description=Mouse button (use 'autoebiten mouse_buttons' to list all)"`
 	DurationTicks int64  `json:"duration_ticks" jsonschema:"default=6,description=Duration in game ticks for hold action"`
 	Async         bool   `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
@@ -40,8 +40,8 @@ func (MouseCmd) commandType() string { return "mouse" }
 
 // WheelCmd represents a wheel command.
 type WheelCmd struct {
-	X     float64 `json:"x" jsonschema:"default=0,description=Horizontal scroll (negative=left, positive=right)"`
-	Y     float64 `json:"y" jsonschema:"default=0,description=Vertical scroll (negative=down, positive=up)"`
+	X     float64 `json:"x" jsonschema:"default=0,description=Horizontal scroll"`
+	Y     float64 `json:"y" jsonschema:"default=0,description=Vertical scroll"`
 	Async bool    `json:"async" jsonschema:"default=false,description=Return immediately without waiting"`
 }
 
@@ -72,18 +72,18 @@ func (RepeatCmd) commandType() string { return "repeat" }
 
 // internalWrapper is used for JSON unmarshaling.
 type internalWrapper struct {
-	Input      *InputCmd       `json:"input,omitempty"`
-	Mouse      *MouseCmd       `json:"mouse,omitempty"`
-	Wheel      *WheelCmd       `json:"wheel,omitempty"`
-	Screenshot *ScreenshotCmd  `json:"screenshot,omitempty"`
-	Delay      *DelayCmd       `json:"delay,omitempty"`
+	Input      *InputCmd        `json:"input,omitempty"`
+	Mouse      *MouseCmd        `json:"mouse,omitempty"`
+	Wheel      *WheelCmd        `json:"wheel,omitempty"`
+	Screenshot *ScreenshotCmd   `json:"screenshot,omitempty"`
+	Delay      *DelayCmd        `json:"delay,omitempty"`
 	Repeat     *json.RawMessage `json:"repeat,omitempty"`
 }
 
 // UnmarshalJSON implements custom JSON unmarshaling for CommandWrapper.
 func (s *Script) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Version  string           `json:"version"`
+		Version  string            `json:"version"`
 		Commands []json.RawMessage `json:"commands"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -178,12 +178,15 @@ type CommandSchema struct {
 
 // RepeatSchema represents a repeat block for schema generation.
 type RepeatSchema struct {
-	Times    int            `json:"times" jsonschema:"minimum=1,description=Number of times to repeat"`
+	Times    int             `json:"times" jsonschema:"minimum=1,description=Number of times to repeat"`
 	Commands []CommandSchema `json:"commands" jsonschema:"description=Commands to repeat"`
 }
 
 // ScriptSchema represents the root script structure for schema generation.
 type ScriptSchema struct {
+	// Schema is the JSON Schema URI for this document
+	Schema string `json:"$schema,omitempty" jsonschema:"type=string,format=uri,description=JSON Schema URI for this document"`
+
 	// Version must be "1.0"
 	Version string `json:"version" jsonschema:"enum=1.0,description=Script format version"`
 
