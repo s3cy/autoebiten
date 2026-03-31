@@ -36,7 +36,9 @@ func main() {
 It communicates with games via JSON-RPC over a Unix socket.
 
 If --pid is not provided, autoebiten automatically detects a running game instance.
-If multiple games are running, use --pid to specify the target.`,
+If multiple games are running, use --pid to specify the target.
+
+For more information, visit: https://github.com/s3cy/autoebiten`,
 		PersistentPreRunE: persistentPreRunRootCommand,
 	}
 	rootCmd.PersistentFlags().IntVarP(&pidFlag, "pid", "p", 0, "Target game process PID (auto-detected if not specified)")
