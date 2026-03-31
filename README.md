@@ -1,6 +1,6 @@
 # autoebiten
 
-CLI tool for automating Ebitengine games via input injection, screenshots, and scripted sequences.
+CLI tool for automating Ebitengine games via input injection, screenshots, scripted sequences, and custom commands.
 
 ## Installation
 
@@ -70,6 +70,44 @@ autoebiten keys
 autoebiten mouse_buttons
 ```
 
+## Custom Commands
+
+Games can register custom commands that can be invoked from the CLI:
+
+### Game Side
+
+```go
+// In your game initialization
+autoebiten.Register("getPlayerInfo", func(ctx autoebiten.CommandContext) {
+    info := fmt.Sprintf("Health: %d, Mana: %d", playerHealth, playerMana)
+    ctx.Respond(info)
+})
+
+autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
+    playerHealth = min(playerHealth+20, 100)
+    ctx.Respond(fmt.Sprintf("Healed to %d", playerHealth))
+})
+```
+
+The `CommandContext` provides:
+- `Request() string` - The request data sent from CLI
+- `Respond(response string)` - Send response back to CLI (can be called immediately or deferred)
+
+### CLI Side
+
+```bash
+# List available custom commands
+autoebiten list_custom
+
+# Execute a custom command
+autoebiten custom getPlayerInfo
+
+# Execute with request data
+autoebiten custom echo --request "hello world"
+```
+
+See [examples/custom_commands](examples/custom_commands/main.go) for a complete example.
+
 ## Scripted Automation
 
 Create a JSON script for complex sequences:
@@ -133,6 +171,11 @@ autoebiten.MouseButtonPressDuration(button ebiten.MouseButton)  // int (ticks)
 
 // Configure input mode
 autoebiten.SetMode(autoebiten.InjectionFallback) // default: injected + real input
+
+// Custom commands
+autoebiten.Register(name string, handler func(CommandContext)) // Register a custom command
+autoebiten.Unregister(name string) bool                        // Remove a custom command
+autoebiten.ListCustomCommands() []string                       // List registered commands
 ```
 
 ### Input Modes

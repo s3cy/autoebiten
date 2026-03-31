@@ -31,9 +31,9 @@ var (
 //
 // Returns false if the game should exit (exit command received).
 func Update() bool {
-	go processInputResults()
-	go processMouseResults()
-	go processWheelResults()
+	processInputResults()
+	processMouseResults()
+	processWheelResults()
 
 	globalServerHandler.incrementTick()
 

@@ -40,7 +40,10 @@ func ProcessScreenshots(screen image.Image) {
 	screenshotMu.Unlock()
 
 	data, err := captureScreen(screen)
-	go respondScreenshots(queue, data, err)
+	for _, req := range queue {
+		// No more pitfalls. Yes, Go 1.22
+		go respondScreenshot(req, data, err)
+	}
 }
 
 // captureScreen captures the current screen to PNG format.
@@ -57,41 +60,39 @@ func captureScreen(screen image.Image) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func respondScreenshots(queue []*rpc.ScreenshotParams, data []byte, err error) {
-	for _, req := range queue {
-		if req.Conn == nil {
-			// Async fire-and-forget, just save to file if path provided
-			if req.Output != "" && err == nil {
-				os.WriteFile(req.Output, data, 0644)
-			}
-			continue
+func respondScreenshot(params *rpc.ScreenshotParams, data []byte, err error) {
+	if params.Async {
+		// Async fire-and-forget, just save to file if path provided
+		if params.Output != "" && err == nil {
+			os.WriteFile(params.Output, data, 0644)
 		}
+		return
+	}
 
-		// Sync mode - send response via connection
-		rpcResp := rpc.RPCResponse{
-			JSONRPC: "2.0",
-			ID:      req.ID,
-		}
+	// Sync mode - send response via connection
+	rpcResp := rpc.RPCResponse{
+		JSONRPC: "2.0",
+		ID:      params.ID,
+	}
 
-		if err != nil {
-			rpcResp.Error = &rpc.RPCError{
-				Code:    rpc.ErrScreenshotFailed,
-				Message: err.Error(),
-			}
-		} else {
-			result := map[string]any{"success": true}
-			if req.Output != "" {
-				result["path"] = req.Output
-				os.WriteFile(req.Output, data, 0644)
-			} else if data != nil {
-				result["data"] = base64.StdEncoding.EncodeToString(data)
-			}
-			rpcResp.Result = result
+	if err != nil {
+		rpcResp.Error = &rpc.RPCError{
+			Code:    rpc.ErrScreenshotFailed,
+			Message: err.Error(),
 		}
+	} else {
+		result := map[string]any{"success": true}
+		if params.Output != "" {
+			result["path"] = params.Output
+			os.WriteFile(params.Output, data, 0644)
+		} else if data != nil {
+			result["data"] = base64.StdEncoding.EncodeToString(data)
+		}
+		rpcResp.Result = result
+	}
 
-		// Send response and signal completion
-		if err := json.NewEncoder(req.Conn).Encode(rpcResp); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to send screenshot response: %v\n", err)
-		}
+	// Send response and signal completion
+	if err := json.NewEncoder(params.Conn).Encode(rpcResp); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to send screenshot response: %v\n", err)
 	}
 }

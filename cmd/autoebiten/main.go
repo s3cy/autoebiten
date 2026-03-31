@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -26,6 +27,8 @@ var (
 	scriptFlag      string
 	inlineFlag      string
 	asyncFlag       bool
+	customNameFlag  string
+	requestFlag     string
 )
 
 func main() {
@@ -205,6 +208,35 @@ The schema follows JSON Schema Draft 07.`,
 		return nil
 	}
 
+	// list_custom command
+	listCustomCmd := &cobra.Command{
+		Use:   "list_custom",
+		Short: "List registered custom commands",
+		Long: `List all custom commands registered by the game.
+
+Custom commands are registered using autoebiten.Register() in the game code.`,
+		RunE: runListCustomCommand,
+	}
+
+	// custom command
+	customCmd := &cobra.Command{
+		Use:   "custom [name]",
+		Short: "Execute a custom command",
+		Long: `Execute a custom command registered by the game.
+
+Arguments:
+  name     The custom command name (optional - lists commands if not provided)
+
+Flags:
+  --request, -r    Request data to pass to the command (string)
+
+Custom commands are registered using autoebiten.Register() in the game code.
+The handler receives a CommandContext containing the request and a Respond method.`,
+		RunE: runCustomCommand,
+	}
+	customCmd.Flags().StringVarP(&customNameFlag, "name", "n", "", "Custom command name")
+	customCmd.Flags().StringVarP(&requestFlag, "request", "r", "", "Request data to pass to the command")
+
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
 	rootCmd.AddCommand(wheelCmd)
@@ -216,6 +248,8 @@ The schema follows JSON Schema Draft 07.`,
 	rootCmd.AddCommand(getMousePositionCmd)
 	rootCmd.AddCommand(getWheelPositionCmd)
 	rootCmd.AddCommand(schemaCmd)
+	rootCmd.AddCommand(listCustomCmd)
+	rootCmd.AddCommand(customCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
@@ -297,4 +331,31 @@ func runGetWheelPositionCommand(cmd *cobra.Command, args []string) error {
 
 func runSchemaCommand(cmd *cobra.Command, args []string) error {
 	return cli.PrintSchema()
+}
+
+func runListCustomCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.ListCustomCommands()
+}
+
+func runCustomCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+
+	var name string
+	if customNameFlag != "" {
+		name = customNameFlag
+	} else if len(args) > 0 {
+		name = args[0]
+	} else {
+		return executor.ListCustomCommands()
+	}
+
+	var request string
+	if requestFlag != "" {
+		request = requestFlag
+	} else if len(args) > 1 {
+		request = strings.Join(args[1:], " ")
+	}
+
+	return executor.RunCustomCommand(name, request)
 }

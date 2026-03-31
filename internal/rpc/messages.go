@@ -129,3 +129,20 @@ type GetWheelPositionResult struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 }
+
+// CustomParams represents custom command parameters.
+type CustomParams struct {
+	Name    string `json:"name"`
+	Request string `json:"request"`
+	// Conn is an internal field used by the server to send responses.
+	// This is not part of the JSON-RPC protocol.
+	Conn net.Conn `json:"-"`
+	// ID is an internal field used by the server to track the request.
+	// This is not part of the JSON-RPC protocol.
+	ID any `json:"-"`
+}
+
+// CustomResult represents custom command result.
+type CustomResult struct {
+	Response string `json:"response"`
+}

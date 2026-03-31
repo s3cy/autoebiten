@@ -35,7 +35,7 @@ func (g *Game) Update() error {
 
 // Draw is called every frame.
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{0x00, 0x00, 0xff, 0xff})
+	screen.Fill(color.RGBA{0x00, 0x00, 0x66, 0xff})
 
 	// Draw some text
 	msg := "autoebiten demo game\n"

@@ -14,7 +14,7 @@ A utility package for Ebitengine that enables AI agents to automate games via CL
                       ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    autoebiten CLI                           │
-│         (input, mouse, wheel, screenshot, run, ping)       │
+│  (input, mouse, wheel, screenshot, run, ping, custom)       │
 └─────────────────────┬───────────────────────────────────────┘
                       │ Unix socket (/tmp/autoebiten/autoebiten-{PID}.sock)
                       │ or $AUTOEBITEN_SOCKET
@@ -25,6 +25,7 @@ A utility package for Ebitengine that enables AI agents to automate games via CL
 │  │                autoebiten package                   │    │
 │  │  autoebiten.Update() → processes RPC commands       │    │
 │  │  autoebiten.Capture() → screenshot capture          │    │
+│  │  autoebiten.Register() → custom command handlers    │    │
 │  │  VirtualInput blends real + injected input          │    │
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
@@ -92,6 +93,8 @@ autoebiten keys
 autoebiten mouse_buttons
 autoebiten get_mouse_position
 autoebiten get_wheel_position
+autoebiten list_custom
+autoebiten custom getPlayerInfo
 ```
 
 ## JSON-RPC Protocol
@@ -127,6 +130,8 @@ autoebiten get_wheel_position
 | `exit` | Request game to exit |
 | `get_mouse_position` | Get injected mouse cursor position |
 | `get_wheel_position` | Get injected wheel position |
+| `list_custom_commands` | List registered custom commands |
+| `custom` | Execute a custom command |
 
 ### Error Codes
 
@@ -176,6 +181,8 @@ autoebiten/
 │   ├── cli/
 │   │   ├── commands.go          # CLI command executor
 │   │   └── writer.go            # Output formatting
+│   ├── custom/
+│   │   └── custom.go            # Custom command registry and CommandContext
 │   ├── input/
 │   │   ├── input.go             # VirtualInput, key/mouse state
 │   │   ├── keys.go              # Key constant mappings
@@ -192,19 +199,23 @@ autoebiten/
 │   │   └── parser_test.go       # Parser tests
 │   └── server/
 │       ├── server.go            # RPC request processing
+│       ├── custom.go            # Custom command execution
 │       ├── screenshot.go        # Screenshot capture
 │       └── tick.go              # Tick management
 ├── integrate/
 │   └── integrate.go             # Low-level integration API for Ebiten patch
 ├── examples/
-│   └── simple/
-│       └── main.go              # Example game
+│   ├── simple/
+│   │   └── main.go              # Example game
+│   └── custom_commands/
+│       └── main.go              # Custom commands example
 ├── e2e/
 │   └── e2e_test.go              # End-to-end tests
 ├── ebiten.patch                 # Patch for Ebiten v2.9.9 deep integration
 ├── autoebiten.go                # Mode configuration
 ├── autoebiten_default.go        # Default build (with RPC server)
 ├── autoebiten_release.go        # Release build (no-op stubs)
+├── custom_command.go            # Custom command API
 ├── go.mod
 ├── README.md
 └── SPEC.md

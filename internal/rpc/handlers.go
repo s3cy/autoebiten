@@ -15,53 +15,9 @@ type Handler interface {
 	HandleGetMousePosition() (any, error)
 	HandleGetWheelPosition() (any, error)
 	HandleExit()
+	HandleCustom(params *CustomParams) (any, error)
+	HandleListCustomCommands() (any, error)
 }
-
-// DefaultHandler is a default no-op handler for testing.
-type DefaultHandler struct{}
-
-// NewDefaultHandler creates a new DefaultHandler.
-func NewDefaultHandler() *DefaultHandler {
-	return &DefaultHandler{}
-}
-
-// HandleInput handles input command.
-func (h *DefaultHandler) HandleInput(params *InputParams) (any, error) {
-	return &InputResult{Success: true}, nil
-}
-
-// HandleMouse handles mouse command.
-func (h *DefaultHandler) HandleMouse(params *MouseParams) (any, error) {
-	return &MouseResult{Success: true}, nil
-}
-
-// HandleWheel handles wheel command.
-func (h *DefaultHandler) HandleWheel(params *WheelParams) (any, error) {
-	return &WheelResult{Success: true}, nil
-}
-
-// HandleScreenshot handles screenshot command.
-func (h *DefaultHandler) HandleScreenshot(params *ScreenshotParams) (any, error) {
-	return &ScreenshotResult{Success: true, Path: params.Output}, nil
-}
-
-// HandlePing handles ping command.
-func (h *DefaultHandler) HandlePing() (any, error) {
-	return &PingResult{OK: true}, nil
-}
-
-// HandleGetMousePosition handles get_mouse_position command.
-func (h *DefaultHandler) HandleGetMousePosition() (any, error) {
-	return &GetMousePositionResult{X: 0, Y: 0}, nil
-}
-
-// HandleGetWheelPosition handles get_wheel_position command.
-func (h *DefaultHandler) HandleGetWheelPosition() (any, error) {
-	return &GetWheelPositionResult{X: 0, Y: 0}, nil
-}
-
-// HandleExit handles exit command.
-func (h *DefaultHandler) HandleExit() {}
 
 // ProcessRequest processes an RPC request and returns the response.
 func ProcessRequest(req *Request, handler Handler) RPCResponse {
@@ -92,6 +48,26 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	case "exit":
 		handler.HandleExit()
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: map[string]bool{"success": true}}
+
+	case "custom":
+		var params CustomParams
+		if err := decodeParams(req.Req.Params, &params); err != nil {
+			return errorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
+		}
+		params.ID = req.Req.ID // Track request ID for response routing
+		params.Conn = req.Conn // Store connection for response
+		result, err := handler.HandleCustom(&params)
+		if err != nil {
+			return errorResponse(id, ErrInvalidParams, err.Error())
+		}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
+
+	case "list_custom_commands":
+		result, err := handler.HandleListCustomCommands()
+		if err != nil {
+			return errorResponse(id, ErrInvalidParams, err.Error())
+		}
+		return RPCResponse{JSONRPC: "2.0", ID: id, Result: result}
 
 	case "input":
 		var params InputParams

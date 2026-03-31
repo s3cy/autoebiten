@@ -656,6 +656,14 @@ func (h *testHandler) HandleGetWheelPosition() (any, error) {
 	return &rpc.GetWheelPositionResult{X: 0, Y: 0}, nil
 }
 
+func (h *testHandler) HandleCustom(params *rpc.CustomParams) (any, error) {
+	return &rpc.CustomResult{Response: "test response"}, nil
+}
+
+func (h *testHandler) HandleListCustomCommands() (any, error) {
+	return []string{"test1", "test2"}, nil
+}
+
 // setupTestSocketPair creates a connected socket pair for testing.
 // Uses TCP for reliability across different systems.
 func setupTestSocketPair(t *testing.T) (net.Listener, *testClient) {

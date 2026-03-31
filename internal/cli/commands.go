@@ -301,3 +301,74 @@ func (e *CommandExecutor) ListMouseButtonsCommand() error {
 	sort.Strings(buttons)
 	return e.writer.PrintJSON(buttons)
 }
+
+// ListCustomCommands lists all registered custom commands.
+func (e *CommandExecutor) ListCustomCommands() error {
+	req, err := rpc.BuildRequest("list_custom_commands", nil)
+	if err != nil {
+		return fmt.Errorf("failed to build request: %w", err)
+	}
+
+	resp, err := rpc.SendRequestSocket(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("rpc error: %s", resp.Error.Message)
+	}
+
+	names, ok := resp.Result.([]any)
+	if !ok {
+		return fmt.Errorf("invalid response format")
+	}
+
+	var commands []string
+	for _, name := range names {
+		if s, ok := name.(string); ok {
+			commands = append(commands, s)
+		}
+	}
+
+	if len(commands) == 0 {
+		e.writer.Success("no custom commands registered")
+		return nil
+	}
+
+	return e.writer.PrintJSON(commands)
+}
+
+// RunCustomCommand runs a custom command.
+func (e *CommandExecutor) RunCustomCommand(name, request string) error {
+	params := &rpc.CustomParams{
+		Name:    name,
+		Request: request,
+	}
+
+	req, err := rpc.BuildRequest("custom", params)
+	if err != nil {
+		return fmt.Errorf("failed to build request: %w", err)
+	}
+
+	resp, err := rpc.SendRequestSocket(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("rpc error: %s", resp.Error.Message)
+	}
+
+	result, ok := resp.Result.(map[string]any)
+	if !ok {
+		return fmt.Errorf("invalid response format")
+	}
+
+	response, ok := result["response"].(string)
+	if !ok {
+		return fmt.Errorf("invalid response format")
+	}
+
+	e.writer.Success(response)
+	return nil
+}

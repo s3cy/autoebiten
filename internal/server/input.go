@@ -34,20 +34,19 @@ func processInputResults() {
 
 	// Process inputs and send responses
 	for _, req := range queue {
-		if req.Conn != nil {
-			// Sync mode - send response via connection
-			rpcResp := rpc.RPCResponse{
-				JSONRPC: "2.0",
-				ID:      req.ID,
-			}
+		// Sync mode - send response via connection
+		rpcResp := rpc.RPCResponse{
+			JSONRPC: "2.0",
+			ID:      req.ID,
+			Result:  &rpc.InputResult{Success: true},
+		}
 
-			rpcResp.Result = &rpc.InputResult{Success: true}
-
+		go func() {
 			// Send response
 			if err := json.NewEncoder(req.Conn).Encode(rpcResp); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to send input response: %v\n", err)
 			}
-		}
+		}()
 	}
 }
 
