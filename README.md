@@ -29,6 +29,8 @@ go install github.com/s3cy/autoebiten/cmd/autoebiten@latest
 | Third-party libs | Compatible with libs that use Ebiten input | Incompatible with libs using raw Ebiten input |
 | Implementation | Hack - relies on Ebiten internals | Clean - direct API integration |
 
+> ⚠️ Don't mix Patch and Library methods. If Ebiten is patched, calling autoebiten.Update(), autoebiten.Capture(), and any input related methods will panic. With the Patch method, these calls happen automatically inside Ebiten.
+
 ## Quick Start (Patch Method)
 
 No code changes required! Patch Ebiten to add automation capabilities.

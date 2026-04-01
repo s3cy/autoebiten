@@ -19,18 +19,21 @@ func panicIfPatched() {
 }
 
 // Capture processes screenshots for injection.
+// Panic when using the patch integration method.
 func Capture(screen image.Image) {
 	panicIfPatched()
 	integrate.Capture(screen)
 }
 
 // Update runs the internal update loop.
+// Panic when using the patch integration method.
 func Update() bool {
 	panicIfPatched()
 	return integrate.Update()
 }
 
-// IsKeyPressed returns whether the key is pressed, respecting the current mode.
+// IsKeyPressed wraps ebiten.IsKeyPressed, respecting the current mode.
+// Panic when using the patch integration method.
 func IsKeyPressed(key ebiten.Key) bool {
 	panicIfPatched()
 	switch currentMode {
@@ -47,7 +50,8 @@ func IsKeyPressed(key ebiten.Key) bool {
 	return false
 }
 
-// CursorPosition returns the cursor position, respecting the current mode.
+// CursorPosition wraps ebiten.CursorPosition, respecting the current mode.
+// Panic when using the patch integration method.
 func CursorPosition() (x, y int) {
 	panicIfPatched()
 	switch currentMode {
@@ -65,7 +69,8 @@ func CursorPosition() (x, y int) {
 	return 0, 0
 }
 
-// Wheel returns the mouse wheel scroll amount, respecting the current mode.
+// Wheel wraps ebiten.Wheel, respecting the current mode.
+// Panic when using the patch integration method.
 func Wheel() (x, y float64) {
 	panicIfPatched()
 	switch currentMode {
@@ -83,8 +88,8 @@ func Wheel() (x, y float64) {
 	return 0, 0
 }
 
-// IsMouseButtonPressed returns whether the mouse button is pressed,
-// respecting the current mode.
+// IsMouseButtonPressed wraps ebiten.IsMouseButtonPressed, respecting the current mode.
+// Panic when using the patch integration method.
 func IsMouseButtonPressed(button ebiten.MouseButton) bool {
 	panicIfPatched()
 	switch currentMode {
@@ -101,6 +106,8 @@ func IsMouseButtonPressed(button ebiten.MouseButton) bool {
 	return false
 }
 
+// IsKeyJustPressed wraps inpututil.IsKeyJustPressed, respecting the current mode.
+// Panic when using the patch integration method.
 func IsKeyJustPressed(key ebiten.Key) bool {
 	panicIfPatched()
 	switch currentMode {
@@ -117,6 +124,8 @@ func IsKeyJustPressed(key ebiten.Key) bool {
 	return false
 }
 
+// IsKeyJustReleased wraps inpututil.IsKeyJustReleased, respecting the current mode.
+// Panic when using the patch integration method.
 func IsKeyJustReleased(key ebiten.Key) bool {
 	panicIfPatched()
 	switch currentMode {
@@ -133,6 +142,8 @@ func IsKeyJustReleased(key ebiten.Key) bool {
 	return false
 }
 
+// KeyPressDuration wraps inpututil.KeyPressDuration, respecting the current mode.
+// Panic when using the patch integration method.
 func KeyPressDuration(key ebiten.Key) int {
 	panicIfPatched()
 	switch currentMode {
@@ -150,6 +161,8 @@ func KeyPressDuration(key ebiten.Key) int {
 	return 0
 }
 
+// IsMouseButtonJustPressed wraps inpututil.IsMouseButtonJustPressed, respecting the current mode.
+// Panic when using the patch integration method.
 func IsMouseButtonJustPressed(button ebiten.MouseButton) bool {
 	panicIfPatched()
 	switch currentMode {
@@ -166,6 +179,8 @@ func IsMouseButtonJustPressed(button ebiten.MouseButton) bool {
 	return false
 }
 
+// IsMouseButtonJustReleased wraps inpututil.IsMouseButtonJustReleased, respecting the current mode.
+// Panic when using the patch integration method.
 func IsMouseButtonJustReleased(button ebiten.MouseButton) bool {
 	panicIfPatched()
 	switch currentMode {
@@ -182,6 +197,8 @@ func IsMouseButtonJustReleased(button ebiten.MouseButton) bool {
 	return false
 }
 
+// MouseButtonPressDuration wraps inpututil.MouseButtonPressDuration, respecting the current mode.
+// Panic when using the patch integration method.
 func MouseButtonPressDuration(button ebiten.MouseButton) int {
 	panicIfPatched()
 	switch currentMode {
