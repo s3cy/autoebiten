@@ -20,6 +20,15 @@ go install github.com/s3cy/autoebiten/cmd/autoebiten@latest
    └─→ Use the Library method.
 ```
 
+**Trade-offs:**
+
+| Aspect | Patch | Library |
+|--------|-------|---------|
+| Code changes | None required | Must use `autoebiten.IsKeyPressed()` etc. |
+| Ebiten version | Locked to v2.9.9 (may need custom patch for other versions) | Works with any version |
+| Third-party libs | Compatible with libs that use Ebiten input | Incompatible with libs using raw Ebiten input |
+| Implementation | Hack - relies on Ebiten internals | Clean - direct API integration |
+
 ## Quick Start (Patch Method)
 
 No code changes required! Patch Ebiten to add automation capabilities.
@@ -48,6 +57,8 @@ go build ./cmd/my-game
 ```
 
 ### 4. Control it via CLI
+
+**Note on ticks:** 1 tick = 1 `Update()` call. Ebiten runs at 60 ticks per second (TPS) by default. This is **not** the same as FPS—your game can render at 120 FPS on a high refresh monitor while still running at 60 TPS. The default `--duration_ticks 6` means a key is held for 6 Update() calls (~100ms at 60 TPS). See [TPS vs FPS](https://github.com/tinne26/tps-vs-fps) for details.
 
 ```bash
 # Press a key
@@ -94,8 +105,9 @@ autoebiten mouse_buttons
 ### Patch Limitations
 
 - **Version dependent:** The patch relies on Ebiten's internal implementation details and has only been tested with Ebiten v2.9.9. It may not apply cleanly to other versions.
+- **Custom patches:** To use a different Ebiten version, you may need to write your own patch by adapting the changes in `ebiten.patch` to your target version's source code.
 - **Maintenance:** You will need to re-apply the patch when updating Ebiten versions.
-- **Compatibility:** Patch may require adjustment for significant Ebiten version changes.
+- **Release builds:** To ship your game to players without automation capabilities, simply remove the `replace` directive from your `go.mod` and use the official Ebiten module.
 
 ## Library Method
 
@@ -230,9 +242,21 @@ autoebiten schema > autoebiten-schema.json
 
 The schema defines all available commands, their fields, and valid values. Use it with editors that support JSON Schema for intelligent autocomplete and inline validation.
 
+### Script Error Handling
+
+Scripts execute commands sequentially. **If any command fails, script execution stops immediately** and the error is returned. There is no continue-on-error or try/catch mechanism—fix the issue and re-run the script.
+
+## Platform Support
+
+- **macOS**: Fully supported
+- **Linux**: Fully supported
+- **Windows**: Not supported (uses Unix domain sockets)
+
 ## Multiple Game Instances
 
 Each game instance uses a PID-based socket at `/tmp/autoebiten/autoebiten-{PID}.sock`.
+
+**Auto-detection:** If `--pid` is not provided, autoebiten automatically detects a running game. If only one game is running, it uses that. If multiple games are running, it lists them and exits with an error—you must specify which one with `--pid`.
 
 Target a specific game:
 
