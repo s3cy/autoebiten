@@ -104,6 +104,7 @@ autoebiten mouse_buttons
 
 ### Patch Limitations
 
+- **What it modifies:** The patch wraps Ebiten's public input API functions (`IsKeyPressed`, `CursorPosition`, `Wheel`, etc.) to check for injected input before falling back to real OS input. It does not modify Ebiten's internal `inputstate` package.
 - **Version dependent:** The patch relies on Ebiten's internal implementation details and has only been tested with Ebiten v2.9.9. It may not apply cleanly to other versions.
 - **Custom patches:** To use a different Ebiten version, you may need to write your own patch by adapting the changes in `ebiten.patch` to your target version's source code.
 - **Maintenance:** You will need to re-apply the patch when updating Ebiten versions.
@@ -161,8 +162,10 @@ The library operates in different input modes to control how real and injected i
 | Mode | Description |
 |------|-------------|
 | `InjectionOnly` | Only CLI-injected input is recognized |
-| `InjectionFallback` | Injected input takes priority; falls back to real input (default) |
+| `InjectionFallback` | Per-key fallback: if a key/button has injected state, return it; otherwise check real input (default) |
 | `Passthrough` | All input passes through to ebiten directly; no injection |
+
+**Note on `InjectionFallback`:** Each input is checked independently. For example, if you inject 'KeyS' via CLI while physically holding 'KeyW' on your keyboard, `IsKeyPressed(KeyS)` returns the injected state and `IsKeyPressed(KeyW)` returns the real keyboard state. They do not interfere with each other.
 
 ## Custom Commands
 
