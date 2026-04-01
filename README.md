@@ -2,40 +2,52 @@
 
 CLI tool for automating Ebitengine games via input injection, screenshots, scripted sequences, and custom commands.
 
+Offers two integration methods: **Patch** (zero-code changes for existing games using Ebiten's native input) and **Library** (direct API integration for new projects).
+
 ## Installation
 
 ```bash
 go install github.com/s3cy/autoebiten/cmd/autoebiten@latest
 ```
 
-## Quick Start
+## Which Integration Method?
 
-### 1. Add the library to your game
-
-```go
-import "github.com/s3cy/autoebiten"
-
-func (g *Game) Update() error {
-    if !autoebiten.Update() {
-        return errors.New("exit requested")
-    }
-    // Your update logic
-    return nil
-}
-
-func (g *Game) Draw(screen *ebiten.Image) {
-    // Your draw logic
-    autoebiten.Capture(screen) // Call at the end
-}
+```
+├─ Already using ebiten's native input functions (ebiten.IsKeyPressed, etc.)?
+│  └─→ YES: Use the Patch method. No code changes required!
+│
+└── Writing a new game or willing to modify input handling code?
+   └─→ Use the Library method.
 ```
 
-### 2. Run your game
+## Quick Start (Patch Method)
+
+No code changes required! Patch Ebiten to add automation capabilities.
+
+### 1. Clone and patch Ebiten
 
 ```bash
+git clone https://github.com/hajimehoshi/ebiten.git /path/to/ebiten
+cd /path/to/ebiten
+git checkout v2.9.9  # Ensure correct version
+git apply /path/to/autoebiten/ebiten.patch
+go mod tidy
+```
+
+### 2. Update your game's go.mod
+
+```go
+replace github.com/hajimehoshi/ebiten/v2 => /path/to/local/ebiten
+```
+
+### 3. Build and run your game normally
+
+```bash
+go build ./cmd/my-game
 ./my-game
 ```
 
-### 3. Control it via CLI
+### 4. Control it via CLI
 
 ```bash
 # Press a key
@@ -48,7 +60,7 @@ autoebiten input --key KeySpace --action hold
 autoebiten mouse --action position -x 100 -y 200
 autoebiten mouse --action press --button MouseButtonLeft
 autoebiten mouse --button MouseButtonLeft  # defaults to hold action
-autoebiten mouse -x 100 -y 200 --button MouseButtonLeft  # move to positen, then trigger the button
+autoebiten mouse -x 100 -y 200 --button MouseButtonLeft  # move to position, then trigger the button
 
 # Scroll wheel
 autoebiten wheel -y -3
@@ -78,6 +90,67 @@ autoebiten keys
 # List mouse buttons
 autoebiten mouse_buttons
 ```
+
+### Patch Limitations
+
+- **Version dependent:** The patch relies on Ebiten's internal implementation details and has only been tested with Ebiten v2.9.9. It may not apply cleanly to other versions.
+- **Maintenance:** You will need to re-apply the patch when updating Ebiten versions.
+- **Compatibility:** Patch may require adjustment for significant Ebiten version changes.
+
+## Library Method
+
+For new games or when you prefer explicit integration, use the library directly.
+
+### 1. Add the library to your game
+
+```go
+import "github.com/s3cy/autoebiten"
+
+func (g *Game) Update() error {
+    if !autoebiten.Update() {
+        return errors.New("exit requested")
+    }
+    // Your update logic
+    return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+    // Your draw logic
+    autoebiten.Capture(screen) // Call at the end
+}
+```
+
+**Note:** When using the library integration method, you need to use `autoebiten.IsKeyPressed()` and other wrapper functions instead of Ebiten's native functions.
+
+### 2. Build and run
+
+```bash
+# Development (default)
+go build ./cmd/my-game
+./my-game
+
+# Release build (no CLI automation)
+go build -tags release ./cmd/my-game
+```
+
+### 3. Control via CLI
+
+Same CLI commands as the Patch method above.
+
+### Build Tags
+
+- **Default** (`go run` or `go build`): Full RPC server enabled. Your game listens for CLI commands via Unix socket.
+- **Release** (`go build -tags release`): RPC server disabled. All functions are no-ops that delegate directly to ebiten. Use this when shipping your game to players.
+
+### Input Modes
+
+The library operates in different input modes to control how real and injected inputs are combined:
+
+| Mode | Description |
+|------|-------------|
+| `InjectionOnly` | Only CLI-injected input is recognized |
+| `InjectionFallback` | Injected input takes priority; falls back to real input (default) |
+| `Passthrough` | All input passes through to ebiten directly; no injection |
 
 ## Custom Commands
 
@@ -202,64 +275,6 @@ autoebiten.Register(name string, handler func(CommandContext)) // Register a cus
 autoebiten.Unregister(name string) bool                        // Remove a custom command
 autoebiten.ListCustomCommands() []string                       // List registered commands
 ```
-
-### Input Modes
-
-The library operates in different input modes to control how real and injected inputs are combined:
-
-| Mode | Description |
-|------|-------------|
-| `InjectionOnly` | Only CLI-injected input is recognized |
-| `InjectionFallback` | Injected input takes priority; falls back to real input (default) |
-| `Passthrough` | All input passes through to ebiten directly; no injection |
-
-### Build Tags
-
-autoebiten uses build tags to control which implementation is included:
-
-- **Default** (`go run` or `go build`): Full RPC server enabled. Your game listens for CLI commands via Unix socket.
-- **Release** (`go build -tags release`): RPC server disabled. All functions are no-ops that delegate directly to ebiten. Use this when shipping your game to players.
-
-```bash
-# Development (default)
-go build ./cmd/autoebiten
-
-# Release build (no CLI automation)
-go build -tags release ./cmd/autoebiten
-```
-
-**Note:** When using the library integration method, you need to use `autoebiten.IsKeyPressed()` and other wrapper functions instead of Ebiten's native functions. This may require changes if your game already uses Ebiten's input functions directly.
-
-## Deeper Integration (Patching Ebiten)
-
-For games that use Ebiten's native input functions directly without modification, autoebiten can be integrated at the Ebiten engine level via a patch. This approach requires no code changes to your game.
-
-### Setup Instructions
-
-1. Clone the Ebiten repository to a local directory:
-```bash
-git clone https://github.com/hajimehoshi/ebiten.git /path/to/ebiten
-cd /path/to/ebiten
-git checkout v2.9.9  # Ensure correct version
-```
-
-2. Apply the autoebiten patch:
-```bash
-git apply /path/to/autoebiten/ebiten.patch
-```
-
-3. In your game's `go.mod`, add a replace directive to use the local Ebiten:
-```go
-replace github.com/hajimehoshi/ebiten/v2 => /path/to/ebiten
-```
-
-4. Build and run your game normally - no code changes required!
-
-### Limitations
-
-- **Version dependent:** The patch relies on Ebiten's internal implementation details and has only been tested with Ebiten v2.9.9. It may not apply cleanly to other versions.
-- **Maintenance:** You will need to re-apply the patch when updating Ebiten versions.
-- **Compatibility:** Patch may require adjustment for significant Ebiten version changes.
 
 ## License
 

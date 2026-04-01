@@ -57,7 +57,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 ```
 
-### Alternative: Deep Integration via Ebiten Patch
+### Deep Integration via Ebiten Patch
 
 For games that cannot modify input calls, autoebiten provides a patch for Ebiten itself. The patch modifies Ebiten's internal `gameforui.go`, `input.go`, and `inpututil/inpututil.go` to call into the `integrate` package:
 

@@ -10,6 +10,9 @@ import (
 type Key = input.Key
 type MouseButton = input.MouseButton
 
+// IsPatched indicates whether the game uses a patched version of Ebiten.
+var IsPatched = true
+
 // Capture processes screenshots for injection.
 func Capture(screen image.Image) {
 	server.ProcessScreenshots(screen)

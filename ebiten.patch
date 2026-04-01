@@ -164,3 +164,24 @@ index a4e259f57..738d6c003 100644
  	return int(inputstate.Get().MouseButtonPressDuration(ui.MouseButton(button)))
  }
  
+diff --git a/run.go b/run.go
+index 8483c6279..007b22ae0 100644
+--- a/run.go
++++ b/run.go
+@@ -21,6 +21,8 @@ import (
+ 	"io/fs"
+ 	"sync/atomic"
+ 
++	"github.com/s3cy/autoebiten/integrate"
++
+ 	"github.com/hajimehoshi/ebiten/v2/internal/clock"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver"
+ 	"github.com/hajimehoshi/ebiten/v2/internal/inputstate"
+@@ -348,6 +350,7 @@ type RunGameOptions struct {
+ // Don't call RunGame or RunGameWithOptions twice or more in one process.
+ func RunGameWithOptions(game Game, options *RunGameOptions) error {
+ 	defer isRunGameEnded_.Store(true)
++	integrate.IsPatched = true
+ 
+ 	initializeWindowPositionIfNeeded(WindowSize())
+ 

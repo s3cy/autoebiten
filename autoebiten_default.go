@@ -11,18 +11,28 @@ import (
 	"github.com/s3cy/autoebiten/integrate"
 )
 
+func panicIfPatched() {
+	if integrate.IsPatched {
+		panic("This function should NOT be called when Ebiten is patched." +
+			"The patch handles this automatically. Remove it from your game.")
+	}
+}
+
 // Capture processes screenshots for injection.
 func Capture(screen image.Image) {
+	panicIfPatched()
 	integrate.Capture(screen)
 }
 
 // Update runs the internal update loop.
 func Update() bool {
+	panicIfPatched()
 	return integrate.Update()
 }
 
 // IsKeyPressed returns whether the key is pressed, respecting the current mode.
 func IsKeyPressed(key ebiten.Key) bool {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.IsKeyPressed(integrate.Key(key))
@@ -39,6 +49,7 @@ func IsKeyPressed(key ebiten.Key) bool {
 
 // CursorPosition returns the cursor position, respecting the current mode.
 func CursorPosition() (x, y int) {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.CursorPosition()
@@ -56,6 +67,7 @@ func CursorPosition() (x, y int) {
 
 // Wheel returns the mouse wheel scroll amount, respecting the current mode.
 func Wheel() (x, y float64) {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.Wheel()
@@ -74,6 +86,7 @@ func Wheel() (x, y float64) {
 // IsMouseButtonPressed returns whether the mouse button is pressed,
 // respecting the current mode.
 func IsMouseButtonPressed(button ebiten.MouseButton) bool {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.IsMouseButtonPressed(integrate.MouseButton(button))
@@ -89,6 +102,7 @@ func IsMouseButtonPressed(button ebiten.MouseButton) bool {
 }
 
 func IsKeyJustPressed(key ebiten.Key) bool {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.IsKeyJustPressed(integrate.Key(key))
@@ -104,6 +118,7 @@ func IsKeyJustPressed(key ebiten.Key) bool {
 }
 
 func IsKeyJustReleased(key ebiten.Key) bool {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.IsKeyJustReleased(integrate.Key(key))
@@ -119,6 +134,7 @@ func IsKeyJustReleased(key ebiten.Key) bool {
 }
 
 func KeyPressDuration(key ebiten.Key) int {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.KeyPressDuration(integrate.Key(key))
@@ -135,6 +151,7 @@ func KeyPressDuration(key ebiten.Key) int {
 }
 
 func IsMouseButtonJustPressed(button ebiten.MouseButton) bool {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.IsMouseButtonJustPressed(integrate.MouseButton(button))
@@ -150,6 +167,7 @@ func IsMouseButtonJustPressed(button ebiten.MouseButton) bool {
 }
 
 func IsMouseButtonJustReleased(button ebiten.MouseButton) bool {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.IsMouseButtonJustReleased(integrate.MouseButton(button))
@@ -165,6 +183,7 @@ func IsMouseButtonJustReleased(button ebiten.MouseButton) bool {
 }
 
 func MouseButtonPressDuration(button ebiten.MouseButton) int {
+	panicIfPatched()
 	switch currentMode {
 	case InjectionOnly:
 		return integrate.MouseButtonPressDuration(integrate.MouseButton(button))
