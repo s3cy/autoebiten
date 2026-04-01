@@ -118,7 +118,8 @@ type ScreenshotResult struct {
 
 // PingResult represents ping command result.
 type PingResult struct {
-	OK bool `json:"ok"`
+	OK      bool   `json:"ok"`
+	Version string `json:"version"` // Game library version
 }
 
 // GetMousePositionResult represents get_mouse_position command result.

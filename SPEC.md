@@ -95,6 +95,7 @@ autoebiten get_mouse_position
 autoebiten get_wheel_position
 autoebiten list_custom
 autoebiten custom getPlayerInfo
+autoebiten version
 ```
 
 ## JSON-RPC Protocol
@@ -127,6 +128,7 @@ autoebiten custom getPlayerInfo
 | `wheel` | Inject mouse wheel movement |
 | `screenshot` | Capture game window to file |
 | `ping` | Health check |
+| `version` | Get CLI and game library versions |
 | `exit` | Request game to exit |
 | `get_mouse_position` | Get injected mouse cursor position |
 | `get_wheel_position` | Get injected wheel position |
@@ -169,57 +171,6 @@ autoebiten custom getPlayerInfo
 | `screenshot` | `output` | Capture screenshot |
 | `delay` | `ms` | Wait in milliseconds |
 | `repeat` | `times`, `commands` | Repeat block N times |
-
-## File Structure
-
-```
-autoebiten/
-├── cmd/
-│   └── autoebiten/
-│       └── main.go              # CLI entry point
-├── internal/
-│   ├── cli/
-│   │   ├── commands.go          # CLI command executor
-│   │   └── writer.go            # Output formatting
-│   ├── custom/
-│   │   └── custom.go            # Custom command registry and CommandContext
-│   ├── input/
-│   │   ├── input.go             # VirtualInput, key/mouse state
-│   │   ├── keys.go              # Key constant mappings
-│   │   ├── mouse_buttons.go     # Mouse button constants
-│   │   └── input_time.go        # Tick-based input timing
-│   ├── rpc/
-│   │   ├── handlers.go          # Command handlers registry
-│   │   ├── messages.go          # RPC request/response types
-│   │   └── socket.go            # Unix socket server and client
-│   ├── script/
-│   │   ├── ast.go               # Script AST nodes
-│   │   ├── parser.go            # JSON script parser
-│   │   ├── executor.go          # Script execution engine
-│   │   └── parser_test.go       # Parser tests
-│   └── server/
-│       ├── server.go            # RPC request processing
-│       ├── custom.go            # Custom command execution
-│       ├── screenshot.go        # Screenshot capture
-│       └── tick.go              # Tick management
-├── integrate/
-│   └── integrate.go             # Low-level integration API for Ebiten patch
-├── examples/
-│   ├── simple/
-│   │   └── main.go              # Example game
-│   └── custom_commands/
-│       └── main.go              # Custom commands example
-├── e2e/
-│   └── e2e_test.go              # End-to-end tests
-├── ebiten.patch                 # Patch for Ebiten v2.9.9 deep integration
-├── autoebiten.go                # Mode configuration
-├── autoebiten_default.go        # Default build (with RPC server)
-├── autoebiten_release.go        # Release build (no-op stubs)
-├── custom_command.go            # Custom command API
-├── go.mod
-├── README.md
-└── SPEC.md
-```
 
 ### Input Modes
 

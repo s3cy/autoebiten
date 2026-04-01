@@ -159,6 +159,22 @@ Use --script for file path or --inline for JSON string.`,
 		RunE:  runPingCommand,
 	}
 
+	// version command
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print version information",
+		Long: `Print version information for the CLI and connected game.
+
+The CLI version is detected automatically from the module version.
+If a game is running, also displays the game library version.`,
+		RunE: runVersionCommand,
+	}
+	versionCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// ignore PID detection error for version command to allow checking version without a running game
+		persistentPreRunRootCommand(cmd, args)
+		return nil
+	}
+
 	// keys command
 	keysCmd := &cobra.Command{
 		Use:   "keys",
@@ -245,6 +261,7 @@ The handler receives a CommandContext containing the request and a Respond metho
 	rootCmd.AddCommand(screenshotCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(pingCmd)
+	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(keysCmd)
 	rootCmd.AddCommand(mouseButtonsCmd)
 	rootCmd.AddCommand(getMousePositionCmd)
@@ -360,4 +377,9 @@ func runCustomCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	return executor.RunCustomCommand(name, request)
+}
+
+func runVersionCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.RunVersionCommand()
 }

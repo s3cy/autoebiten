@@ -11,6 +11,7 @@ import (
 
 	"github.com/s3cy/autoebiten/internal/input"
 	"github.com/s3cy/autoebiten/internal/rpc"
+	"github.com/s3cy/autoebiten/internal/version"
 )
 
 var (
@@ -149,7 +150,7 @@ func (h *serverHandler) HandleScreenshot(params *rpc.ScreenshotParams) (any, err
 
 // HandlePing handles ping command.
 func (h *serverHandler) HandlePing() (any, error) {
-	return &rpc.PingResult{OK: true}, nil
+	return &rpc.PingResult{OK: true, Version: version.VersionForLibrary()}, nil
 }
 
 // HandleGetMousePosition handles get_mouse_position command.

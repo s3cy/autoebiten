@@ -8,6 +8,7 @@ import (
 	"github.com/s3cy/autoebiten/internal/input"
 	"github.com/s3cy/autoebiten/internal/rpc"
 	"github.com/s3cy/autoebiten/internal/script"
+	"github.com/s3cy/autoebiten/internal/version"
 )
 
 // EnsureTargetPID auto-detects the game PID if not already set.
@@ -371,5 +372,37 @@ func (e *CommandExecutor) RunCustomCommand(name, request string) error {
 	}
 
 	e.writer.Success(result.Response)
+	return nil
+}
+
+// RunVersionCommand runs the version command.
+// Shows CLI version and attempts to get game version via ping.
+func (e *CommandExecutor) RunVersionCommand() error {
+	cliVersion := version.VersionForCLI()
+	fmt.Printf("CLI version:    %s\n", cliVersion)
+
+	// Try to get game version via ping (optional - don't fail if no game)
+	req, err := rpc.BuildRequest("ping", nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := rpc.SendRequestSocket(req)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Printf("Game version:   not connected\n")
+		return nil
+	}
+
+	if resp.Error != nil {
+		return err
+	}
+
+	var result rpc.PingResult
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		return err
+	}
+
+	fmt.Printf("Game version:   %s\n", result.Version)
 	return nil
 }

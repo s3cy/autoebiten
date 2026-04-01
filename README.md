@@ -95,6 +95,9 @@ autoebiten schema > autoebiten-schema.json
 # Check connection
 autoebiten ping
 
+# Print version information
+autoebiten version
+
 # List available keys
 autoebiten keys
 
