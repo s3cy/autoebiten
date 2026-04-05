@@ -277,6 +277,10 @@ The handler receives a CommandContext containing the request and a Respond metho
 }
 
 func persistentPreRunRootCommand(cmd *cobra.Command, args []string) error {
+	// Skip PID detection for help command
+	if cmd.Name() == "help" || (len(args) > 0 && args[0] == "--help") {
+		return nil
+	}
 	if pidFlag == 0 {
 		if err := cli.EnsureTargetPID(); err != nil {
 			return err
