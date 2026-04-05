@@ -101,6 +101,70 @@ func TestParseCustom(t *testing.T) {
 	}
 }
 
+func TestParseComments(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         string
+		expectedCmds  int
+	}{
+		{
+			name: "single-line comments",
+			expectedCmds: 2,
+			input: `{
+				// This is a version comment
+				"version": "1.0",
+				"commands": [
+					// Press the key
+					{"input": {"action": "press", "key": "KeyA"}},
+					{"delay": {"ms": 100}} // wait a bit
+				]
+			}`,
+		},
+		{
+			name: "multi-line comments",
+			expectedCmds: 1,
+			input: `{
+				/* This is a
+				   multi-line comment */
+				"version": "1.0",
+				"commands": [
+					{"input": {"action": "press", "key": "KeyA"}}
+				]
+			}`,
+		},
+		{
+			name: "mixed comments",
+			expectedCmds: 1,
+			input: `// Header comment
+			{
+				/* version info */
+				"version": "1.0", // default version
+				"commands": [
+					{"input": {"action": "press", "key": "KeyA"}}
+				]
+			}
+			// Footer comment`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			script, err := ParseBytes([]byte(tt.input))
+			if err != nil {
+				t.Fatalf("Failed to parse: %v", err)
+			}
+
+			if script.Version != "1.0" {
+				t.Errorf("Expected version 1.0, got %s", script.Version)
+			}
+
+			if len(script.Commands) != tt.expectedCmds {
+				t.Errorf("Expected %d commands, got %d", tt.expectedCmds, len(script.Commands))
+			}
+		})
+	}
+}
+
 func TestParseInvalid(t *testing.T) {
 	tests := []struct {
 		name  string

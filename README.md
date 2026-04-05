@@ -212,14 +212,16 @@ See [examples/custom_commands](examples/custom_commands/main.go) for a complete 
 
 ## Scripted Automation
 
-Create a JSON script for complex sequences:
+Create a JSON script for complex sequences. Script files support **comments** (`//` and `/* */`):
 
 ```json
 {
   "version": "1.0",
+  // Move forward and wait
   "commands": [
     {"input": {"action": "press", "key": "KeyW"}},
     {"delay": {"ms": 100}},
+    /* Repeat this block 3 times */
     {"repeat": {"times": 3, "commands": [
       {"input": {"action": "press", "key": "KeyA"}},
       {"delay": {"ms": 200}}
