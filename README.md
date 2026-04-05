@@ -310,6 +310,40 @@ autoebiten.Unregister(name string) bool                        // Remove a custo
 autoebiten.ListCustomCommands() []string                       // List registered commands
 ```
 
+## Testing with testkit
+
+The `testkit` package provides a Go testing framework for autoebiten games. It supports two testing modes:
+
+- **Black-Box Mode** (`Game`): Launches game in separate process, controls via RPC
+- **White-Box Mode** (`Mock`): Tests game logic in same process with mocked inputs
+
+See the [testkit package documentation](testkit/doc.go) for details.
+
+### Quick Example
+
+```go
+import "github.com/s3cy/autoebiten/testkit"
+
+// Black-box test
+func TestPlayerMovement(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    game.HoldKey(ebiten.KeyD, 10)
+    x, _ := game.StateQuery("Player.X")
+    assert.Equal(t, 10, x)
+}
+
+// White-box test
+func TestPlayerTakesDamage(t *testing.T) {
+    g := NewGame()
+    mock := testkit.NewMock(t)
+    g.EnemyAttacks()
+    mock.Tick(g)
+    assert.Equal(t, 90, g.Player.Health)
+}
+```
+
 ## License
 
 MIT

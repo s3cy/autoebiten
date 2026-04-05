@@ -212,3 +212,75 @@ require (
 - Unit tests for script parser, executor, RPC handlers (`internal/script/parser_test.go`)
 - End-to-end tests for RPC communication, CLI commands, and script execution (`e2e/e2e_test.go`)
 - Integration tests require a running game process
+
+## Testkit Package
+
+The `testkit` package provides a Go testing framework for Ebiten games that use autoebiten.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      testkit Package                         │
+├───────────────────────────┬─────────────────────────────────┤
+│      Black-Box (Game)     │       White-Box (Mock)          │
+│  ┌─────────────────────┐  │  ┌─────────────────────────┐    │
+│  │ Separate Process    │  │  │ Same Process            │    │
+│  │ (game binary)       │  │  │                         │    │
+│  │         │           │  │  │ ┌─────────────────┐     │    │
+│  │         ▼           │  │  │ │ Game struct     │     │    │
+│  │ ┌─────────────┐     │  │  │ │ (user code)     │     │    │
+│  │ │ RPC Server  │     │  │  │ └────────┬────────┘     │    │
+│  │ │ (in game)   │◄────┼──┼──┤          │              │    │
+│  │ └─────────────┘     │  │  │          ▼              │    │
+│  │         ▲           │  │  │ ┌─────────────────┐     │    │
+│  │         │           │  │  │ │ Mock RPC Client │     │    │
+│  │ ┌─────────────┐     │  │  │ │ (simulates CLI) │     │    │
+│  │ │ RPC Client  │     │  │  │ └─────────────────┘     │    │
+│  │ │ (in test)   │     │  │  │                         │    │
+│  │ └─────────────┘     │  │  └─────────────────────────┘    │
+│  └─────────────────────┘  │                                 │
+└───────────────────────────┴─────────────────────────────────┘
+```
+
+### Black-Box Mode (Game)
+
+Launches a game binary in a separate process and controls it via RPC.
+
+```go
+func Launch(t *testing.T, binary string, opts ...Option) (*Game, error)
+```
+
+Key capabilities:
+- Input injection (`PressKey`, `HoldKey`, `MoveMouse`, etc.)
+- Screenshots (`Screenshot`, `ScreenshotToFile`)
+- State queries via `StateExporter` (`StateQuery`)
+- Custom command execution (`RunCustom`)
+- Lifecycle management (`Shutdown`, `Ping`, `WaitFor`)
+
+### White-Box Mode (Mock)
+
+Simulates autoebiten's RPC server for testing game logic in-process.
+
+```go
+func NewMock(t *testing.T) *Mock
+```
+
+Key capabilities:
+- Input injection (`InjectKeyPress`, `InjectMousePosition`, etc.)
+- Tick execution (`Tick`, `Ticks`)
+- Custom command registration (`RegisterCustom`)
+
+### State Exporter
+
+Reflection-based state exposure for black-box testing:
+
+```go
+func StateExporter(v interface{}) func(autoebiten.CommandContext)
+```
+
+Used to expose game state for inspection during tests. Supports dot-notation paths like `Player.X`, `Inventory.0.Name`, `Skills.Sword`.
+
+### Documentation
+
+See the [testkit package documentation](testkit/doc.go) for complete API reference and usage examples.
