@@ -105,14 +105,6 @@ func getSimpleTestGameBinary() string {
 	candidates := []string{
 		"./internal/testgames/simple/simple",
 		"./internal/testgames/simple/main",
-		"../testkit/internal/testgames/simple/simple",
-	}
-
-	// Add .exe extension on Windows
-	if os.PathSeparator == '\\' {
-		for i := range candidates {
-			candidates[i] += ".exe"
-		}
 	}
 
 	for _, candidate := range candidates {

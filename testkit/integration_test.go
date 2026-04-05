@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/s3cy/autoebiten/internal/input"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // getStatefulTestGameBinary returns the path to the stateful test game binary.
@@ -14,11 +14,6 @@ func getStatefulTestGameBinary() string {
 	candidates := []string{
 		"./internal/testgames/stateful/stateful",
 		"./internal/testgames/stateful/main",
-	}
-	if os.PathSeparator == '\\' {
-		for i := range candidates {
-			candidates[i] += ".exe"
-		}
 	}
 	for _, candidate := range candidates {
 		if _, err := os.Stat(candidate); err == nil {
@@ -33,11 +28,6 @@ func getCustomTestGameBinary() string {
 	candidates := []string{
 		"./internal/testgames/custom/custom",
 		"./internal/testgames/custom/main",
-	}
-	if os.PathSeparator == '\\' {
-		for i := range candidates {
-			candidates[i] += ".exe"
-		}
 	}
 	for _, candidate := range candidates {
 		if _, err := os.Stat(candidate); err == nil {
@@ -66,13 +56,13 @@ func TestE2EPlayerMovement(t *testing.T) {
 	}
 
 	// Get initial player position
-	initialX, err := game.StateQuery("Player.X")
+	initialX, err := game.StateQuery("testkit.state", "Player.X")
 	if err != nil {
 		t.Fatalf("failed to query Player.X: %v", err)
 	}
 
 	// Press right arrow key for 10 ticks
-	if err := game.HoldKey(input.KeyArrowRight, 10); err != nil {
+	if err := game.HoldKey(ebiten.KeyArrowRight, 10); err != nil {
 		t.Fatalf("failed to hold key: %v", err)
 	}
 
@@ -80,7 +70,7 @@ func TestE2EPlayerMovement(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Get new player position
-	newX, err := game.StateQuery("Player.X")
+	newX, err := game.StateQuery("testkit.state", "Player.X")
 	if err != nil {
 		t.Fatalf("failed to query Player.X after movement: %v", err)
 	}
@@ -192,7 +182,7 @@ func TestE2EStateQuery(t *testing.T) {
 	}
 
 	// Test simple field query
-	health, err := game.StateQuery("Player.Health")
+	health, err := game.StateQuery("testkit.state", "Player.Health")
 	if err != nil {
 		t.Fatalf("failed to query Player.Health: %v", err)
 	}
@@ -201,7 +191,7 @@ func TestE2EStateQuery(t *testing.T) {
 	}
 
 	// Test slice query
-	itemName, err := game.StateQuery("Inventory.0.Name")
+	itemName, err := game.StateQuery("testkit.state", "Inventory.0.Name")
 	if err != nil {
 		t.Fatalf("failed to query Inventory.0.Name: %v", err)
 	}
@@ -210,7 +200,7 @@ func TestE2EStateQuery(t *testing.T) {
 	}
 
 	// Test map query
-	skillLevel, err := game.StateQuery("Skills.Sword")
+	skillLevel, err := game.StateQuery("testkit.state", "Skills.Sword")
 	if err != nil {
 		t.Fatalf("failed to query Skills.Sword: %v", err)
 	}

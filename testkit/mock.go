@@ -3,6 +3,7 @@ package testkit
 import (
 	"testing"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/s3cy/autoebiten/internal/input"
 	"github.com/s3cy/autoebiten/internal/server"
 )
@@ -16,7 +17,7 @@ type GameUpdate interface {
 // Mock provides white-box testing control over a game running in the same process.
 // It injects inputs directly into the game's update loop without requiring RPC.
 type Mock struct {
-	t *testing.T
+	t    *testing.T
 	game GameUpdate
 
 	// Input state buffers
@@ -28,9 +29,6 @@ type Mock struct {
 		pressed bool
 	}
 	wheelDelta struct{ x, y float64 }
-
-	// Custom command handlers
-	customHandlers map[string]func(string) string
 }
 
 // NewMock creates a new Mock controller for white-box testing.
@@ -41,12 +39,14 @@ func NewMock(t *testing.T, game GameUpdate) *Mock {
 	t.Helper()
 
 	m := &Mock{
-		t:              t,
-		game:           game,
-		keyPresses:     make([]input.Key, 0),
-		keyReleases:    make([]input.Key, 0),
-		mouseButtons:   make([]struct{ button input.MouseButton; pressed bool }, 0),
-		customHandlers: make(map[string]func(string) string),
+		t:           t,
+		game:        game,
+		keyPresses:  make([]input.Key, 0),
+		keyReleases: make([]input.Key, 0),
+		mouseButtons: make([]struct {
+			button  input.MouseButton
+			pressed bool
+		}, 0),
 	}
 
 	// Register cleanup (no-op for mock, but maintains symmetry with Game)
@@ -61,13 +61,13 @@ func NewMock(t *testing.T, game GameUpdate) *Mock {
 }
 
 // InjectKeyPress buffers a key press event to be applied on the next Tick.
-func (m *Mock) InjectKeyPress(key input.Key) {
-	m.keyPresses = append(m.keyPresses, key)
+func (m *Mock) InjectKeyPress(key ebiten.Key) {
+	m.keyPresses = append(m.keyPresses, input.Key(key))
 }
 
 // InjectKeyRelease buffers a key release event to be applied on the next Tick.
-func (m *Mock) InjectKeyRelease(key input.Key) {
-	m.keyReleases = append(m.keyReleases, key)
+func (m *Mock) InjectKeyRelease(key ebiten.Key) {
+	m.keyReleases = append(m.keyReleases, input.Key(key))
 }
 
 // InjectMousePosition sets the mouse cursor position.
@@ -77,19 +77,19 @@ func (m *Mock) InjectMousePosition(x, y int) {
 }
 
 // InjectMouseButtonPress buffers a mouse button press event.
-func (m *Mock) InjectMouseButtonPress(button input.MouseButton) {
+func (m *Mock) InjectMouseButtonPress(button ebiten.MouseButton) {
 	m.mouseButtons = append(m.mouseButtons, struct {
 		button  input.MouseButton
 		pressed bool
-	}{button: button, pressed: true})
+	}{button: input.MouseButton(button), pressed: true})
 }
 
 // InjectMouseButtonRelease buffers a mouse button release event.
-func (m *Mock) InjectMouseButtonRelease(button input.MouseButton) {
+func (m *Mock) InjectMouseButtonRelease(button ebiten.MouseButton) {
 	m.mouseButtons = append(m.mouseButtons, struct {
 		button  input.MouseButton
 		pressed bool
-	}{button: button, pressed: false})
+	}{button: input.MouseButton(button), pressed: false})
 }
 
 // InjectWheel sets the wheel scroll delta.
@@ -151,22 +151,6 @@ func (m *Mock) Ticks(n int) {
 	for i := 0; i < n; i++ {
 		m.Tick()
 	}
-}
-
-// RegisterCustom registers a custom command handler.
-// The handler will be called when the corresponding custom command is invoked.
-func (m *Mock) RegisterCustom(name string, handler func(string) string) {
-	m.customHandlers[name] = handler
-}
-
-// RunCustom executes a registered custom command.
-// Returns an empty string if the command is not registered.
-func (m *Mock) RunCustom(name, request string) string {
-	handler, ok := m.customHandlers[name]
-	if !ok {
-		return ""
-	}
-	return handler(request)
 }
 
 // Game returns the underlying game instance.

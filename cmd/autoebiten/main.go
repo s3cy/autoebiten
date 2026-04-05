@@ -120,7 +120,7 @@ If --output is not specified, a timestamped filename is generated.`,
 	runCmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run a script file",
-		Long: `Execute a JSON script for automated game control.
+		Long: `Execute a JSON script for automated game control. Script files support **comments** ('//' and '/* */')
 
 Supported Commands:
   input      - Inject keyboard input (press, release, hold)

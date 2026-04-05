@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/s3cy/autoebiten"
-	"github.com/s3cy/autoebiten/testkit"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -19,23 +18,23 @@ const (
 
 // Player represents the player character.
 type Player struct {
-	X      float64 `json:"x"`
-	Y      float64 `json:"y"`
-	Health int     `json:"health"`
+	X      float64
+	Y      float64
+	Health int
 }
 
 // InventoryItem represents an item in the inventory.
 type InventoryItem struct {
-	Name string `json:"name"`
-	Qty  int    `json:"qty"`
+	Name string
+	Qty  int
 }
 
 // StatefulGame is a test game with player state and movement.
 type StatefulGame struct {
-	Player    Player          `json:"player"`
-	Inventory []InventoryItem `json:"inventory"`
-	Skills    map[string]int  `json:"skills"`
-	TickCount int64           `json:"tickCount"`
+	Player    Player
+	Inventory []InventoryItem
+	Skills    map[string]int
+	TickCount int64
 }
 
 // NewStatefulGame creates a new stateful game with initial state.
@@ -51,9 +50,9 @@ func NewStatefulGame() *StatefulGame {
 			{Name: "Shield", Qty: 1},
 		},
 		Skills: map[string]int{
-			"Sword":   10,
-			"Shield":  5,
-			"Magic":   3,
+			"Sword":  10,
+			"Shield": 5,
+			"Magic":  3,
 		},
 		TickCount: 0,
 	}
@@ -95,17 +94,12 @@ func (g *StatefulGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-// RegisterCommands registers custom commands.
-func (g *StatefulGame) RegisterCommands() {
-	autoebiten.Register("testkit.state", testkit.StateExporter(g))
-}
-
 func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("testkit stateful test game")
 
 	g := NewStatefulGame()
-	g.RegisterCommands()
+	autoebiten.RegisterStateExporter("testkit.state", g)
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

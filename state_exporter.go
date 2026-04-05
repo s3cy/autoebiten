@@ -1,28 +1,67 @@
-package testkit
+package autoebiten
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/s3cy/autoebiten"
 )
 
-// StateExporter creates a custom command handler that exposes game state
-// via reflection-based path queries. The path uses dot notation:
-//   - "Player.X" - access struct field
-//   - "Inventory.0.Name" - access array/slice index
-//   - "Skills.Sword" - access map key
-//
-// The handler can be registered with a game's command registry:
-//
-//     func (g *MyGame) RegisterCommands(c *autoebiten.CommandRegistry) {
-//         c.Register("testkit.state", testkit.StateExporter(&g.Player))
-//     }
-func StateExporter(root any) func(autoebiten.CommandContext) {
-	return func(ctx autoebiten.CommandContext) {
+var StateExporterPathPrefix = ".state."
+
+// ErrPathNotFound is returned when a state query path cannot be resolved.
+// This occurs when:
+//   - The path references a non-existent field
+//   - An array index is out of bounds
+//   - A map key does not exist
+//   - The path traverses a nil pointer
+var ErrPathNotFound = errors.New("path not found")
+
+/*
+RegisterStateExporter registers a custom command that exposes game
+state via reflection-based path queries. The path uses dot notation:
+  - "Player.X" - access struct field
+  - "Inventory.0.Name" - access array/slice index
+  - "Skills.Sword" - access map key
+
+# Game state can be retrieved by calling the testkit.StateQuery function
+
+In game:
+
+	type Player struct {
+		X      float64
+		Y      float64
+		Health int
+	}
+
+	type Game struct {
+		Player Player
+	}
+
+	func main() {
+		var g := Game{Player: Player{X: 0, Y: 0, Health: 100}}
+		RegisterStateExporter("mystate", &g)
+	}
+
+In test:
+
+	func TestPlayerMovement(t *testing.T) {
+	    game := testkit.Launch(t, "./mygame")
+	    defer game.Shutdown()
+
+		game.HoldKey(ebiten.KeyD, 10)
+	    x, _ := game.StateQuery("mystate", "Player.X")
+	    assert.Equal(t, 10, x)
+	}
+*/
+func RegisterStateExporter(name string, root any) {
+	Register(StateExporterPathPrefix+name, stateExporter(root))
+}
+
+func stateExporter(root any) func(CommandContext) {
+	return func(ctx CommandContext) {
 		path := ctx.Request()
 		if path == "" {
 			ctx.Respond(`{"error":"path required"}`)

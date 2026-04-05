@@ -15,30 +15,32 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/s3cy/autoebiten"
 	"github.com/s3cy/autoebiten/internal/input"
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
-// keyToString converts an input.Key to its string representation.
-func keyToString(key input.Key) string {
-	// Reverse lookup in StringKeyMap
+// keyToString converts an ebiten.Key to its string representation.
+func keyToString(key ebiten.Key) string {
+	// Reverse lookup in StringKeyMap using ebiten.Key
 	for name, k := range input.StringKeyMap {
-		if k == key {
+		if input.Key(key) == k {
 			return name
 		}
 	}
-	return fmt.Sprintf("Key%d", key)
+	panic(fmt.Sprintf("unhandled key: %v", key))
 }
 
-// mouseButtonToString converts an input.MouseButton to its string representation.
-func mouseButtonToString(btn input.MouseButton) string {
-	// Reverse lookup in StringMouseButtonMap
+// mouseButtonToString converts an ebiten.MouseButton to its string representation.
+func mouseButtonToString(btn ebiten.MouseButton) string {
+	// Reverse lookup in StringMouseButtonMap using ebiten.MouseButton
 	for name, b := range input.StringMouseButtonMap {
-		if b == btn {
+		if input.MouseButton(btn) == b {
 			return name
 		}
 	}
-	return fmt.Sprintf("MouseButton%d", btn)
+	panic(fmt.Sprintf("unhandled mouse button: %v", btn))
 }
 
 // Game provides black-box testing control over a game running in a separate process.
@@ -48,8 +50,8 @@ type Game struct {
 	config *config
 
 	// Process control
-	process   *os.Process
-	cmd       *exec.Cmd
+	process    *os.Process
+	cmd        *exec.Cmd
 	socketPath string
 
 	// RPC client
@@ -251,22 +253,22 @@ func (g *Game) WaitFor(fn func() bool, timeout time.Duration) bool {
 }
 
 // PressKey sends a key press event to the game.
-func (g *Game) PressKey(key input.Key) error {
+func (g *Game) PressKey(key ebiten.Key) error {
 	return g.sendInput("press", key, 0)
 }
 
 // ReleaseKey sends a key release event to the game.
-func (g *Game) ReleaseKey(key input.Key) error {
+func (g *Game) ReleaseKey(key ebiten.Key) error {
 	return g.sendInput("release", key, 0)
 }
 
 // HoldKey holds a key down for the specified number of ticks.
-func (g *Game) HoldKey(key input.Key, ticks int64) error {
+func (g *Game) HoldKey(key ebiten.Key, ticks int64) error {
 	return g.sendInput("hold", key, ticks)
 }
 
 // sendInput sends an input command to the game.
-func (g *Game) sendInput(action string, key input.Key, ticks int64) error {
+func (g *Game) sendInput(action string, key ebiten.Key, ticks int64) error {
 	if g.client == nil {
 		return ErrGameNotRunning
 	}
@@ -300,12 +302,12 @@ func (g *Game) MoveMouse(x, y int) error {
 }
 
 // PressMouseButton sends a mouse button press event.
-func (g *Game) PressMouseButton(button input.MouseButton) error {
+func (g *Game) PressMouseButton(button ebiten.MouseButton) error {
 	return g.sendMouse("press", 0, 0, mouseButtonToString(button), 0)
 }
 
 // ReleaseMouseButton sends a mouse button release event.
-func (g *Game) ReleaseMouseButton(button input.MouseButton) error {
+func (g *Game) ReleaseMouseButton(button ebiten.MouseButton) error {
 	return g.sendMouse("release", 0, 0, mouseButtonToString(button), 0)
 }
 
@@ -531,8 +533,8 @@ func (g *Game) RunCustom(name, request string) (string, error) {
 
 // StateQuery queries game state via reflection-based path.
 // The path uses dot notation, e.g., "Player.X", "Inventory.0.Name".
-func (g *Game) StateQuery(path string) (any, error) {
-	response, err := g.RunCustom("testkit.state", path)
+func (g *Game) StateQuery(name string, path string) (any, error) {
+	response, err := g.RunCustom(autoebiten.StateExporterPathPrefix+name, path)
 	if err != nil {
 		return nil, err
 	}

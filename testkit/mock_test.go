@@ -3,7 +3,7 @@ package testkit
 import (
 	"testing"
 
-	"github.com/s3cy/autoebiten/internal/input"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // mockGame is a simple game for testing Mock.
@@ -36,8 +36,8 @@ func TestMockInjectKeyPress(t *testing.T) {
 	game := &mockGame{}
 	mock := NewMock(t, game)
 
-	mock.InjectKeyPress(input.KeyA)
-	mock.InjectKeyPress(input.KeyB)
+	mock.InjectKeyPress(ebiten.KeyA)
+	mock.InjectKeyPress(ebiten.KeyB)
 
 	// Verify inputs are buffered
 	if len(mock.keyPresses) != 2 {
@@ -50,7 +50,7 @@ func TestMockInjectKeyRelease(t *testing.T) {
 	game := &mockGame{}
 	mock := NewMock(t, game)
 
-	mock.InjectKeyRelease(input.KeyA)
+	mock.InjectKeyRelease(ebiten.KeyA)
 
 	if len(mock.keyReleases) != 1 {
 		t.Errorf("expected 1 key release, got %d", len(mock.keyReleases))
@@ -74,9 +74,9 @@ func TestMockInjectMouseButton(t *testing.T) {
 	game := &mockGame{}
 	mock := NewMock(t, game)
 
-	mock.InjectMouseButtonPress(input.MouseButtonLeft)
-	mock.InjectMouseButtonRelease(input.MouseButtonLeft)
-	mock.InjectMouseButtonPress(input.MouseButtonRight)
+	mock.InjectMouseButtonPress(ebiten.MouseButtonLeft)
+	mock.InjectMouseButtonRelease(ebiten.MouseButtonLeft)
+	mock.InjectMouseButtonPress(ebiten.MouseButtonRight)
 
 	if len(mock.mouseButtons) != 3 {
 		t.Errorf("expected 3 mouse button events, got %d", len(mock.mouseButtons))
@@ -125,9 +125,9 @@ func TestMockTickClearsInputs(t *testing.T) {
 	game := &mockGame{}
 	mock := NewMock(t, game)
 
-	mock.InjectKeyPress(input.KeyA)
-	mock.InjectKeyRelease(input.KeyB)
-	mock.InjectMouseButtonPress(input.MouseButtonLeft)
+	mock.InjectKeyPress(ebiten.KeyA)
+	mock.InjectKeyRelease(ebiten.KeyB)
+	mock.InjectMouseButtonPress(ebiten.MouseButtonLeft)
 	mock.InjectWheel(1.0, 2.0)
 
 	mock.Tick()
@@ -144,45 +144,6 @@ func TestMockTickClearsInputs(t *testing.T) {
 	}
 	if mock.wheelDelta.x != 0 || mock.wheelDelta.y != 0 {
 		t.Error("wheelDelta buffer not cleared")
-	}
-}
-
-// TestMockRegisterCustom tests custom command registration.
-func TestMockRegisterCustom(t *testing.T) {
-	game := &mockGame{}
-	mock := NewMock(t, game)
-
-	called := false
-	mock.RegisterCustom("test", func(req string) string {
-		called = true
-		return "response: " + req
-	})
-
-	// Verify handler is registered
-	if _, ok := mock.customHandlers["test"]; !ok {
-		t.Error("custom handler not registered")
-	}
-
-	// Call the handler
-	response := mock.RunCustom("test", "hello")
-
-	if !called {
-		t.Error("custom handler not called")
-	}
-	if response != "response: hello" {
-		t.Errorf("unexpected response: %s", response)
-	}
-}
-
-// TestMockRunCustomNotFound tests calling an unregistered custom command.
-func TestMockRunCustomNotFound(t *testing.T) {
-	game := &mockGame{}
-	mock := NewMock(t, game)
-
-	response := mock.RunCustom("nonexistent", "request")
-
-	if response != "" {
-		t.Errorf("expected empty response for unknown command, got: %s", response)
 	}
 }
 
