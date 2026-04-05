@@ -21,14 +21,7 @@ type Mock struct {
 	game GameUpdate
 
 	// Input state buffers
-	keyPresses   []input.Key
-	keyReleases  []input.Key
-	mousePos     struct{ x, y int }
-	mouseButtons []struct {
-		button  input.MouseButton
-		pressed bool
-	}
-	wheelDelta struct{ x, y float64 }
+	actions []func(vi *input.VirtualInput, inputTime input.InputTime)
 }
 
 // NewMock creates a new Mock controller for white-box testing.
@@ -39,98 +32,66 @@ func NewMock(t *testing.T, game GameUpdate) *Mock {
 	t.Helper()
 
 	m := &Mock{
-		t:           t,
-		game:        game,
-		keyPresses:  make([]input.Key, 0),
-		keyReleases: make([]input.Key, 0),
-		mouseButtons: make([]struct {
-			button  input.MouseButton
-			pressed bool
-		}, 0),
+		t:    t,
+		game: game,
 	}
-
-	// Register cleanup (no-op for mock, but maintains symmetry with Game)
-	t.Cleanup(func() {
-		// Clear any pending inputs
-		m.keyPresses = nil
-		m.keyReleases = nil
-		m.mouseButtons = nil
-	})
 
 	return m
 }
 
 // InjectKeyPress buffers a key press event to be applied on the next Tick.
 func (m *Mock) InjectKeyPress(key ebiten.Key) {
-	m.keyPresses = append(m.keyPresses, input.Key(key))
+	m.actions = append(m.actions, func(vi *input.VirtualInput, inputTime input.InputTime) {
+		vi.InjectKeyPress(input.Key(key), inputTime)
+	})
 }
 
 // InjectKeyRelease buffers a key release event to be applied on the next Tick.
 func (m *Mock) InjectKeyRelease(key ebiten.Key) {
-	m.keyReleases = append(m.keyReleases, input.Key(key))
+	m.actions = append(m.actions, func(vi *input.VirtualInput, inputTime input.InputTime) {
+		vi.InjectKeyRelease(input.Key(key), inputTime)
+	})
 }
 
 // InjectMousePosition sets the mouse cursor position.
 func (m *Mock) InjectMousePosition(x, y int) {
-	m.mousePos.x = x
-	m.mousePos.y = y
+	m.actions = append(m.actions, func(vi *input.VirtualInput, inputTime input.InputTime) {
+		vi.InjectCursorMove(x, y)
+	})
 }
 
 // InjectMouseButtonPress buffers a mouse button press event.
 func (m *Mock) InjectMouseButtonPress(button ebiten.MouseButton) {
-	m.mouseButtons = append(m.mouseButtons, struct {
-		button  input.MouseButton
-		pressed bool
-	}{button: input.MouseButton(button), pressed: true})
+	m.actions = append(m.actions, func(vi *input.VirtualInput, inputTime input.InputTime) {
+		vi.InjectMouseButtonPress(input.MouseButton(button), inputTime)
+	})
 }
 
 // InjectMouseButtonRelease buffers a mouse button release event.
 func (m *Mock) InjectMouseButtonRelease(button ebiten.MouseButton) {
-	m.mouseButtons = append(m.mouseButtons, struct {
-		button  input.MouseButton
-		pressed bool
-	}{button: input.MouseButton(button), pressed: false})
+	m.actions = append(m.actions, func(vi *input.VirtualInput, inputTime input.InputTime) {
+		vi.InjectMouseButtonRelease(input.MouseButton(button), inputTime)
+	})
 }
 
 // InjectWheel sets the wheel scroll delta.
 func (m *Mock) InjectWheel(x, y float64) {
-	m.wheelDelta.x = x
-	m.wheelDelta.y = y
+	m.actions = append(m.actions, func(vi *input.VirtualInput, inputTime input.InputTime) {
+		vi.InjectWheelMove(x, y)
+	})
 }
 
 // Tick advances the game by one tick, applying buffered inputs.
 // This calls the game's Update() method once.
 func (m *Mock) Tick() {
-	// Get current tick from server
+	server.IncrementTick()
 	tick := server.Tick()
-	inputTime := input.NewInputTimeFromTick(tick, 0)
 
 	vi := input.Get()
 
-	// Apply buffered key presses
-	for _, key := range m.keyPresses {
-		vi.InjectKeyPress(key, inputTime)
+	for _, action := range m.actions {
+		action(vi, input.NewInputTimeFromTick(tick, server.IncrementSubtick()))
 	}
-
-	// Apply buffered key releases
-	for _, key := range m.keyReleases {
-		vi.InjectKeyRelease(key, inputTime)
-	}
-
-	// Apply mouse position
-	vi.InjectCursorMove(m.mousePos.x, m.mousePos.y)
-
-	// Apply buffered mouse buttons
-	for _, btn := range m.mouseButtons {
-		if btn.pressed {
-			vi.InjectMouseButtonPress(btn.button, inputTime)
-		} else {
-			vi.InjectMouseButtonRelease(btn.button, inputTime)
-		}
-	}
-
-	// Apply wheel delta
-	vi.InjectWheelMove(m.wheelDelta.x, m.wheelDelta.y)
 
 	// Call game update
 	if err := m.game.Update(); err != nil {
@@ -138,11 +99,7 @@ func (m *Mock) Tick() {
 	}
 
 	// Clear input buffers
-	m.keyPresses = m.keyPresses[:0]
-	m.keyReleases = m.keyReleases[:0]
-	m.mouseButtons = m.mouseButtons[:0]
-	m.wheelDelta.x = 0
-	m.wheelDelta.y = 0
+	m.actions = m.actions[:0]
 }
 
 // Ticks advances the game by N ticks.

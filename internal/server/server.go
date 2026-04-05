@@ -70,6 +70,16 @@ Loop:
 	return true
 }
 
+// IncrementTick for testkit.Mock
+func IncrementTick() {
+	globalServerHandler.incrementTick()
+}
+
+// IncrementSubtick for testkit.Mock
+func IncrementSubtick() int64 {
+	return globalServerHandler.subtick.Add(1)
+}
+
 func Tick() int64 {
 	return globalServerHandler.tick.Load()
 }

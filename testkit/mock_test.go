@@ -39,9 +39,9 @@ func TestMockInjectKeyPress(t *testing.T) {
 	mock.InjectKeyPress(ebiten.KeyA)
 	mock.InjectKeyPress(ebiten.KeyB)
 
-	// Verify inputs are buffered
-	if len(mock.keyPresses) != 2 {
-		t.Errorf("expected 2 key presses, got %d", len(mock.keyPresses))
+	// Verify actions are buffered
+	if len(mock.actions) != 2 {
+		t.Errorf("expected 2 actions, got %d", len(mock.actions))
 	}
 }
 
@@ -52,8 +52,8 @@ func TestMockInjectKeyRelease(t *testing.T) {
 
 	mock.InjectKeyRelease(ebiten.KeyA)
 
-	if len(mock.keyReleases) != 1 {
-		t.Errorf("expected 1 key release, got %d", len(mock.keyReleases))
+	if len(mock.actions) != 1 {
+		t.Errorf("expected 1 action, got %d", len(mock.actions))
 	}
 }
 
@@ -64,8 +64,8 @@ func TestMockInjectMousePosition(t *testing.T) {
 
 	mock.InjectMousePosition(100, 200)
 
-	if mock.mousePos.x != 100 || mock.mousePos.y != 200 {
-		t.Errorf("expected mouse pos (100, 200), got (%d, %d)", mock.mousePos.x, mock.mousePos.y)
+	if len(mock.actions) != 1 {
+		t.Errorf("expected 1 action, got %d", len(mock.actions))
 	}
 }
 
@@ -78,8 +78,8 @@ func TestMockInjectMouseButton(t *testing.T) {
 	mock.InjectMouseButtonRelease(ebiten.MouseButtonLeft)
 	mock.InjectMouseButtonPress(ebiten.MouseButtonRight)
 
-	if len(mock.mouseButtons) != 3 {
-		t.Errorf("expected 3 mouse button events, got %d", len(mock.mouseButtons))
+	if len(mock.actions) != 3 {
+		t.Errorf("expected 3 actions, got %d", len(mock.actions))
 	}
 }
 
@@ -90,8 +90,8 @@ func TestMockInjectWheel(t *testing.T) {
 
 	mock.InjectWheel(1.5, -2.5)
 
-	if mock.wheelDelta.x != 1.5 || mock.wheelDelta.y != -2.5 {
-		t.Errorf("expected wheel delta (1.5, -2.5), got (%f, %f)", mock.wheelDelta.x, mock.wheelDelta.y)
+	if len(mock.actions) != 1 {
+		t.Errorf("expected 1 action, got %d", len(mock.actions))
 	}
 }
 
@@ -130,20 +130,15 @@ func TestMockTickClearsInputs(t *testing.T) {
 	mock.InjectMouseButtonPress(ebiten.MouseButtonLeft)
 	mock.InjectWheel(1.0, 2.0)
 
+	if len(mock.actions) != 4 {
+		t.Errorf("expected 4 actions before Tick, got %d", len(mock.actions))
+	}
+
 	mock.Tick()
 
-	// Verify all buffers are cleared
-	if len(mock.keyPresses) != 0 {
-		t.Error("keyPresses buffer not cleared")
-	}
-	if len(mock.keyReleases) != 0 {
-		t.Error("keyReleases buffer not cleared")
-	}
-	if len(mock.mouseButtons) != 0 {
-		t.Error("mouseButtons buffer not cleared")
-	}
-	if mock.wheelDelta.x != 0 || mock.wheelDelta.y != 0 {
-		t.Error("wheelDelta buffer not cleared")
+	// Verify actions buffer is cleared
+	if len(mock.actions) != 0 {
+		t.Errorf("expected 0 actions after Tick, got %d", len(mock.actions))
 	}
 }
 
