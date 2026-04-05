@@ -330,16 +330,16 @@ func TestPlayerMovement(t *testing.T) {
     defer game.Shutdown()
 
     game.HoldKey(ebiten.KeyD, 10)
-    x, _ := game.StateQuery("Player.X")
+    x, _ := game.StateQuery("mygamestate", "Player.X")
     assert.Equal(t, 10, x)
 }
 
 // White-box test
 func TestPlayerTakesDamage(t *testing.T) {
     g := NewGame()
-    mock := testkit.NewMock(t)
+    mock := testkit.NewMock(t, g)
     g.EnemyAttacks()
-    mock.Tick(g)
+    mock.Tick()
     assert.Equal(t, 90, g.Player.Health)
 }
 ```

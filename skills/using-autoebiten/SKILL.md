@@ -165,7 +165,7 @@ import (
     "testing"
     "time"
 
-    "github.com/s3cy/autoebiten/internal/input"
+    "github.com/hajimehoshi/ebiten/v2"
     "github.com/s3cy/autoebiten/testkit"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
@@ -184,18 +184,18 @@ func TestPlayerMovement(t *testing.T) {
     require.True(t, ready, "game did not become ready")
 
     // Get initial position
-    initialX, err := game.StateQuery("Player.X")
+    initialX, err := game.StateQuery("gamestate", "Player.X")
     require.NoError(t, err)
 
     // Send input (hold for 10 ticks)
-    err = game.HoldKey(input.KeyArrowRight, 10)
+    err = game.HoldKey(ebiten.KeyArrowRight, 10)
     require.NoError(t, err)
 
     // Wait for movement
     time.Sleep(100 * time.Millisecond)
 
     // Verify position changed
-    newX, err := game.StateQuery("Player.X")
+    newX, err := game.StateQuery("gamestate", "Player.X")
     require.NoError(t, err)
     assert.Greater(t, newX.(float64), initialX.(float64))
 }
@@ -214,12 +214,11 @@ go build -o ./mygame ./cmd/mygame
 **CRITICAL:** For `StateQuery()` to work, the game must export state:
 
 ```go
-func (g *Game) RegisterCommands(c *autoebiten.CommandRegistry) {
-    c.Register("testkit.state", testkit.StateExporter(&g.Player))
-}
+autoebiten.RegisterStateExporter("gamestate", &gameInstance)
 ```
 
 Query paths use dot notation: `"Player.X"`, `"Inventory.0.Name"`, `"Skills.Sword"`
+The first argument to `StateQuery` is the exporter name (e.g., `"gamestate"`), the second is the path.
 
 ### Black-Box API Reference
 
@@ -233,7 +232,7 @@ Query paths use dot notation: `"Player.X"`, `"Inventory.0.Name"`, `"Skills.Sword
 | `game.PressKey(key)` | Press and release |
 | `game.MoveMouse(x, y)` | Set cursor position |
 | `game.Screenshot()` | Capture as image |
-| `game.StateQuery(path)` | Query exported state |
+| `game.StateQuery(name, path)` | Query exported state |
 | `game.RunCustom(name, req)` | Execute custom command |
 
 ---
@@ -250,8 +249,8 @@ package mygame
 import (
     "testing"
 
+    "github.com/hajimehoshi/ebiten/v2"
     "github.com/s3cy/autoebiten"
-    "github.com/s3cy/autoebiten/internal/input"
     "github.com/s3cy/autoebiten/testkit"
     "github.com/stretchr/testify/assert"
 )
@@ -267,7 +266,7 @@ func TestPlayerMovesRight(t *testing.T) {
     initialX := game.Player.X
 
     // Inject key press
-    mock.InjectKeyPress(input.KeyArrowRight)
+    mock.InjectKeyPress(ebiten.KeyArrowRight)
 
     // Advance 10 ticks
     mock.Ticks(10)
@@ -309,8 +308,7 @@ func (g *Game) Update() error {
 | Mistake | Fix |
 |---------|-----|
 | Black-box test fails with "binary not found" | Build binary first: `go build -o ./mygame ./cmd/mygame` |
-| `StateQuery` returns error | Register `testkit.StateExporter` in game |
-| White-box test not seeing inputs | Use `autoebiten.IsKeyPressed()` not `ebiten.IsKeyPressed()` |
+| `StateQuery` returns error | Register `autoebiten.RegisterStateExporter` in game |
 | `game.Ping()` fails | Wait for game to be ready with `game.WaitFor()` |
 | Patch method panics | Don't call `autoebiten.Update()` or `autoebiten.Capture()` |
 | Inputs not working in white-box | Call `mock.Tick()` after injecting inputs |

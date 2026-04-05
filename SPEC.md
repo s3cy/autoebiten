@@ -248,13 +248,13 @@ The `testkit` package provides a Go testing framework for Ebiten games that use 
 Launches a game binary in a separate process and controls it via RPC.
 
 ```go
-func Launch(t *testing.T, binary string, opts ...Option) (*Game, error)
+func Launch(t *testing.T, binaryPath string, opts ...Option) *Game
 ```
 
 Key capabilities:
 - Input injection (`PressKey`, `HoldKey`, `MoveMouse`, etc.)
-- Screenshots (`Screenshot`, `ScreenshotToFile`)
-- State queries via `StateExporter` (`StateQuery`)
+- Screenshots (`Screenshot`, `ScreenshotToFile`, `ScreenshotBase64`)
+- State queries via autoebiten `RegisterStateExporter` (`StateQuery`)
 - Custom command execution (`RunCustom`)
 - Lifecycle management (`Shutdown`, `Ping`, `WaitFor`)
 
@@ -263,23 +263,29 @@ Key capabilities:
 Simulates autoebiten's RPC server for testing game logic in-process.
 
 ```go
-func NewMock(t *testing.T) *Mock
+func NewMock(t *testing.T, game GameUpdate) *Mock
 ```
 
 Key capabilities:
 - Input injection (`InjectKeyPress`, `InjectMousePosition`, etc.)
 - Tick execution (`Tick`, `Ticks`)
-- Custom command registration (`RegisterCustom`)
 
 ### State Exporter
 
-Reflection-based state exposure for black-box testing:
+Games can expose internal state for black-box testing using `autoebiten.RegisterStateExporter`:
 
 ```go
-func StateExporter(v interface{}) func(autoebiten.CommandContext)
+// In your game
+autoebiten.RegisterStateExporter("gamestate", &gameState)
 ```
 
-Used to expose game state for inspection during tests. Supports dot-notation paths like `Player.X`, `Inventory.0.Name`, `Skills.Sword`.
+Tests can then query state via dot-notation paths:
+
+```go
+value, err := game.StateQuery("gamestate", "Player.X")
+```
+
+Supports paths like `Player.X`, `Inventory.0.Name`, `Skills.Sword`.
 
 ### Documentation
 
