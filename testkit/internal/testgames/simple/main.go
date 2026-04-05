@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+
+	"github.com/s3cy/autoebiten"
 )
 
 const (
@@ -17,6 +20,9 @@ type SimpleGame struct{}
 
 // Update is called every frame.
 func (g *SimpleGame) Update() error {
+	if !autoebiten.Update() {
+		return fmt.Errorf("exit requested")
+	}
 	return nil
 }
 
@@ -24,6 +30,7 @@ func (g *SimpleGame) Update() error {
 func (g *SimpleGame) Draw(screen *ebiten.Image) {
 	// Fill with a distinctive color for screenshot verification
 	screen.Fill(color.RGBA{0x42, 0x86, 0xF4, 0xFF}) // Google blue
+	autoebiten.Capture(screen)
 }
 
 // Layout is called to get the screen size.

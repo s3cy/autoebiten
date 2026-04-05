@@ -217,10 +217,7 @@ type Client struct {
 	mu      sync.Mutex
 }
 
-// NewClient creates a new RPC client that connects to the socket.
-func NewClient() (*Client, error) {
-	path := SocketPath()
-
+func NewClientWithPath(path string) (*Client, error) {
 	conn, err := net.Dial("unix", path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to socket %s: %w", path, err)
@@ -231,6 +228,10 @@ func NewClient() (*Client, error) {
 		encoder: json.NewEncoder(conn),
 		decoder: json.NewDecoder(conn),
 	}, nil
+}
+
+func NewClient() (*Client, error) {
+	return NewClientWithPath(SocketPath())
 }
 
 // Close closes the client connection.

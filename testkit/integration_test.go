@@ -1,7 +1,7 @@
 package testkit
 
 import (
-	"os"
+	"os/exec"
 	"strconv"
 	"testing"
 	"time"
@@ -10,31 +10,25 @@ import (
 )
 
 // getStatefulTestGameBinary returns the path to the stateful test game binary.
+// Builds the binary if it doesn't exist.
 func getStatefulTestGameBinary() string {
-	candidates := []string{
-		"./internal/testgames/stateful/stateful",
-		"./internal/testgames/stateful/main",
+	binaryPath := "./internal/testgames/stateful/stateful"
+	cmd := exec.Command("go", "build", "-o", binaryPath, "./internal/testgames/stateful")
+	if err := cmd.Run(); err != nil {
+		return ""
 	}
-	for _, candidate := range candidates {
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return ""
+	return binaryPath
 }
 
 // getCustomTestGameBinary returns the path to the custom test game binary.
+// Builds the binary if it doesn't exist.
 func getCustomTestGameBinary() string {
-	candidates := []string{
-		"./internal/testgames/custom/custom",
-		"./internal/testgames/custom/main",
+	binaryPath := "./internal/testgames/custom/custom"
+	cmd := exec.Command("go", "build", "-o", binaryPath, "./internal/testgames/custom")
+	if err := cmd.Run(); err != nil {
+		return ""
 	}
-	for _, candidate := range candidates {
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return ""
+	return binaryPath
 }
 
 // TestE2EPlayerMovement tests player movement in a stateful game.

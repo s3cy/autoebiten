@@ -110,7 +110,7 @@ func Launch(t *testing.T, binaryPath string, opts ...Option) *Game {
 	}
 
 	// Create RPC client
-	client, err := rpc.NewClient()
+	client, err := rpc.NewClientWithPath(socketPath)
 	if err != nil {
 		g.kill()
 		t.Fatalf("testkit: failed to create RPC client: %v", err)
