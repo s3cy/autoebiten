@@ -20,19 +20,19 @@ autoebiten state --name <exporter_name> --path <dot_path>
 - `--name` (required): State exporter name registered via `autoebiten.RegisterStateExporter`
 - `--path` (required): Dot-notation path (e.g., `Player.X`, `Inventory.0.Name`)
 
-**Output:** Raw JSON value from query (no wrapper, no success message)
+**Output:** `OK: <value>` (wraps result with success prefix, consistent with other commands)
 
 **Examples:**
 
 ```bash
 autoebiten state --name gamestate --path Player.Health
-# Output: 100
+# Output: OK: 100
 
 autoebiten state --name gamestate --path Player.Position
-# Output: {"X":10,"Y":20}
+# Output: OK: {"X":10,"Y":20}
 
 autoebiten state --name gamestate --path Inventory.0.Name
-# Output: "Sword"
+# Output: OK: "Sword"
 ```
 
 ### `wait-for` command
@@ -48,7 +48,7 @@ autoebiten wait-for --condition "<condition>" --timeout <duration> [--interval <
 - `--timeout` (required): Maximum wait duration (e.g., `10s`, `5m`)
 - `--interval` (optional): Poll interval (default `100ms`)
 
-**Output on success:** `condition met after <duration>` (e.g., `condition met after 2.3s`)
+**Output on success:** `OK: condition met after <duration>` (e.g., `OK: condition met after 2.3s`)
 
 **Output on timeout:** Error message with timeout duration
 
@@ -79,13 +79,13 @@ autoebiten wait-for --condition "<condition>" --timeout <duration> [--interval <
 
 ```bash
 autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout 10s
-# Output: condition met after 2.3s
+# Output: OK: condition met after 2.3s
 
 autoebiten wait-for --condition "state:gamestate:Player.X > 50" --timeout 30s
-# Output: condition met after 15.2s
+# Output: OK: condition met after 15.2s
 
 autoebiten wait-for --condition "custom:getStatus:ready != false" --timeout 5s --interval 200ms
-# Output: condition met after 1.5s
+# Output: OK: condition met after 1.5s
 ```
 
 ## JSON Script Support
@@ -157,7 +157,18 @@ internal/script/executor.go - Add state and wait command handlers
 func (e *CommandExecutor) RunStateCommand(name, path string) error {
     // Internally calls custom ".state.<name>" with path as request
     customName := autoebiten.StateExporterPathPrefix + name
-    return e.RunCustomCommand(customName, path)
+    
+    // Get response and wrap with OK: prefix using writer.Success
+    params := &rpc.CustomParams{Name: customName, Request: path}
+    req, _ := rpc.BuildRequest("custom", params)
+    resp, err := rpc.SendRequestSocket(req)
+    if err != nil { return err }
+    if resp.Error != nil { return fmt.Errorf("rpc error: %s", resp.Error.Message) }
+    
+    var result rpc.CustomResult
+    json.Unmarshal(resp.Result, &result)
+    e.writer.Success(result.Response)
+    return nil
 }
 ```
 
@@ -257,7 +268,7 @@ No changes required. Both commands use existing RPC infrastructure:
 
 ## Success Criteria
 
-1. `autoebiten state --name <n> --path <p>` returns raw JSON value
+1. `autoebiten state --name <n> --path <p>` outputs `OK: <value>`
 2. `autoebiten wait-for --condition <c> --timeout <t>` polls until condition met
 3. Scripts support `state` and `wait` commands
 4. All comparison operators work correctly for supported value types

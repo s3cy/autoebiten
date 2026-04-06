@@ -30,6 +30,7 @@ var (
 	asyncFlag       bool
 	customNameFlag  string
 	requestFlag     string
+	noRecordFlag    bool
 )
 
 func main() {
@@ -63,6 +64,7 @@ Actions:
 	inputCmd.Flags().StringVarP(&inputActionFlag, "action", "a", "hold", "Action: press, release, or hold")
 	inputCmd.Flags().Int64VarP(&durationTicks, "duration_ticks", "d", 6, "Duration in ticks for hold action")
 	inputCmd.Flags().BoolVarP(&asyncFlag, "async", "", false, "Async mode: return immediately without waiting for the input to be processed")
+	inputCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 	inputCmd.MarkFlagRequired("key")
 
 	// mouse command
@@ -88,6 +90,7 @@ Use get_mouse_position to retrieve the injected position.`,
 	mouseCmd.Flags().StringVarP(&buttonFlag, "button", "b", "", "Mouse button (e.g., MouseButtonLeft, MouseButtonRight)")
 	mouseCmd.Flags().Int64VarP(&durationTicks, "duration_ticks", "d", 6, "Duration in ticks for hold action")
 	mouseCmd.Flags().BoolVarP(&asyncFlag, "async", "", false, "Async mode: return immediately without waiting for the input to be processed")
+	mouseCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 	mouseCmd.MarkFlagsRequiredTogether("x", "y")
 
 	// wheel command
@@ -104,6 +107,7 @@ Use get_wheel_position to retrieve the injected position.`,
 	wheelCmd.Flags().Float64VarP(&wheelXFlag, "x", "x", 0, "Horizontal scroll (negative=left, positive=right)")
 	wheelCmd.Flags().Float64VarP(&wheelYFlag, "y", "y", 0, "Vertical scroll (negative=down, positive=up)")
 	wheelCmd.Flags().BoolVarP(&asyncFlag, "async", "", false, "Async mode: return immediately without waiting for the input to be processed")
+	wheelCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 	wheelCmd.MarkFlagsRequiredTogether("x", "y")
 
 	// screenshot command
@@ -117,6 +121,7 @@ If --output is not specified, a timestamped filename is generated.`,
 	screenshotCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "Output file path (optional)")
 	screenshotCmd.Flags().BoolVarP(&base64Flag, "base64", "", false, "Output screenshot as base64 string instead of saving to a file")
 	screenshotCmd.Flags().BoolVarP(&asyncFlag, "async", "a", false, "Async mode: return immediately without waiting for capture")
+	screenshotCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 
 	// run command
 	runCmd := &cobra.Command{
@@ -256,6 +261,7 @@ The handler receives a CommandContext containing the request and a Respond metho
 	}
 	customCmd.Flags().StringVarP(&customNameFlag, "name", "n", "", "Custom command name")
 	customCmd.Flags().StringVarP(&requestFlag, "request", "r", "", "Request data to pass to the command")
+	customCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
@@ -295,7 +301,7 @@ func persistentPreRunRootCommand(cmd *cobra.Command, args []string) error {
 
 func runInputCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunInputCommand(keyFlag, inputActionFlag, durationTicks, asyncFlag)
+	return executor.RunInputCommand(keyFlag, inputActionFlag, durationTicks, asyncFlag, !noRecordFlag)
 }
 
 func runMouseCommand(cmd *cobra.Command, args []string) error {
@@ -306,7 +312,7 @@ func runMouseCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("x y must be provided")
 	}
 
-	return executor.RunMouseCommand(mouseActionFlag, xFlag, yFlag, buttonFlag, durationTicks, asyncFlag)
+	return executor.RunMouseCommand(mouseActionFlag, xFlag, yFlag, buttonFlag, durationTicks, asyncFlag, !noRecordFlag)
 }
 
 func runWheelCommand(cmd *cobra.Command, args []string) error {
@@ -316,12 +322,12 @@ func runWheelCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("x y must be provided")
 	}
 
-	return executor.RunWheelCommand(wheelXFlag, wheelYFlag, asyncFlag)
+	return executor.RunWheelCommand(wheelXFlag, wheelYFlag, asyncFlag, !noRecordFlag)
 }
 
 func runScreenshotCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunScreenshotCommand(outputFlag, base64Flag, asyncFlag)
+	return executor.RunScreenshotCommand(outputFlag, base64Flag, asyncFlag, !noRecordFlag)
 }
 
 func runScriptCommand(cmd *cobra.Command, args []string) error {
@@ -393,7 +399,7 @@ func runCustomCommand(cmd *cobra.Command, args []string) error {
 		request = strings.Join(args[1:], " ")
 	}
 
-	return executor.RunCustomCommand(name, request)
+	return executor.RunCustomCommand(name, request, !noRecordFlag)
 }
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {
