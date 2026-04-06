@@ -751,3 +751,216 @@ autoebiten replay --dump script.json
 ```
 
 ---
+
+## Tutorial
+
+### Step 1: Choose Integration Method
+
+**Decision tree:**
+1. Check your game's go.mod for `replace github.com/hajimehoshi/ebiten/v2`
+2. If found → Patch method already applied
+3. If not found → Check for `autoebiten.Update()` in code
+4. If found → Library method already integrated
+5. If neither → Choose based on needs
+
+**Patch method checklist:**
+- [ ] Clone Ebiten locally
+- [ ] Checkout v2.9.9
+- [ ] Apply `ebiten.patch`
+- [ ] Add replace directive to go.mod
+
+**Library method checklist:**
+- [ ] Import autoebiten package
+- [ ] Add `autoebiten.Update()` to Update()
+- [ ] Add `autoebiten.Capture()` to Draw()
+- [ ] Replace input calls with wrappers
+
+---
+
+### Step 2: Patch Method Setup
+
+**Goal:** Enable automation without modifying game code.
+
+**Prerequisites:**
+- Ebiten v2.9.9 compatible game
+- Git installed
+
+**Actions:**
+
+```bash
+# Clone Ebiten
+git clone https://github.com/hajimehoshi/ebiten.git /path/to/ebiten
+cd /path/to/ebiten
+git checkout v2.9.9
+
+# Apply patch (from autoebiten repo root)
+git apply /path/to/autoebiten/ebiten.patch
+go mod tidy
+```
+
+**Add to game's go.mod:**
+
+```go
+replace github.com/hajimehoshi/ebiten/v2 => /path/to/local/ebiten
+```
+
+**Build and run:**
+
+```bash
+go build ./cmd/mygame
+./mygame
+```
+
+**Expected:** Game runs normally. Automation socket created at startup.
+
+**Troubleshooting:**
+- Patch doesn't apply: Check Ebiten version matches v2.9.9
+- Import errors: Run `go mod tidy` in both repos
+
+---
+
+### Step 3: Library Method Setup
+
+**Goal:** Integrate autoebiten directly into game code.
+
+**Prerequisites:**
+- Control over game source code
+
+**Actions:**
+
+Add import:
+
+```go
+import "github.com/s3cy/autoebiten"
+```
+
+Modify Update:
+
+```go
+func (g *Game) Update() error {
+    if !autoebiten.Update() {
+        return fmt.Errorf("exit requested")
+    }
+    // Your logic here
+    return nil
+}
+```
+
+Modify Draw:
+
+```go
+func (g *Game) Draw(screen *ebiten.Image) {
+    // Your drawing here
+    autoebiten.Capture(screen) // Call at end
+}
+```
+
+Replace input calls:
+
+```go
+// Before
+if ebiten.IsKeyPressed(ebiten.KeySpace) { ... }
+
+// After (Library method)
+if autoebiten.IsKeyPressed(ebiten.KeySpace) { ... }
+```
+
+**Build modes:**
+
+```bash
+# Development (automation enabled)
+go build ./cmd/mygame
+
+# Release (no automation)
+go build -tags release ./cmd/mygame
+```
+
+---
+
+### Step 4: Verify Connection
+
+**Goal:** Confirm CLI can communicate with game.
+
+**Actions:**
+
+```bash
+# Start game
+./mygame &
+
+# Check connection
+autoebiten ping
+```
+
+**Expected:** Output: `game is running`
+
+**Troubleshooting:**
+- "connection failed": Game not started or socket not created
+- Multiple games running: Use `--pid` to specify
+
+---
+
+### Step 5: Basic CLI Commands
+
+**Goal:** Send simple inputs and capture screenshot.
+
+**Actions:**
+
+```bash
+# Press a key
+autoebiten input --key KeySpace --action press
+
+# Move mouse
+autoebiten mouse -x 100 -y 200
+
+# Click
+autoebiten mouse --button MouseButtonLeft
+
+# Take screenshot
+autoebiten screenshot --output test.png
+```
+
+---
+
+### Step 6: Understanding Ticks
+
+**Goal:** Use duration_ticks correctly.
+
+**Key concept:** 1 tick = 1 `Update()` call. Ebiten runs at 60 TPS by default.
+
+**Duration calculation:**
+- 6 ticks ≈ 100ms (default)
+- 10 ticks ≈ 167ms
+- 60 ticks ≈ 1 second
+
+**Example:**
+
+```bash
+# Hold key for 1 second
+autoebiten input --key KeyW --action hold --duration_ticks 60
+```
+
+**Note:** TPS ≠ FPS. Game can render at 120 FPS while running at 60 TPS.
+
+---
+
+### Step 7: Custom Commands Intro
+
+**Goal:** Add game-specific commands.
+
+**In game code:**
+
+```go
+autoebiten.Register("getPlayerInfo", func(ctx autoebiten.CommandContext) {
+    ctx.Respond(fmt.Sprintf("Health: %d", player.Health))
+})
+```
+
+**From CLI:**
+
+```bash
+autoebiten custom getPlayerInfo
+```
+
+**Expected:** Output: `Health: 100`
+
+---
