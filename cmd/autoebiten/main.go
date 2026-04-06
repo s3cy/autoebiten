@@ -33,6 +33,15 @@ var (
 	noRecordFlag    bool
 	speedFlag       float64
 	dumpFlag        string
+
+	// State command flags
+	stateNameFlag string
+	statePathFlag string
+
+	// Wait-for command flags
+	waitConditionFlag string
+	waitTimeoutFlag   string
+	waitIntervalFlag  string
 )
 
 func main() {
@@ -265,6 +274,55 @@ The handler receives a CommandContext containing the request and a Respond metho
 	customCmd.Flags().StringVarP(&requestFlag, "request", "r", "", "Request data to pass to the command")
 	customCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 
+	// state command
+	stateCmd := &cobra.Command{
+		Use:   "state",
+		Short: "Query game state",
+		Long: `Query game state via registered state exporters.
+
+State exporters are registered in the game using autoebiten.RegisterStateExporter().
+
+The path uses dot notation:
+  - "Player.X" - access struct field
+  - "Inventory.0.Name" - access array/slice index
+  - "Skills.Sword" - access map key
+
+Examples:
+  autoebiten state --name gamestate --path Player.Health
+  autoebiten state --name gamestate --path Inventory.0.Name`,
+		RunE: runStateCommand,
+	}
+	stateCmd.Flags().StringVar(&stateNameFlag, "name", "", "State exporter name")
+	stateCmd.Flags().StringVar(&statePathFlag, "path", "", "Dot-notation path to query")
+	stateCmd.MarkFlagRequired("name")
+	stateCmd.MarkFlagRequired("path")
+
+	// wait-for command
+	waitCmd := &cobra.Command{
+		Use:   "wait-for",
+		Short: "Wait for a condition to be met",
+		Long: `Poll until a condition is met or timeout expires.
+
+Condition Format:
+  <type>:<name>:<path> <operator> <value>
+
+  type     - "state" or "custom"
+  name     - exporter name (for state) or custom command name
+  path     - dot-notation path (for state) or request string (for custom)
+  operator - ==, !=, <, >, <=, >=
+  value    - JSON value (number, string, boolean)
+
+Examples:
+  autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout 10s
+  autoebiten wait-for --condition "state:gamestate:Player.X > 50" --timeout 30s --interval 500ms`,
+		RunE: runWaitForCommand,
+	}
+	waitCmd.Flags().StringVar(&waitConditionFlag, "condition", "", "Condition to wait for")
+	waitCmd.Flags().StringVar(&waitTimeoutFlag, "timeout", "", "Maximum wait duration (e.g., 10s, 5m)")
+	waitCmd.Flags().StringVar(&waitIntervalFlag, "interval", "", "Poll interval (default 100ms)")
+	waitCmd.MarkFlagRequired("condition")
+	waitCmd.MarkFlagRequired("timeout")
+
 	// clear_recording command
 	clearRecordingCmd := &cobra.Command{
 		Use:   "clear_recording",
@@ -302,6 +360,8 @@ Use --dump to save the script without executing.`,
 	rootCmd.AddCommand(schemaCmd)
 	rootCmd.AddCommand(listCustomCmd)
 	rootCmd.AddCommand(customCmd)
+	rootCmd.AddCommand(stateCmd)
+	rootCmd.AddCommand(waitCmd)
 	rootCmd.AddCommand(clearRecordingCmd)
 	rootCmd.AddCommand(replayCmd)
 
@@ -427,6 +487,16 @@ func runCustomCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	return executor.RunCustomCommand(name, request, !noRecordFlag)
+}
+
+func runStateCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.RunStateCommand(stateNameFlag, statePathFlag)
+}
+
+func runWaitForCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.RunWaitForCommand(waitConditionFlag, waitTimeoutFlag, waitIntervalFlag)
 }
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {
