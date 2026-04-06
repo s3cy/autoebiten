@@ -346,7 +346,9 @@ func TestPlayerTakesDamage(t *testing.T) {
 
 ## Documentation
 
-- [SPEC.md](docs/SPEC.md) - JSON-RPC protocol specification and architecture details
+- **CLI Automation** - Control games via command line → [docs/cli.md](docs/cli.md)
+- **Game Testing** - Write automated tests → [docs/testkit.md](docs/testkit.md)
+- **Technical Specs** - Architecture & protocol → [docs/SPEC.md](docs/SPEC.md)
 
 ## License
 
