@@ -112,14 +112,14 @@ func (g *Game) Update() error {
 
 #### Capture
 
-**Signature:** `func Capture(screen *ebiten.Image)`
+**Signature:** `func Capture(screen image.Image)`
 
 **Purpose:** Enable screenshot capture for CLI requests.
 
 **Parameters:**
 | Name | Type | Description |
 |------|------|-------------|
-| screen | *ebiten.Image | The screen image from Draw |
+| screen | image.Image | The screen image from Draw |
 
 **Returns:** None
 
