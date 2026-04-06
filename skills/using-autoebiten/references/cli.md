@@ -365,12 +365,28 @@ type GameState struct {
 autoebiten.RegisterStateExporter("gamestate", &gameInstance)
 ```
 
-**Notes:** Query via CLI: `autoebiten state --name gamestate --path Player.Health`
+**Important:** State Exporter uses reflection internally. Only **exported fields** (capitalized names) are accessible. Unexported fields (lowercase) will not be queryable.
+
+**Path Navigation Rules:**
+- Use **Go field names**
+- JSON tags like `json:"player_name"` are ignored for path navigation
+- Interface fields can be queried directly, but cannot traverse into nested fields
+
+**Example with JSON tags:**
+```go
+type Player struct {
+    Name string `json:"player_name"`  // Query as "Name", NOT "player_name"
+    Health int    `json:"hp"`          // Query as "Health", NOT "hp"
+}
+```
 
 **Supported paths:**
-- `Player.X` - Struct field
+- `Player.X` - Struct field (must be exported/capitalized)
+- `Player.Name` - Works even with `json:"player_name"` tag
 - `Inventory.0.Name` - Array/slice index
 - `Skills.Sword` - Map key
+- `Entity` - Interface field itself (returns the stored value)
+- `Entity.Field` - NOT supported (cannot traverse into interfaces)
 
 ---
 

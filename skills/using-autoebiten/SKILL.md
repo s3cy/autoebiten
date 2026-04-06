@@ -101,5 +101,6 @@ mock.Ticks(10)
 | Issue | Check | Fix |
 |-------|-------|-----|
 | StateQuery fails | `grep RegisterStateExporter` returns nothing | Add `autoebiten.RegisterStateExporter("name", &game)` |
+| StateQuery returns empty/missing | Field is lowercase (unexported) | Capitalize field name. More edge cases in reference documents |
 | Binary not found | `ls ./mygame` fails | Build: `go build -o ./mygame ./cmd/mygame` |
 | Patch panics | `replace` in go.mod AND `autoebiten.Update()` calls | Remove `autoebiten.Update()` (patch handles it) |
