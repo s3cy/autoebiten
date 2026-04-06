@@ -964,3 +964,181 @@ autoebiten custom getPlayerInfo
 **Expected:** Output: `Health: 100`
 
 ---
+
+## Examples
+
+### Library Integration
+
+**Scenario:** New game with direct autoebiten integration.
+
+**Code:**
+```go
+package main
+
+import (
+    "fmt"
+    "image/color"
+    "log"
+
+    "github.com/s3cy/autoebiten"
+    "github.com/hajimehoshi/ebiten/v2"
+    "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+)
+
+const (
+    screenWidth  = 640
+    screenHeight = 480
+)
+
+type Game struct{}
+
+func (g *Game) Update() error {
+    // Process CLI commands
+    if !autoebiten.Update() {
+        return fmt.Errorf("exit requested")
+    }
+
+    // Check injected or real input
+    if autoebiten.IsKeyPressed(ebiten.KeySpace) {
+        fmt.Println("Space pressed!")
+    }
+
+    return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+    screen.Fill(color.RGBA{0x00, 0x00, 0x66, 0xff})
+    ebitenutil.DebugPrint(screen, "autoebiten demo")
+    autoebiten.Capture(screen) // Enable screenshots
+}
+
+func (g *Game) Layout(_, _ int) (int, int) {
+    return screenWidth, screenHeight
+}
+
+func main() {
+    ebiten.SetWindowSize(screenWidth, screenHeight)
+    ebiten.SetWindowTitle("Demo")
+    if err := ebiten.RunGame(&Game{}); err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+**How to run:**
+```bash
+go build -o demo
+./demo &
+autoebiten input --key KeySpace --action press
+```
+
+---
+
+### Custom Commands
+
+**Scenario:** Add game-specific actions callable from CLI.
+
+**Code:**
+```go
+// In game initialization
+func NewGame() *Game {
+    g := &Game{
+        PlayerHealth: 100,
+    }
+
+    // Register commands
+    autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
+        g.PlayerHealth = min(g.PlayerHealth+20, 100)
+        ctx.Respond(fmt.Sprintf("Healed to %d", g.PlayerHealth))
+    })
+
+    autoebiten.Register("damage", func(ctx autoebiten.CommandContext) {
+        g.PlayerHealth = max(g.PlayerHealth-10, 0)
+        ctx.Respond(fmt.Sprintf("Health: %d", g.PlayerHealth))
+    })
+
+    return g
+}
+```
+
+**CLI usage:**
+```bash
+autoebiten custom heal
+autoebiten custom damage
+```
+
+---
+
+### State Exporter
+
+**Scenario:** Expose game state for testing and verification.
+
+**Code:**
+```go
+type GameState struct {
+    Player struct {
+        X      float64
+        Y      float64
+        Health int
+    }
+    Inventory []string
+}
+
+func main() {
+    game := &GameState{}
+    autoebiten.RegisterStateExporter("gamestate", game)
+
+    // ... game loop
+}
+```
+
+**CLI usage:**
+```bash
+autoebiten state --name gamestate --path Player.Health
+autoebiten state --name gamestate --path Inventory.0
+```
+
+---
+
+### Scripted Automation
+
+**Scenario:** Complex input sequences.
+
+**Script:**
+```json
+{
+  "version": "1.0",
+  "commands": [
+    {"input": {"action": "press", "key": "KeyW"}},
+    {"delay": {"ms": 100}},
+    {"repeat": {"times": 3, "commands": [
+      {"input": {"action": "press", "key": "KeyA"}},
+      {"delay": {"ms": 200}}
+    ]}},
+    {"screenshot": {"output": "final.png"}}
+  ]
+}
+```
+
+**How to run:**
+```bash
+autoebiten run --script automation.json
+```
+
+---
+
+### Multiple Game Instances
+
+**Scenario:** Control specific game when multiple are running.
+
+**Detection:**
+```bash
+# Auto-detect (fails if multiple)
+autoebiten ping
+
+# Specify PID
+autoebiten --pid 12345 input --key KeySpace
+
+# Or set socket path
+AUTOEBITEN_SOCKET=/tmp/autoebiten/autoebiten-custom.sock autoebiten ping
+```
