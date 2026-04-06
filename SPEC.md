@@ -95,6 +95,8 @@ autoebiten get_mouse_position
 autoebiten get_wheel_position
 autoebiten list_custom
 autoebiten custom getPlayerInfo
+autoebiten state --name gamestate --path Player.Health
+autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout 10s
 autoebiten version
 ```
 
@@ -134,6 +136,8 @@ autoebiten version
 | `get_wheel_position` | Get injected wheel position |
 | `list_custom_commands` | List registered custom commands |
 | `custom` | Execute a custom command |
+
+**Note:** The CLI `state` and `wait-for` commands use the `custom` RPC method internally. The `state` command queries registered state exporters (via `.state.<name>` prefix), and `wait-for` polls using the `custom` method until a condition is met.
 
 ### Error Codes
 
