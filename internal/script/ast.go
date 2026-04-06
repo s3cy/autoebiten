@@ -116,6 +116,12 @@ func (s *Script) UnmarshalJSON(data []byte) error {
 
 // unmarshalCommand unmarshals a single command from JSON.
 func unmarshalCommand(data []byte) (CommandWrapper, error) {
+	return UnmarshalCommand(data)
+}
+
+// UnmarshalCommand unmarshals a single command from JSON.
+// This is the public version that can be used by external packages.
+func UnmarshalCommand(data []byte) (CommandWrapper, error) {
 	var w internalWrapper
 	if err := json.Unmarshal(data, &w); err != nil {
 		return nil, err
