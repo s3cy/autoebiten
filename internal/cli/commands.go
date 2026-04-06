@@ -67,7 +67,7 @@ func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int6
 
 	// Record after successful execution
 	if shouldRecord {
-		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
 		cmd := &script.InputCmd{
 			Action:        action,
 			Key:           key,
@@ -125,7 +125,7 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 
 	// Record after successful execution
 	if shouldRecord {
-		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
 		cmd := &script.MouseCmd{
 			Action:        action,
 			X:             x,
@@ -167,7 +167,7 @@ func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool, shouldRecord
 
 	// Record after successful execution
 	if shouldRecord {
-		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
 		cmd := &script.WheelCmd{
 			X:     x,
 			Y:     y,
@@ -221,7 +221,7 @@ func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bo
 
 	// Record after successful execution (only if output path was provided)
 	if shouldRecord && output != "" {
-		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
 		cmd := &script.ScreenshotCmd{
 			Output: output,
 			Base64: b64,
@@ -349,7 +349,7 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 	})
 
 	executor.SetWaitFunc(func(condition, timeout, interval string) error {
-		return e.RunWaitForCommand(condition, timeout, interval)
+		return e.RunWaitForCommand(condition, timeout, interval, false)
 	})
 
 	// Execute
@@ -439,7 +439,7 @@ func (e *CommandExecutor) RunCustomCommand(name, request string, shouldRecord bo
 
 	// Record after successful execution
 	if shouldRecord {
-		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
 		cmd := &script.CustomCmd{
 			Name:    name,
 			Request: request,
@@ -487,8 +487,7 @@ func (e *CommandExecutor) RunVersionCommand() error {
 
 // ClearRecording clears the recording file for the current game.
 func (e *CommandExecutor) ClearRecording() error {
-	pid := rpc.GetTargetPID()
-	if err := recording.Clear(pid); err != nil {
+	if err := recording.Clear(rpc.SocketPath()); err != nil {
 		return fmt.Errorf("failed to clear recording: %w", err)
 	}
 	e.writer.Success("recording cleared")
@@ -497,10 +496,8 @@ func (e *CommandExecutor) ClearRecording() error {
 
 // Replay replays the recorded session.
 func (e *CommandExecutor) Replay(speed float64, dumpPath string) error {
-	pid := rpc.GetTargetPID()
-
 	// Read recording
-	reader := recording.NewReader(pid)
+	reader := recording.NewReaderFromSocket(rpc.SocketPath())
 	entries, err := reader.ReadAll()
 	if err != nil {
 		return fmt.Errorf("failed to read recording: %w", err)

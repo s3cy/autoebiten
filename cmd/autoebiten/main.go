@@ -42,6 +42,7 @@ var (
 	waitConditionFlag string
 	waitTimeoutFlag   string
 	waitIntervalFlag  string
+	waitVerboseFlag   bool
 )
 
 func main() {
@@ -320,6 +321,7 @@ Examples:
 	waitCmd.Flags().StringVar(&waitConditionFlag, "condition", "", "Condition to wait for")
 	waitCmd.Flags().StringVar(&waitTimeoutFlag, "timeout", "", "Maximum wait duration (e.g., 10s, 5m)")
 	waitCmd.Flags().StringVar(&waitIntervalFlag, "interval", "", "Poll interval (default 100ms)")
+		waitCmd.Flags().BoolVarP(&waitVerboseFlag, "verbose", "v", false, "Print errors during polling")
 	waitCmd.MarkFlagRequired("condition")
 	waitCmd.MarkFlagRequired("timeout")
 
@@ -496,7 +498,7 @@ func runStateCommand(cmd *cobra.Command, args []string) error {
 
 func runWaitForCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunWaitForCommand(waitConditionFlag, waitTimeoutFlag, waitIntervalFlag)
+	return executor.RunWaitForCommand(waitConditionFlag, waitTimeoutFlag, waitIntervalFlag, waitVerboseFlag)
 }
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {

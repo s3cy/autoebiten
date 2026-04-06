@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -12,14 +13,17 @@ import (
 	"github.com/s3cy/autoebiten/internal/script"
 )
 
-var (
-	// RecordingDir is the directory for recording files.
-	RecordingDir = "/tmp/autoebiten"
-)
+// PathFromSocket derives the recording file path from a socket path.
+// The recording file is placed in the same directory with a name based on the socket.
+// Example: socket "autoebiten-12345.sock" → recording "autoebiten-12345-recording.jsonl"
+func PathFromSocket(socketPath string) string {
+	dir := filepath.Dir(socketPath)
+	base := filepath.Base(socketPath)
 
-// Path returns the recording file path for a PID.
-func Path(pid int) string {
-	return filepath.Join(RecordingDir, fmt.Sprintf("recording-%d.jsonl", pid))
+	// Remove .sock extension if present
+	name := strings.TrimSuffix(base, ".sock")
+
+	return filepath.Join(dir, fmt.Sprintf("%s-recording.jsonl", name))
 }
 
 // entryCommandWrapper is used for JSON marshaling/unmarshaling with discriminator.
@@ -111,18 +115,19 @@ type Entry struct {
 
 // Recorder handles appending commands to recording file.
 type Recorder struct {
-	pid int
+	socketPath string
 }
 
-// NewRecorder creates a recorder for the given PID.
-func NewRecorder(pid int) *Recorder {
-	return &Recorder{pid: pid}
+// NewRecorderFromSocket creates a recorder using a socket path.
+// The recording file path is derived from the socket path.
+func NewRecorderFromSocket(socketPath string) *Recorder {
+	return &Recorder{socketPath: socketPath}
 }
 
 // Record appends a command with current timestamp.
 // Uses flock for concurrency safety.
 func (r *Recorder) Record(cmd script.CommandWrapper) error {
-	path := Path(r.pid)
+	path := PathFromSocket(r.socketPath)
 
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -163,9 +168,9 @@ func (r *Recorder) Record(cmd script.CommandWrapper) error {
 	return nil
 }
 
-// Clear removes the recording file for the given PID.
-func Clear(pid int) error {
-	path := Path(pid)
+// Clear removes the recording file derived from the socket path.
+func Clear(socketPath string) error {
+	path := PathFromSocket(socketPath)
 	if err := os.Remove(path); err != nil {
 		if os.IsNotExist(err) {
 			return nil

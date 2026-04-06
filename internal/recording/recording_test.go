@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -12,20 +13,21 @@ import (
 	"github.com/s3cy/autoebiten/internal/script"
 )
 
-func TestPath(t *testing.T) {
+func TestPathFromSocket(t *testing.T) {
 	tests := []struct {
-		name     string
-		pid      int
-		expected string
+		name       string
+		socketPath string
+		expected   string
 	}{
-		{"pid 1234", 1234, "/tmp/autoebiten/recording-1234.jsonl"},
-		{"pid 1", 1, "/tmp/autoebiten/recording-1.jsonl"},
+		{"default socket", "/tmp/autoebiten/autoebiten-12345.sock", "/tmp/autoebiten/autoebiten-12345-recording.jsonl"},
+		{"custom socket", "/custom/path/game.sock", "/custom/path/game-recording.jsonl"},
+		{"no .sock extension", "/tmp/autoebiten/autoebiten-99999", "/tmp/autoebiten/autoebiten-99999-recording.jsonl"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Path(tt.pid); got != tt.expected {
-				t.Errorf("Path(%d) = %s, want %s", tt.pid, got, tt.expected)
+			if got := PathFromSocket(tt.socketPath); got != tt.expected {
+				t.Errorf("PathFromSocket(%s) = %s, want %s", tt.socketPath, got, tt.expected)
 			}
 		})
 	}
@@ -256,31 +258,24 @@ func TestRecord(t *testing.T) {
 	// Use a temp directory for test isolation
 	tmpDir := t.TempDir()
 
-	// Override RecordingDir for this test
-	oldDir := RecordingDir
-
 	tests := []struct {
-		name    string
-		pid     int
-		cmd     script.CommandWrapper
+		name       string
+		socketPath string
+		cmd        script.CommandWrapper
 	}{
-		{"input command", 12345, &script.InputCmd{Action: "press", Key: "KeyA"}},
-		{"mouse command", 12346, &script.MouseCmd{Action: "position", X: 100, Y: 200}},
+		{"input command", filepath.Join(tmpDir, "autoebiten-12345.sock"), &script.InputCmd{Action: "press", Key: "KeyA"}},
+		{"mouse command", filepath.Join(tmpDir, "autoebiten-12346.sock"), &script.MouseCmd{Action: "position", X: 100, Y: 200}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set test dir
-			RecordingDir = tmpDir
-			defer func() { RecordingDir = oldDir }()
-
-			recorder := NewRecorder(tt.pid)
+			recorder := NewRecorderFromSocket(tt.socketPath)
 			if err := recorder.Record(tt.cmd); err != nil {
 				t.Fatalf("Record failed: %v", err)
 			}
 
 			// Verify file exists and has content
-			path := Path(tt.pid)
+			path := PathFromSocket(tt.socketPath)
 			data, err := os.ReadFile(path)
 			if err != nil {
 				t.Fatalf("Failed to read file: %v", err)
@@ -301,12 +296,9 @@ func TestRecord(t *testing.T) {
 
 func TestRecordConcurrent(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldDir := RecordingDir
-	RecordingDir = tmpDir
-	defer func() { RecordingDir = oldDir }()
 
-	pid := 54321
-	recorder := NewRecorder(pid)
+	socketPath := filepath.Join(tmpDir, "autoebiten-54321.sock")
+	recorder := NewRecorderFromSocket(socketPath)
 
 	// Write 10 entries concurrently
 	var wg sync.WaitGroup
@@ -333,7 +325,7 @@ func TestRecordConcurrent(t *testing.T) {
 	}
 
 	// Verify 10 lines written
-	path := Path(pid)
+	path := PathFromSocket(socketPath)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to read file: %v", err)
@@ -355,20 +347,17 @@ func TestRecordConcurrent(t *testing.T) {
 
 func TestReadAll(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldDir := RecordingDir
-	RecordingDir = tmpDir
-	defer func() { RecordingDir = oldDir }()
 
-	pid := 99999
+	socketPath := filepath.Join(tmpDir, "autoebiten-99999.sock")
 
 	// Write some entries first
-	recorder := NewRecorder(pid)
+	recorder := NewRecorderFromSocket(socketPath)
 	recorder.Record(&script.InputCmd{Action: "press", Key: "KeyA"})
 	recorder.Record(&script.MouseCmd{Action: "position", X: 100, Y: 200})
 	recorder.Record(&script.ScreenshotCmd{Output: "test.png"})
 
 	// Read them back
-	reader := NewReader(pid)
+	reader := NewReaderFromSocket(socketPath)
 	entries, err := reader.ReadAll()
 	if err != nil {
 		t.Fatalf("ReadAll failed: %v", err)
@@ -399,12 +388,9 @@ func TestReadAll(t *testing.T) {
 
 func TestReadAllEmpty(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldDir := RecordingDir
-	RecordingDir = tmpDir
-	defer func() { RecordingDir = oldDir }()
 
-	pid := 77777
-	reader := NewReader(pid)
+	socketPath := filepath.Join(tmpDir, "autoebiten-77777.sock")
+	reader := NewReaderFromSocket(socketPath)
 	entries, err := reader.ReadAll()
 	if err != nil {
 		t.Fatalf("ReadAll should not fail on missing file: %v", err)
@@ -519,21 +505,17 @@ func TestGenerateZeroSpeed(t *testing.T) {
 
 func TestRecordingFlow(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldDir := RecordingDir
-	RecordingDir = tmpDir
-	defer func() { RecordingDir = oldDir }()
-
-	pid := 11111
+	socketPath := filepath.Join(tmpDir, "autoebiten-11111.sock")
 
 	// Record several commands
-	recorder := NewRecorder(pid)
+	recorder := NewRecorderFromSocket(socketPath)
 	recorder.Record(&script.InputCmd{Action: "press", Key: "KeyA"})
 	recorder.Record(&script.MouseCmd{Action: "position", X: 100, Y: 200})
 	recorder.Record(&script.DelayCmd{Ms: 500})
 	recorder.Record(&script.ScreenshotCmd{Output: "shot.png"})
 
 	// Read back
-	reader := NewReader(pid)
+	reader := NewReaderFromSocket(socketPath)
 	entries, err := reader.ReadAll()
 	if err != nil {
 		t.Fatalf("ReadAll failed: %v", err)
@@ -560,12 +542,12 @@ func TestRecordingFlow(t *testing.T) {
 	}
 
 	// Clear recording
-	if err := Clear(pid); err != nil {
+	if err := Clear(socketPath); err != nil {
 		t.Fatalf("Clear failed: %v", err)
 	}
 
 	// Verify file removed
-	path := Path(pid)
+	path := PathFromSocket(socketPath)
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Error("Recording file should be removed after clear")
 	}
