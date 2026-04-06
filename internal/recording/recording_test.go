@@ -516,3 +516,57 @@ func TestGenerateZeroSpeed(t *testing.T) {
 		t.Fatal("Expected error for speed 0")
 	}
 }
+
+func TestRecordingFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := RecordingDir
+	RecordingDir = tmpDir
+	defer func() { RecordingDir = oldDir }()
+
+	pid := 11111
+
+	// Record several commands
+	recorder := NewRecorder(pid)
+	recorder.Record(&script.InputCmd{Action: "press", Key: "KeyA"})
+	recorder.Record(&script.MouseCmd{Action: "position", X: 100, Y: 200})
+	recorder.Record(&script.DelayCmd{Ms: 500})
+	recorder.Record(&script.ScreenshotCmd{Output: "shot.png"})
+
+	// Read back
+	reader := NewReader(pid)
+	entries, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("ReadAll failed: %v", err)
+	}
+	if len(entries) != 4 {
+		t.Fatalf("Expected 4 entries, got %d", len(entries))
+	}
+
+	// Generate script
+	gen := NewGenerator(1.0)
+	script, err := gen.Generate(entries)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	// Verify script structure
+	if script.Version != "1.0" {
+		t.Errorf("Expected version 1.0, got %s", script.Version)
+	}
+
+	// Should have delays inserted between commands
+	if len(script.Commands) < 4 {
+		t.Errorf("Expected at least 4 commands, got %d", len(script.Commands))
+	}
+
+	// Clear recording
+	if err := Clear(pid); err != nil {
+		t.Fatalf("Clear failed: %v", err)
+	}
+
+	// Verify file removed
+	path := Path(pid)
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Error("Recording file should be removed after clear")
+	}
+}
