@@ -30,6 +30,14 @@ func SetTargetPID(pid int) {
 	targetPID = pid
 }
 
+// GetTargetPID returns the current target PID.
+func GetTargetPID() int {
+	if targetPID > 0 {
+		return targetPID
+	}
+	return os.Getpid()
+}
+
 // GameInfo represents a running game instance.
 type GameInfo struct {
 	PID  int

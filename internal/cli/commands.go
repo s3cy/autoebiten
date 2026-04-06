@@ -3,9 +3,11 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/s3cy/autoebiten/internal/input"
+	"github.com/s3cy/autoebiten/internal/recording"
 	"github.com/s3cy/autoebiten/internal/rpc"
 	"github.com/s3cy/autoebiten/internal/script"
 	"github.com/s3cy/autoebiten/internal/version"
@@ -35,7 +37,7 @@ func NewCommandExecutor() *CommandExecutor {
 }
 
 // RunInputCommand runs an input command.
-func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int64, async bool) error {
+func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int64, async bool, shouldRecord bool) error {
 	if action == "" {
 		action = "hold"
 	}
@@ -63,12 +65,26 @@ func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int6
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
+	// Record after successful execution
+	if shouldRecord {
+		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		cmd := &script.InputCmd{
+			Action:        action,
+			Key:           key,
+			DurationTicks: durationTicks,
+			Async:         async,
+		}
+		if err := recorder.Record(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+		}
+	}
+
 	e.writer.Success(fmt.Sprintf("input %s %s", action, key))
 	return nil
 }
 
 // RunMouseCommand runs a mouse command.
-func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string, durationTicks int64, async bool) error {
+func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string, durationTicks int64, async bool, shouldRecord bool) error {
 	if action == "" {
 		if button != "" {
 			action = "hold"
@@ -107,12 +123,28 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
+	// Record after successful execution
+	if shouldRecord {
+		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		cmd := &script.MouseCmd{
+			Action:        action,
+			X:             x,
+			Y:             y,
+			Button:        button,
+			DurationTicks: durationTicks,
+			Async:         async,
+		}
+		if err := recorder.Record(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+		}
+	}
+
 	e.writer.Success(fmt.Sprintf("mouse %s at (%d, %d)", action, result.X, result.Y))
 	return nil
 }
 
 // RunWheelCommand runs a wheel command.
-func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool) error {
+func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool, shouldRecord bool) error {
 	params := &rpc.WheelParams{
 		X:     x,
 		Y:     y,
@@ -133,12 +165,25 @@ func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool) error {
 		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
+	// Record after successful execution
+	if shouldRecord {
+		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		cmd := &script.WheelCmd{
+			X:     x,
+			Y:     y,
+			Async: async,
+		}
+		if err := recorder.Record(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+		}
+	}
+
 	e.writer.Success(fmt.Sprintf("wheel moved by (%.2f, %.2f)", x, y))
 	return nil
 }
 
 // RunScreenshotCommand runs a screenshot command.
-func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bool) error {
+func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bool, shouldRecord bool) error {
 	params := &rpc.ScreenshotParams{
 		Output: output,
 		Base64: b64,
@@ -172,6 +217,19 @@ func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bo
 		e.writer.Success(fmt.Sprintf("screenshot captured (base64)\n%s", result.Data))
 	} else {
 		e.writer.Success("screenshot captured")
+	}
+
+	// Record after successful execution (only if output path was provided)
+	if shouldRecord && output != "" {
+		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		cmd := &script.ScreenshotCmd{
+			Output: output,
+			Base64: b64,
+			Async:  async,
+		}
+		if err := recorder.Record(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+		}
 	}
 
 	return nil
@@ -267,23 +325,23 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 
 	// Set up handlers that send RPC commands
 	executor.SetInputFunc(func(key, action string, durationTicks int64, async bool) error {
-		return e.RunInputCommand(key, action, durationTicks, async)
+		return e.RunInputCommand(key, action, durationTicks, async, false)
 	})
 
 	executor.SetMouseFunc(func(action string, x, y int, button string, durationTicks int64, async bool) error {
-		return e.RunMouseCommand(action, x, y, button, durationTicks, async)
+		return e.RunMouseCommand(action, x, y, button, durationTicks, async, false)
 	})
 
 	executor.SetWheelFunc(func(x, y float64, async bool) error {
-		return e.RunWheelCommand(x, y, async)
+		return e.RunWheelCommand(x, y, async, false)
 	})
 
 	executor.SetScreenshotFunc(func(output string, b64 bool, async bool) error {
-		return e.RunScreenshotCommand(output, b64, async)
+		return e.RunScreenshotCommand(output, b64, async, false)
 	})
 
 	executor.SetCustomFunc(func(name, request string) error {
-		return e.RunCustomCommand(name, request)
+		return e.RunCustomCommand(name, request, false)
 	})
 
 	// Execute
@@ -346,7 +404,7 @@ func (e *CommandExecutor) ListCustomCommands() error {
 }
 
 // RunCustomCommand runs a custom command.
-func (e *CommandExecutor) RunCustomCommand(name, request string) error {
+func (e *CommandExecutor) RunCustomCommand(name, request string, shouldRecord bool) error {
 	params := &rpc.CustomParams{
 		Name:    name,
 		Request: request,
@@ -369,6 +427,18 @@ func (e *CommandExecutor) RunCustomCommand(name, request string) error {
 	var result rpc.CustomResult
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		return fmt.Errorf("invalid response format: %w", err)
+	}
+
+	// Record after successful execution
+	if shouldRecord {
+		recorder := recording.NewRecorder(rpc.GetTargetPID())
+		cmd := &script.CustomCmd{
+			Name:    name,
+			Request: request,
+		}
+		if err := recorder.Record(cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+		}
 	}
 
 	e.writer.Success(result.Response)
