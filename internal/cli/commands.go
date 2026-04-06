@@ -486,3 +486,46 @@ func (e *CommandExecutor) ClearRecording() error {
 	e.writer.Success("recording cleared")
 	return nil
 }
+
+// Replay replays the recorded session.
+func (e *CommandExecutor) Replay(speed float64, dumpPath string) error {
+	pid := rpc.GetTargetPID()
+
+	// Read recording
+	reader := recording.NewReader(pid)
+	entries, err := reader.ReadAll()
+	if err != nil {
+		return fmt.Errorf("failed to read recording: %w", err)
+	}
+
+	if len(entries) == 0 {
+		return fmt.Errorf("no recording found for game")
+	}
+
+	// Generate script
+	gen := recording.NewGenerator(speed)
+	script, err := gen.Generate(entries)
+	if err != nil {
+		return fmt.Errorf("failed to generate script: %w", err)
+	}
+
+	// Either dump or execute
+	if dumpPath != "" {
+		data, err := json.MarshalIndent(script, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal script: %w", err)
+		}
+		if err := os.WriteFile(dumpPath, data, 0644); err != nil {
+			return fmt.Errorf("failed to write script: %w", err)
+		}
+		e.writer.Success(fmt.Sprintf("script dumped to %s", dumpPath))
+		return nil
+	}
+
+	// Execute via RunScriptCommand
+	data, err := json.Marshal(script)
+	if err != nil {
+		return fmt.Errorf("failed to marshal script: %w", err)
+	}
+	return e.RunScriptCommand(string(data), false)
+}

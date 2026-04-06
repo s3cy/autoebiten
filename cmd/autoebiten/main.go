@@ -31,6 +31,8 @@ var (
 	customNameFlag  string
 	requestFlag     string
 	noRecordFlag    bool
+	speedFlag       float64
+	dumpFlag        string
 )
 
 func main() {
@@ -272,6 +274,20 @@ This starts a fresh recording session.`,
 		RunE: runClearRecordingCommand,
 	}
 
+	// replay command
+	replayCmd := &cobra.Command{
+		Use:   "replay",
+		Short: "Replay recorded commands",
+		Long: `Replay the recorded session for the target game.
+
+Generates a script from the recording and executes it.
+Use --speed to scale timing (2 = 2x faster, 0.5 = half speed).
+Use --dump to save the script without executing.`,
+		RunE: runReplayCommand,
+	}
+	replayCmd.Flags().Float64VarP(&speedFlag, "speed", "s", 1.0, "Speed multiplier (default 1.0)")
+	replayCmd.Flags().StringVarP(&dumpFlag, "dump", "d", "", "Dump script to file instead of executing")
+
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
 	rootCmd.AddCommand(wheelCmd)
@@ -287,6 +303,7 @@ This starts a fresh recording session.`,
 	rootCmd.AddCommand(listCustomCmd)
 	rootCmd.AddCommand(customCmd)
 	rootCmd.AddCommand(clearRecordingCmd)
+	rootCmd.AddCommand(replayCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
@@ -420,4 +437,9 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 func runClearRecordingCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
 	return executor.ClearRecording()
+}
+
+func runReplayCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.Replay(speedFlag, dumpFlag)
 }
