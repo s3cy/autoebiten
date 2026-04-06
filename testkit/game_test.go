@@ -1,7 +1,6 @@
 package testkit
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -99,17 +98,8 @@ func TestGamePing(t *testing.T) {
 	}
 }
 
-// getSimpleTestGameBinary returns the path to the simple test game binary.
-// Builds the binary if it doesn't exist.
 func getSimpleTestGameBinary() string {
 	binaryPath := "./internal/testgames/simple/simple"
-
-	// Check if binary exists
-	if _, err := os.Stat(binaryPath); err == nil {
-		return binaryPath
-	}
-
-	// Build the binary
 	cmd := exec.Command("go", "build", "-o", binaryPath, "./internal/testgames/simple")
 	if err := cmd.Run(); err != nil {
 		return ""

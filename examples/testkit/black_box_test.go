@@ -1,6 +1,7 @@
 package testkit_test
 
 import (
+	"os/exec"
 	"testing"
 	"time"
 
@@ -10,11 +11,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func getStateExporterGameBinary() string {
+	binaryPath := "../state_exporter/cmd/state_exporter"
+	cmd := exec.Command("go", "build", "-o", binaryPath, "../state_exporter/cmd/")
+	if err := cmd.Run(); err != nil {
+		return ""
+	}
+	return binaryPath
+}
+
 // TestPlayerMovement demonstrates black-box testing with StateQuery.
 // Requires a game built from examples/state_exporter/cmd.
 func TestPlayerMovement(t *testing.T) {
 	// Launch game in separate process (binary built from cmd directory)
-	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter",
+	game := testkit.Launch(t, getStateExporterGameBinary(),
 		testkit.WithTimeout(30*time.Second))
 	defer game.Shutdown()
 
@@ -41,7 +51,7 @@ func TestPlayerMovement(t *testing.T) {
 
 // TestHealthModification demonstrates custom commands and state verification.
 func TestHealthModification(t *testing.T) {
-	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter")
+	game := testkit.Launch(t, getStateExporterGameBinary())
 	defer game.Shutdown()
 
 	game.WaitFor(func() bool { return game.Ping() == nil }, 5*time.Second)
@@ -64,7 +74,7 @@ func TestHealthModification(t *testing.T) {
 
 // TestScreenshotCapture demonstrates visual verification.
 func TestScreenshotCapture(t *testing.T) {
-	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter")
+	game := testkit.Launch(t, getStateExporterGameBinary())
 	defer game.Shutdown()
 
 	game.WaitFor(func() bool { return game.Ping() == nil }, 5*time.Second)
@@ -82,7 +92,7 @@ func TestScreenshotCapture(t *testing.T) {
 
 // TestEnemyStateQuery demonstrates querying array/slice state.
 func TestEnemyStateQuery(t *testing.T) {
-	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter")
+	game := testkit.Launch(t, getStateExporterGameBinary())
 	defer game.Shutdown()
 
 	game.WaitFor(func() bool { return game.Ping() == nil }, 5*time.Second)

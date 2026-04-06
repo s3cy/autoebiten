@@ -2,7 +2,6 @@
 package custom
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -20,9 +19,9 @@ type Context interface {
 
 // context implements Context.
 type context struct {
-	request  string
-	respond  func(string)
-	called   bool
+	request string
+	respond func(string)
+	called  bool
 }
 
 func (c *context) Request() string {
@@ -53,7 +52,7 @@ var (
 )
 
 // Register registers a custom command handler.
-// The name must be unique; registering a duplicate name will panic.
+// The name must be unique; registering a duplicate name will override.
 func Register(name string, handler func(Context)) {
 	if name == "" {
 		panic("custom.Register: command name cannot be empty")
@@ -64,11 +63,6 @@ func Register(name string, handler func(Context)) {
 
 	commandsMu.Lock()
 	defer commandsMu.Unlock()
-
-	if _, exists := commands[name]; exists {
-		panic(fmt.Sprintf("custom.Register: command %q already registered", name))
-	}
-
 	commands[name] = handler
 }
 
