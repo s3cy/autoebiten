@@ -1,9 +1,14 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/s3cy/autoebiten"
+	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
 // Condition represents a parsed wait condition.
@@ -133,5 +138,96 @@ func checkBool(queried bool, operator string, expected bool) (bool, error) {
 		return queried != expected, nil
 	default:
 		return false, fmt.Errorf("operator %s not supported for boolean values", operator)
+	}
+}
+
+// RunWaitForCommand polls until a condition is met or timeout expires.
+func (e *CommandExecutor) RunWaitForCommand(conditionStr, timeoutStr, intervalStr string) error {
+	// Parse condition
+	cond, err := ParseCondition(conditionStr)
+	if err != nil {
+		return err
+	}
+
+	// Parse timeout
+	timeout, err := time.ParseDuration(timeoutStr)
+	if err != nil {
+		return fmt.Errorf("invalid timeout: %w", err)
+	}
+
+	// Parse interval (default to 100ms)
+	interval := 100 * time.Millisecond
+	if intervalStr != "" {
+		interval, err = time.ParseDuration(intervalStr)
+		if err != nil {
+			return fmt.Errorf("invalid interval: %w", err)
+		}
+	}
+
+	// Create timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	// Determine the custom command name based on condition type
+	var customName string
+	if cond.Type == "state" {
+		customName = autoebiten.StateExporterPathPrefix + cond.Name
+	} else {
+		customName = cond.Name
+	}
+
+	start := time.Now()
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout exceeded after %s waiting for condition", timeoutStr)
+
+		case <-ticker.C:
+			// Query the value
+			params := &rpc.CustomParams{
+				Name:    customName,
+				Request: cond.Path,
+			}
+
+			req, err := rpc.BuildRequest("custom", params)
+			if err != nil {
+				continue // Retry on transient errors
+			}
+
+			resp, err := rpc.SendRequestSocket(req)
+			if err != nil {
+				continue // Retry on transient errors
+			}
+
+			if resp.Error != nil {
+				continue // Retry on game-side errors (e.g., path not found yet)
+			}
+
+			var result rpc.CustomResult
+			if err := json.Unmarshal(resp.Result, &result); err != nil {
+				continue
+			}
+
+			// Parse the response as JSON
+			var queried any
+			if err := json.Unmarshal([]byte(result.Response), &queried); err != nil {
+				continue
+			}
+
+			// Check condition
+			met, err := CheckCondition(queried, cond.Operator, cond.Value)
+			if err != nil {
+				return err
+			}
+
+			if met {
+				elapsed := time.Since(start).Round(100 * time.Millisecond)
+				e.writer.Success(fmt.Sprintf("condition met after %s", elapsed))
+				return nil
+			}
+		}
 	}
 }

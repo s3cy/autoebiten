@@ -233,3 +233,33 @@ func TestCheckCondition(t *testing.T) {
 		})
 	}
 }
+
+func TestRunWaitForCommandInvalidCondition(t *testing.T) {
+	executor := NewCommandExecutor()
+
+	// Test with invalid condition format
+	err := executor.RunWaitForCommand("invalid-condition", "5s", "100ms")
+	if err == nil {
+		t.Error("Expected error for invalid condition, got nil")
+	}
+}
+
+func TestRunWaitForCommandInvalidTimeout(t *testing.T) {
+	executor := NewCommandExecutor()
+
+	// Test with invalid timeout format
+	err := executor.RunWaitForCommand("state:gamestate:Player.X == 100", "invalid", "100ms")
+	if err == nil {
+		t.Error("Expected error for invalid timeout, got nil")
+	}
+}
+
+func TestRunWaitForCommandInvalidInterval(t *testing.T) {
+	executor := NewCommandExecutor()
+
+	// Test with invalid interval format
+	err := executor.RunWaitForCommand("state:gamestate:Player.X == 100", "5s", "invalid")
+	if err == nil {
+		t.Error("Expected error for invalid interval, got nil")
+	}
+}
