@@ -352,3 +352,64 @@ func TestRecordConcurrent(t *testing.T) {
 		}
 	}
 }
+
+func TestReadAll(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := RecordingDir
+	RecordingDir = tmpDir
+	defer func() { RecordingDir = oldDir }()
+
+	pid := 99999
+
+	// Write some entries first
+	recorder := NewRecorder(pid)
+	recorder.Record(&script.InputCmd{Action: "press", Key: "KeyA"})
+	recorder.Record(&script.MouseCmd{Action: "position", X: 100, Y: 200})
+	recorder.Record(&script.ScreenshotCmd{Output: "test.png"})
+
+	// Read them back
+	reader := NewReader(pid)
+	entries, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("ReadAll failed: %v", err)
+	}
+
+	if len(entries) != 3 {
+		t.Fatalf("Expected 3 entries, got %d", len(entries))
+	}
+
+	// Verify first entry is InputCmd
+	inputCmd, ok := entries[0].Command.(*script.InputCmd)
+	if !ok {
+		t.Fatal("First entry should be InputCmd")
+	}
+	if inputCmd.Key != "KeyA" {
+		t.Errorf("Expected KeyA, got %s", inputCmd.Key)
+	}
+
+	// Verify second entry is MouseCmd
+	mouseCmd, ok := entries[1].Command.(*script.MouseCmd)
+	if !ok {
+		t.Fatal("Second entry should be MouseCmd")
+	}
+	if mouseCmd.X != 100 || mouseCmd.Y != 200 {
+		t.Errorf("Expected (100, 200), got (%d, %d)", mouseCmd.X, mouseCmd.Y)
+	}
+}
+
+func TestReadAllEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := RecordingDir
+	RecordingDir = tmpDir
+	defer func() { RecordingDir = oldDir }()
+
+	pid := 77777
+	reader := NewReader(pid)
+	entries, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("ReadAll should not fail on missing file: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("Expected 0 entries for missing file, got %d", len(entries))
+	}
+}
