@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "commands": [
+    {"input": {"action": "hold", "key": "KeyW", "duration_ticks": 20}},
+    {"delay": {"ms": 300}},
+    {"repeat": {"times": 3, "commands": [
+      {"input": {"action": "press", "key": "KeySpace"}},
+      {"delay": {"ms": 100}}
+    ]}},
+    {"state": {"name": "gamestate", "path": "Player.Health"}},
+    {"screenshot": {"output": "combat-done.png"}}
+  ]
+}

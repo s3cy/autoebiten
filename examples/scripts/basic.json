@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "commands": [
+    {"input": {"action": "press", "key": "KeySpace"}},
+    {"delay": {"ms": 500}},
+    {"input": {"action": "hold", "key": "KeyW", "duration_ticks": 30}},
+    {"screenshot": {"output": "basic-result.png"}}
+  ]
+}

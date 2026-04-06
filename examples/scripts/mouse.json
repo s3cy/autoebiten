@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "commands": [
+    {"mouse": {"action": "position", "x": 320, "y": 240}},
+    {"delay": {"ms": 100}},
+    {"mouse": {"action": "press", "button": "MouseButtonLeft"}},
+    {"delay": {"ms": 200}},
+    {"mouse": {"action": "position", "x": 400, "y": 300}},
+    {"mouse": {"action": "hold", "button": "MouseButtonLeft", "duration_ticks": 10}},
+    {"wheel": {"x": 0, "y": 3}},
+    {"screenshot": {"output": "mouse-result.png"}}
+  ]
+}
