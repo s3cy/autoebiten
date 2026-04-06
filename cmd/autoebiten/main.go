@@ -263,6 +263,15 @@ The handler receives a CommandContext containing the request and a Respond metho
 	customCmd.Flags().StringVarP(&requestFlag, "request", "r", "", "Request data to pass to the command")
 	customCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 
+	// clear_recording command
+	clearRecordingCmd := &cobra.Command{
+		Use:   "clear_recording",
+		Short: "Clear the recording file for the current game",
+		Long: `Remove the recording file for the target game process.
+This starts a fresh recording session.`,
+		RunE: runClearRecordingCommand,
+	}
+
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
 	rootCmd.AddCommand(wheelCmd)
@@ -277,6 +286,7 @@ The handler receives a CommandContext containing the request and a Respond metho
 	rootCmd.AddCommand(schemaCmd)
 	rootCmd.AddCommand(listCustomCmd)
 	rootCmd.AddCommand(customCmd)
+	rootCmd.AddCommand(clearRecordingCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
@@ -405,4 +415,9 @@ func runCustomCommand(cmd *cobra.Command, args []string) error {
 func runVersionCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
 	return executor.RunVersionCommand()
+}
+
+func runClearRecordingCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.ClearRecording()
 }

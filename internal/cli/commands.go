@@ -476,3 +476,13 @@ func (e *CommandExecutor) RunVersionCommand() error {
 	fmt.Printf("Game version:   %s\n", result.Version)
 	return nil
 }
+
+// ClearRecording clears the recording file for the current game.
+func (e *CommandExecutor) ClearRecording() error {
+	pid := rpc.GetTargetPID()
+	if err := recording.Clear(pid); err != nil {
+		return fmt.Errorf("failed to clear recording: %w", err)
+	}
+	e.writer.Success("recording cleared")
+	return nil
+}
