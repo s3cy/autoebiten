@@ -344,6 +344,10 @@ func TestPlayerTakesDamage(t *testing.T) {
 }
 ```
 
+## Documentation
+
+- [SPEC.md](docs/SPEC.md) - JSON-RPC protocol specification and architecture details
+
 ## License
 
 MIT
