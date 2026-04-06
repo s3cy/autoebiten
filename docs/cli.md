@@ -40,7 +40,7 @@ autoebiten is a CLI tool that enables automation of Ebitengine games through:
 - **Custom commands** - Execute game-specific actions
 - **State queries** - Read internal game state for testing
 
-Communication uses JSON-RPC over Unix sockets. Each game instance creates a socket at `/tmp/autoebiten/autoebiten-{socket-hash}.sock`.
+Communication uses JSON-RPC over Unix sockets. Each game instance creates a socket at `/tmp/autoebiten/autoebiten-{PID}.sock`.
 
 ---
 
