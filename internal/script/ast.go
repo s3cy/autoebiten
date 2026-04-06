@@ -71,6 +71,23 @@ type CustomCmd struct {
 
 func (CustomCmd) commandType() string { return "custom" }
 
+// StateCmd represents a state query command.
+type StateCmd struct {
+	Name string `json:"name" jsonschema:"required,description=State exporter name"`
+	Path string `json:"path" jsonschema:"required,description=Dot-notation path to query"`
+}
+
+func (StateCmd) commandType() string { return "state" }
+
+// WaitCmd represents a wait-for condition command.
+type WaitCmd struct {
+	Condition string `json:"condition" jsonschema:"required,description=Condition to poll for (e.g., state:gamestate:Player.Health == 100)"`
+	Timeout   string `json:"timeout" jsonschema:"required,description=Maximum wait duration (e.g., 10s, 5m)"`
+	Interval  string `json:"interval,omitempty" jsonschema:"description=Poll interval (default 100ms)"`
+}
+
+func (WaitCmd) commandType() string { return "wait" }
+
 // RepeatCmd represents a repeat block.
 type RepeatCmd struct {
 	Times    int              `json:"times"`
@@ -87,6 +104,8 @@ type internalWrapper struct {
 	Screenshot *ScreenshotCmd   `json:"screenshot,omitempty"`
 	Delay      *DelayCmd        `json:"delay,omitempty"`
 	Custom     *CustomCmd       `json:"custom,omitempty"`
+	State      *StateCmd        `json:"state,omitempty"`
+	Wait       *WaitCmd         `json:"wait,omitempty"`
 	Repeat     *json.RawMessage `json:"repeat,omitempty"`
 }
 
@@ -140,6 +159,10 @@ func UnmarshalCommand(data []byte) (CommandWrapper, error) {
 		return w.Delay, nil
 	case w.Custom != nil:
 		return w.Custom, nil
+	case w.State != nil:
+		return w.State, nil
+	case w.Wait != nil:
+		return w.Wait, nil
 	case w.Repeat != nil:
 		return unmarshalRepeat(*w.Repeat)
 	default:
@@ -192,6 +215,12 @@ type CommandSchema struct {
 
 	// Custom command - execute a registered custom command
 	Custom *CustomCmd `json:"custom,omitempty" jsonschema:"oneof_required=custom,description=Execute a registered custom command"`
+
+	// State command - query game state
+	State *StateCmd `json:"state,omitempty" jsonschema:"oneof_required=state,description=Query game state via registered exporter"`
+
+	// Wait command - wait for condition to be met
+	Wait *WaitCmd `json:"wait,omitempty" jsonschema:"oneof_required=wait,description=Wait for condition to be met"`
 
 	// Repeat command - repeat a block of commands
 	Repeat *RepeatSchema `json:"repeat,omitempty" jsonschema:"oneof_required=repeat,description=Repeat a block of commands"`
