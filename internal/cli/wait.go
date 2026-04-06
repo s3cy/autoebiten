@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/s3cy/autoebiten"
+	"github.com/s3cy/autoebiten/internal/recording"
 	"github.com/s3cy/autoebiten/internal/rpc"
+	"github.com/s3cy/autoebiten/internal/script"
 )
 
 // Condition represents a parsed wait condition.
@@ -143,7 +145,7 @@ func checkBool(queried bool, operator string, expected bool) (bool, error) {
 }
 
 // RunWaitForCommand polls until a condition is met or timeout expires.
-func (e *CommandExecutor) RunWaitForCommand(conditionStr, timeoutStr, intervalStr string, verbose bool) error {
+func (e *CommandExecutor) RunWaitForCommand(conditionStr, timeoutStr, intervalStr string, verbose bool, shouldRecord bool) error {
 	cond, err := ParseCondition(conditionStr)
 	if err != nil {
 		return err
@@ -185,6 +187,20 @@ func (e *CommandExecutor) RunWaitForCommand(conditionStr, timeoutStr, intervalSt
 			}
 			if met {
 				elapsed := time.Since(start).Round(100 * time.Millisecond)
+
+				// Record after successful execution
+				if shouldRecord {
+					recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
+					cmd := &script.WaitCmd{
+						Condition: conditionStr,
+						Timeout:   timeoutStr,
+						Interval:  intervalStr,
+					}
+					if err := recorder.Record(cmd); err != nil {
+						fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+					}
+				}
+
 				e.writer.Success(fmt.Sprintf("condition met after %s", elapsed))
 				return nil
 			}

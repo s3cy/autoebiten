@@ -84,6 +84,7 @@ type WaitCmd struct {
 	Condition string `json:"condition" jsonschema:"required,description=Condition to poll for (e.g., state:gamestate:Player.Health == 100)"`
 	Timeout   string `json:"timeout" jsonschema:"required,description=Maximum wait duration (e.g., 10s, 5m)"`
 	Interval  string `json:"interval,omitempty" jsonschema:"description=Poll interval (default 100ms)"`
+	Verbose   bool   `json:"verbose,omitempty" jsonschema:"description=Print errors during polling"`
 }
 
 func (WaitCmd) commandType() string { return "wait" }

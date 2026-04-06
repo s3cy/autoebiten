@@ -14,7 +14,7 @@ type Executor struct {
 	screenshotFunc func(output string, b64, async bool) error
 	customFunc     func(name, request string) error
 	stateFunc      func(name, path string) error
-	waitFunc       func(condition, timeout, interval string) error
+	waitFunc       func(condition, timeout, interval string, verbose bool) error
 	commandCount   int
 }
 
@@ -56,7 +56,7 @@ func (e *Executor) SetStateFunc(f func(name, path string) error) {
 }
 
 // SetWaitFunc sets the function to call for wait commands.
-func (e *Executor) SetWaitFunc(f func(condition, timeout, interval string) error) {
+func (e *Executor) SetWaitFunc(f func(condition, timeout, interval string, verbose bool) error) {
 	e.waitFunc = f
 }
 
@@ -141,7 +141,7 @@ func (e *Executor) executeCommand(cmd CommandWrapper) error {
 		if e.waitFunc == nil {
 			return fmt.Errorf("wait function not set")
 		}
-		if err := e.waitFunc(c.Condition, c.Timeout, c.Interval); err != nil {
+		if err := e.waitFunc(c.Condition, c.Timeout, c.Interval, c.Verbose); err != nil {
 			return fmt.Errorf("wait command failed: %w", err)
 		}
 		return nil

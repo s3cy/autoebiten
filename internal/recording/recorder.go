@@ -35,6 +35,8 @@ type entryCommandWrapper struct {
 	Delay      *script.DelayCmd      `json:"delay,omitempty"`
 	Custom     *script.CustomCmd     `json:"custom,omitempty"`
 	Repeat     *script.RepeatCmd     `json:"repeat,omitempty"`
+	State      *script.StateCmd      `json:"state,omitempty"`
+	Wait       *script.WaitCmd       `json:"wait,omitempty"`
 }
 
 // MarshalJSON implements custom JSON marshaling for Entry.
@@ -65,6 +67,10 @@ func (e Entry) MarshalJSON() ([]byte, error) {
 		wrapper.Custom = cmd
 	case *script.RepeatCmd:
 		wrapper.Repeat = cmd
+	case *script.StateCmd:
+		wrapper.State = cmd
+	case *script.WaitCmd:
+		wrapper.Wait = cmd
 	default:
 		return nil, fmt.Errorf("unknown command type: %T", e.Command)
 	}

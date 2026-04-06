@@ -295,6 +295,7 @@ Examples:
 	}
 	stateCmd.Flags().StringVar(&stateNameFlag, "name", "", "State exporter name")
 	stateCmd.Flags().StringVar(&statePathFlag, "path", "", "Dot-notation path to query")
+	stateCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 	stateCmd.MarkFlagRequired("name")
 	stateCmd.MarkFlagRequired("path")
 
@@ -321,7 +322,8 @@ Examples:
 	waitCmd.Flags().StringVar(&waitConditionFlag, "condition", "", "Condition to wait for")
 	waitCmd.Flags().StringVar(&waitTimeoutFlag, "timeout", "", "Maximum wait duration (e.g., 10s, 5m)")
 	waitCmd.Flags().StringVar(&waitIntervalFlag, "interval", "", "Poll interval (default 100ms)")
-		waitCmd.Flags().BoolVarP(&waitVerboseFlag, "verbose", "v", false, "Print errors during polling")
+	waitCmd.Flags().BoolVarP(&waitVerboseFlag, "verbose", "v", false, "Print errors during polling")
+	waitCmd.Flags().BoolVar(&noRecordFlag, "no-record", false, "Skip recording this command")
 	waitCmd.MarkFlagRequired("condition")
 	waitCmd.MarkFlagRequired("timeout")
 
@@ -493,12 +495,12 @@ func runCustomCommand(cmd *cobra.Command, args []string) error {
 
 func runStateCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunStateCommand(stateNameFlag, statePathFlag)
+	return executor.RunStateCommand(stateNameFlag, statePathFlag, !noRecordFlag)
 }
 
 func runWaitForCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
-	return executor.RunWaitForCommand(waitConditionFlag, waitTimeoutFlag, waitIntervalFlag, waitVerboseFlag)
+	return executor.RunWaitForCommand(waitConditionFlag, waitTimeoutFlag, waitIntervalFlag, waitVerboseFlag, !noRecordFlag)
 }
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {

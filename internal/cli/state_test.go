@@ -18,6 +18,6 @@ func TestRunStateCommand(t *testing.T) {
 
 	// Test that the method exists and has correct signature
 	// This should fail to compile if RunStateCommand is not defined
-	err := executor.RunStateCommand("test", "path.to.value")
+	err := executor.RunStateCommand("test", "path.to.value", false)
 	_ = err // We expect this to fail (no game connected) but method should exist
 }

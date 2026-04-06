@@ -276,7 +276,7 @@ func TestExecutorWaitCommand(t *testing.T) {
 	var capturedCondition, capturedTimeout, capturedInterval string
 
 	executor := NewExecutor(script)
-	executor.SetWaitFunc(func(condition, timeout, interval string) error {
+	executor.SetWaitFunc(func(condition, timeout, interval string, verbose bool) error {
 		capturedCondition = condition
 		capturedTimeout = timeout
 		capturedInterval = interval

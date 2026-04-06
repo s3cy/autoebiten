@@ -345,11 +345,11 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 	})
 
 	executor.SetStateFunc(func(name, path string) error {
-		return e.RunStateCommand(name, path)
+		return e.RunStateCommand(name, path, false)
 	})
 
-	executor.SetWaitFunc(func(condition, timeout, interval string) error {
-		return e.RunWaitForCommand(condition, timeout, interval, false)
+	executor.SetWaitFunc(func(condition, timeout, interval string, verbose bool) error {
+		return e.RunWaitForCommand(condition, timeout, interval, verbose, false)
 	})
 
 	// Execute
