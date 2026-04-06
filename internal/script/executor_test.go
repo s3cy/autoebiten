@@ -217,6 +217,106 @@ func TestExecutorScreenshotFuncNotSet(t *testing.T) {
 	}
 }
 
+func TestExecutorStateCommand(t *testing.T) {
+	script := &Script{
+		Version: "1.0",
+		Commands: []CommandWrapper{
+			&StateCmd{Name: "gamestate", Path: "Player.X"},
+		},
+	}
+
+	var capturedName, capturedPath string
+
+	executor := NewExecutor(script)
+	executor.SetStateFunc(func(name, path string) error {
+		capturedName = name
+		capturedPath = path
+		return nil
+	})
+
+	count, err := executor.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Expected count 1, got %d", count)
+	}
+
+	if capturedName != "gamestate" {
+		t.Errorf("Expected name 'gamestate', got %s", capturedName)
+	}
+	if capturedPath != "Player.X" {
+		t.Errorf("Expected path 'Player.X', got %s", capturedPath)
+	}
+}
+
+func TestExecutorStateFuncNotSet(t *testing.T) {
+	script := &Script{
+		Version: "1.0",
+		Commands: []CommandWrapper{
+			&StateCmd{Name: "gamestate", Path: "Player.X"},
+		},
+	}
+
+	executor := NewExecutor(script)
+	_, err := executor.Execute()
+	if err == nil {
+		t.Fatal("Expected error when state func not set, got nil")
+	}
+}
+
+func TestExecutorWaitCommand(t *testing.T) {
+	script := &Script{
+		Version: "1.0",
+		Commands: []CommandWrapper{
+			&WaitCmd{Condition: "state:gamestate:Player.X == 100", Timeout: "5s", Interval: "100ms"},
+		},
+	}
+
+	var capturedCondition, capturedTimeout, capturedInterval string
+
+	executor := NewExecutor(script)
+	executor.SetWaitFunc(func(condition, timeout, interval string) error {
+		capturedCondition = condition
+		capturedTimeout = timeout
+		capturedInterval = interval
+		return nil
+	})
+
+	count, err := executor.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Expected count 1, got %d", count)
+	}
+
+	if capturedCondition != "state:gamestate:Player.X == 100" {
+		t.Errorf("Expected condition 'state:gamestate:Player.X == 100', got %s", capturedCondition)
+	}
+	if capturedTimeout != "5s" {
+		t.Errorf("Expected timeout '5s', got %s", capturedTimeout)
+	}
+	if capturedInterval != "100ms" {
+		t.Errorf("Expected interval '100ms', got %s", capturedInterval)
+	}
+}
+
+func TestExecutorWaitFuncNotSet(t *testing.T) {
+	script := &Script{
+		Version: "1.0",
+		Commands: []CommandWrapper{
+			&WaitCmd{Condition: "state:gamestate:Player.X == 100", Timeout: "5s"},
+		},
+	}
+
+	executor := NewExecutor(script)
+	_, err := executor.Execute()
+	if err == nil {
+		t.Fatal("Expected error when wait func not set, got nil")
+	}
+}
+
 var errCustom = &testError{msg: "custom error"}
 
 type testError struct {

@@ -13,6 +13,8 @@ type Executor struct {
 	wheelFunc      func(x, y float64, async bool) error
 	screenshotFunc func(output string, b64, async bool) error
 	customFunc     func(name, request string) error
+	stateFunc      func(name, path string) error
+	waitFunc       func(condition, timeout, interval string) error
 	commandCount   int
 }
 
@@ -46,6 +48,16 @@ func (e *Executor) SetScreenshotFunc(f func(output string, b64, async bool) erro
 // SetCustomFunc sets the function to call for custom commands.
 func (e *Executor) SetCustomFunc(f func(name, request string) error) {
 	e.customFunc = f
+}
+
+// SetStateFunc sets the function to call for state commands.
+func (e *Executor) SetStateFunc(f func(name, path string) error) {
+	e.stateFunc = f
+}
+
+// SetWaitFunc sets the function to call for wait commands.
+func (e *Executor) SetWaitFunc(f func(condition, timeout, interval string) error) {
+	e.waitFunc = f
 }
 
 // Execute runs the script.
@@ -113,6 +125,24 @@ func (e *Executor) executeCommand(cmd CommandWrapper) error {
 		}
 		if err := e.customFunc(c.Name, c.Request); err != nil {
 			return fmt.Errorf("%s command failed: %w", formatCustomCmd(c), err)
+		}
+		return nil
+
+	case *StateCmd:
+		if e.stateFunc == nil {
+			return fmt.Errorf("state function not set")
+		}
+		if err := e.stateFunc(c.Name, c.Path); err != nil {
+			return fmt.Errorf("state command failed: %w", err)
+		}
+		return nil
+
+	case *WaitCmd:
+		if e.waitFunc == nil {
+			return fmt.Errorf("wait function not set")
+		}
+		if err := e.waitFunc(c.Condition, c.Timeout, c.Interval); err != nil {
+			return fmt.Errorf("wait command failed: %w", err)
 		}
 		return nil
 
