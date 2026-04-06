@@ -1,8 +1,11 @@
 package recording
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -245,6 +248,107 @@ func TestEntry_RoundTrip_AllCommandTypes(t *testing.T) {
 		// Verify command type is preserved
 		if fmt.Sprintf("%T", result.Command) != fmt.Sprintf("%T", cmd) {
 			t.Errorf("command type = %T, want %T", result.Command, cmd)
+		}
+	}
+}
+
+func TestRecord(t *testing.T) {
+	// Use a temp directory for test isolation
+	tmpDir := t.TempDir()
+
+	// Override RecordingDir for this test
+	oldDir := RecordingDir
+
+	tests := []struct {
+		name    string
+		pid     int
+		cmd     script.CommandWrapper
+	}{
+		{"input command", 12345, &script.InputCmd{Action: "press", Key: "KeyA"}},
+		{"mouse command", 12346, &script.MouseCmd{Action: "position", X: 100, Y: 200}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set test dir
+			RecordingDir = tmpDir
+			defer func() { RecordingDir = oldDir }()
+
+			recorder := NewRecorder(tt.pid)
+			if err := recorder.Record(tt.cmd); err != nil {
+				t.Fatalf("Record failed: %v", err)
+			}
+
+			// Verify file exists and has content
+			path := Path(tt.pid)
+			data, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatalf("Failed to read file: %v", err)
+			}
+
+			if len(data) == 0 {
+				t.Error("Recording file is empty")
+			}
+
+			// Verify valid JSON line
+			lines := bytes.Split(data, []byte("\n"))
+			if len(lines) < 1 || len(lines[0]) == 0 {
+				t.Error("No JSON line in recording file")
+			}
+		})
+	}
+}
+
+func TestRecordConcurrent(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := RecordingDir
+	RecordingDir = tmpDir
+	defer func() { RecordingDir = oldDir }()
+
+	pid := 54321
+	recorder := NewRecorder(pid)
+
+	// Write 10 entries concurrently
+	var wg sync.WaitGroup
+	errCh := make(chan error, 10)
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			cmd := &script.InputCmd{Action: "press", Key: fmt.Sprintf("Key%d", i)}
+			if err := recorder.Record(cmd); err != nil {
+				errCh <- err
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			t.Fatalf("Concurrent record error: %v", err)
+		}
+	}
+
+	// Verify 10 lines written
+	path := Path(pid)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("Failed to read file: %v", err)
+	}
+
+	lines := bytes.Split(bytes.TrimSuffix(data, []byte("\n")), []byte("\n"))
+	if len(lines) != 10 {
+		t.Errorf("Expected 10 lines, got %d", len(lines))
+	}
+
+	// Verify each line is valid JSON
+	for i, line := range lines {
+		var entry Entry
+		if err := json.Unmarshal(line, &entry); err != nil {
+			t.Errorf("Line %d is invalid JSON: %v", i, err)
 		}
 	}
 }
