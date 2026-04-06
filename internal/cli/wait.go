@@ -64,3 +64,74 @@ func ParseCondition(s string) (*Condition, error) {
 		Value:    value,
 	}, nil
 }
+
+// CheckCondition compares a queried value against an expected value using the given operator.
+func CheckCondition(queried any, operator string, expected any) (bool, error) {
+	// Determine the type of the queried value
+	switch q := queried.(type) {
+	case float64:
+		e, ok := expected.(float64)
+		if !ok {
+			return false, fmt.Errorf("type mismatch: queried is number, expected is %T", expected)
+		}
+		return checkNumber(q, operator, e)
+
+	case string:
+		e, ok := expected.(string)
+		if !ok {
+			return false, fmt.Errorf("type mismatch: queried is string, expected is %T", expected)
+		}
+		return checkString(q, operator, e)
+
+	case bool:
+		e, ok := expected.(bool)
+		if !ok {
+			return false, fmt.Errorf("type mismatch: queried is bool, expected is %T", expected)
+		}
+		return checkBool(q, operator, e)
+
+	default:
+		return false, fmt.Errorf("cannot compare objects/arrays, use specific path to a primitive value")
+	}
+}
+
+func checkNumber(queried float64, operator string, expected float64) (bool, error) {
+	switch operator {
+	case "==":
+		return queried == expected, nil
+	case "!=":
+		return queried != expected, nil
+	case "<":
+		return queried < expected, nil
+	case ">":
+		return queried > expected, nil
+	case "<=":
+		return queried <= expected, nil
+	case ">=":
+		return queried >= expected, nil
+	default:
+		return false, fmt.Errorf("unknown operator: %s", operator)
+	}
+}
+
+func checkString(queried, operator, expected string) (bool, error) {
+	switch operator {
+	case "==":
+		return queried == expected, nil
+	case "!=":
+		return queried != expected, nil
+	default:
+		return false, fmt.Errorf("operator %s not supported for string values", operator)
+	}
+}
+
+func checkBool(queried bool, operator string, expected bool) (bool, error) {
+	switch operator {
+	case "==":
+		return queried == expected, nil
+	case "!=":
+		return queried != expected, nil
+	default:
+		return false, fmt.Errorf("operator %s not supported for boolean values", operator)
+	}
+}
