@@ -344,6 +344,14 @@ func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 		return e.RunCustomCommand(name, request, false)
 	})
 
+	executor.SetStateFunc(func(name, path string) error {
+		return e.RunStateCommand(name, path)
+	})
+
+	executor.SetWaitFunc(func(condition, timeout, interval string) error {
+		return e.RunWaitForCommand(condition, timeout, interval)
+	})
+
 	// Execute
 	count, err := executor.Execute()
 	if err != nil {
