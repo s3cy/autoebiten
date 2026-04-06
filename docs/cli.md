@@ -376,6 +376,16 @@ autoebiten.RegisterStateExporter("gamestate", &gameInstance)
 
 ## CLI Commands
 
+### Global Flags
+
+These flags apply to all commands:
+
+| Flag | Description |
+|------|-------------|
+| --pid, -p | Target game process PID (auto-detected if not specified) |
+
+If multiple games are running and --pid is not specified, autoebiten will list available games and exit with an error.
+
 ### Input Control
 
 #### input
@@ -741,13 +751,3 @@ autoebiten replay --dump script.json
 ```
 
 ---
-
-## Exit Codes
-
-| Code | Description |
-|------|-------------|
-| 0 | Success |
-| 1 | General error |
-| 2 | Connection error (game not running) |
-| 3 | Invalid arguments |
-| 4 | RPC error |
