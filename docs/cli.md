@@ -495,7 +495,7 @@ autoebiten screenshot [--output <Path>] [--base64]
 |------|-------------|
 | --output, -o | Output file path (auto-generated if not set) |
 | --base64 | Output as base64 string instead of file |
-| --async | Return immediately |
+| --async, -a | Return immediately |
 | --no-record | Skip recording |
 
 **Examples:**
@@ -523,6 +523,15 @@ autoebiten run --inline '<JSON>'
 |------|-------------|
 | --script, -s | Path to script file |
 | --inline | Inline JSON string |
+
+**Examples:**
+```bash
+# From file
+autoebiten run --script automation.json
+
+# Inline
+autoebiten run --inline '{"version":"1.0","commands":[{"input":{"key":"KeySpace"}}]}'
+```
 
 ---
 
@@ -718,3 +727,27 @@ autoebiten replay [--speed N] [--dump <Path>]
 |------|-------------|
 | --speed, -s | Speed multiplier (default 1.0) |
 | --dump, -d | Dump script to file instead of executing |
+
+**Examples:**
+```bash
+# Replay at normal speed
+autoebiten replay
+
+# Replay at 2x speed
+autoebiten replay --speed 2
+
+# Dump script without executing
+autoebiten replay --dump script.json
+```
+
+---
+
+## Exit Codes
+
+| Code | Description |
+|------|-------------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Connection error (game not running) |
+| 3 | Invalid arguments |
+| 4 | RPC error |
