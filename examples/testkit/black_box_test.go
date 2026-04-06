@@ -11,10 +11,10 @@ import (
 )
 
 // TestPlayerMovement demonstrates black-box testing with StateQuery.
-// Requires a game built from examples/state_exporter.
+// Requires a game built from examples/state_exporter/cmd.
 func TestPlayerMovement(t *testing.T) {
-	// Launch game in separate process
-	game := testkit.Launch(t, "./examples/state_exporter/state_exporter",
+	// Launch game in separate process (binary built from cmd directory)
+	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter",
 		testkit.WithTimeout(30*time.Second))
 	defer game.Shutdown()
 
@@ -41,7 +41,7 @@ func TestPlayerMovement(t *testing.T) {
 
 // TestHealthModification demonstrates custom commands and state verification.
 func TestHealthModification(t *testing.T) {
-	game := testkit.Launch(t, "./examples/state_exporter/state_exporter")
+	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter")
 	defer game.Shutdown()
 
 	game.WaitFor(func() bool { return game.Ping() == nil }, 5*time.Second)
@@ -64,7 +64,7 @@ func TestHealthModification(t *testing.T) {
 
 // TestScreenshotCapture demonstrates visual verification.
 func TestScreenshotCapture(t *testing.T) {
-	game := testkit.Launch(t, "./examples/state_exporter/state_exporter")
+	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter")
 	defer game.Shutdown()
 
 	game.WaitFor(func() bool { return game.Ping() == nil }, 5*time.Second)
@@ -82,7 +82,7 @@ func TestScreenshotCapture(t *testing.T) {
 
 // TestEnemyStateQuery demonstrates querying array/slice state.
 func TestEnemyStateQuery(t *testing.T) {
-	game := testkit.Launch(t, "./examples/state_exporter/state_exporter")
+	game := testkit.Launch(t, "./examples/state_exporter/cmd/state_exporter")
 	defer game.Shutdown()
 
 	game.WaitFor(func() bool { return game.Ping() == nil }, 5*time.Second)
