@@ -413,3 +413,106 @@ func TestReadAllEmpty(t *testing.T) {
 		t.Errorf("Expected 0 entries for missing file, got %d", len(entries))
 	}
 }
+
+func TestGenerate(t *testing.T) {
+	// Create entries with known timestamps
+	baseTime := time.Now()
+	entries := []Entry{
+		{Timestamp: baseTime, Command: &script.InputCmd{Action: "press", Key: "KeyA"}},
+		{Timestamp: baseTime.Add(500 * time.Millisecond), Command: &script.MouseCmd{Action: "position", X: 100, Y: 200}},
+		{Timestamp: baseTime.Add(800 * time.Millisecond), Command: &script.ScreenshotCmd{Output: "shot.png"}},
+	}
+
+	gen := NewGenerator(1.0)
+	s, err := gen.Generate(entries)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	if s.Version != "1.0" {
+		t.Errorf("Expected version 1.0, got %s", s.Version)
+	}
+
+	// Expected: input, delay(500ms), mouse, delay(300ms), screenshot
+	if len(s.Commands) != 5 {
+		t.Fatalf("Expected 5 commands (input + delay + mouse + delay + screenshot), got %d", len(s.Commands))
+	}
+
+	// Verify first command is input
+	_, ok := s.Commands[0].(*script.InputCmd)
+	if !ok {
+		t.Fatal("First command should be InputCmd")
+	}
+
+	// Verify second command is delay 500ms
+	delay1, ok := s.Commands[1].(*script.DelayCmd)
+	if !ok {
+		t.Fatal("Second command should be DelayCmd")
+	}
+	if delay1.Ms != 500 {
+		t.Errorf("Expected delay 500ms, got %d", delay1.Ms)
+	}
+
+	// Verify third command is mouse
+	_, ok = s.Commands[2].(*script.MouseCmd)
+	if !ok {
+		t.Fatal("Third command should be MouseCmd")
+	}
+
+	// Verify fourth command is delay 300ms
+	delay2, ok := s.Commands[3].(*script.DelayCmd)
+	if !ok {
+		t.Fatal("Fourth command should be DelayCmd")
+	}
+	if delay2.Ms != 300 {
+		t.Errorf("Expected delay 300ms, got %d", delay2.Ms)
+	}
+
+	// Verify fifth command is screenshot
+	_, ok = s.Commands[4].(*script.ScreenshotCmd)
+	if !ok {
+		t.Fatal("Fifth command should be ScreenshotCmd")
+	}
+}
+
+func TestGenerateWithSpeed(t *testing.T) {
+	baseTime := time.Now()
+	entries := []Entry{
+		{Timestamp: baseTime, Command: &script.InputCmd{Action: "press", Key: "KeyA"}},
+		{Timestamp: baseTime.Add(500 * time.Millisecond), Command: &script.MouseCmd{Action: "position", X: 100, Y: 200}},
+	}
+
+	gen := NewGenerator(2.0) // 2x speed
+	s, err := gen.Generate(entries)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	// Delay should be 500/2 = 250ms
+	delay, ok := s.Commands[1].(*script.DelayCmd)
+	if !ok {
+		t.Fatal("Second command should be DelayCmd")
+	}
+	if delay.Ms != 250 {
+		t.Errorf("Expected delay 250ms (500/2), got %d", delay.Ms)
+	}
+}
+
+func TestGenerateEmpty(t *testing.T) {
+	gen := NewGenerator(1.0)
+	_, err := gen.Generate([]Entry{})
+	if err == nil {
+		t.Fatal("Expected error for empty entries")
+	}
+}
+
+func TestGenerateZeroSpeed(t *testing.T) {
+	gen := NewGenerator(0.0)
+	entries := []Entry{
+		{Timestamp: time.Now(), Command: &script.InputCmd{Action: "press", Key: "KeyA"}},
+	}
+	_, err := gen.Generate(entries)
+	if err == nil {
+		t.Fatal("Expected error for speed 0")
+	}
+}
