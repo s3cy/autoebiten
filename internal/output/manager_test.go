@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -156,4 +157,37 @@ func TestOutputManagerDiffAndUpdateSnapshotEmptyFiles(t *testing.T) {
 	diff, err := manager.DiffAndUpdateSnapshot()
 	require.NoError(t, err)
 	assert.Empty(t, diff) // Empty diff when both empty
+}
+
+func TestOutputManagerConcurrentWrite(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+	snapPath := filepath.Join(tmpDir, "test-snapshot.log")
+
+	logFile, err := os.Create(logPath)
+	require.NoError(t, err)
+
+	manager := NewOutputManager(logFile, logPath, snapPath)
+
+	// Write concurrently from multiple goroutines
+	done := make(chan bool, 10)
+	for i := range 10 {
+		go func(n int) {
+			manager.Write([]byte("line " + strconv.Itoa(n) + "\n"))
+			done <- true
+		}(i)
+	}
+
+	// Wait for all writes to complete
+	for range 10 {
+		<-done
+	}
+
+	// Read file and verify all lines are present
+	content, err := os.ReadFile(logPath)
+	require.NoError(t, err)
+
+	for i := range 10 {
+		assert.Contains(t, string(content), "line "+strconv.Itoa(i))
+	}
 }
