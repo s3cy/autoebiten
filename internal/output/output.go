@@ -3,7 +3,6 @@ package output
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -67,41 +66,4 @@ func writeSnapshot(path string, content []byte) error {
 	}
 
 	return nil
-}
-
-// CopyFile copies src to dst, creating dst if needed.
-// Returns error if src doesn't exist (not os.IsNotExist).
-func CopyFile(dst, src string) error {
-	content, err := os.ReadFile(src)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Source doesn't exist - write empty file
-			return writeSnapshot(dst, nil)
-		}
-		return fmt.Errorf("failed to read source: %w", err)
-	}
-	return writeSnapshot(dst, content)
-}
-
-// GenerateDiff generates a unified diff between snapshot and current file paths.
-// Uses diff -u directly on files with sed to handle carriage returns.
-func GenerateDiff(snapshotPath, currentPath string) string {
-	// Use bash process substitution to:
-	// 1. Process carriage returns (keep only content after last \r per line)
-	// 2. Run diff -u on the processed content
-	cmd := exec.Command("bash", "-c",
-		"diff -u <(sed 's/^.*\\r//' '"+snapshotPath+"' 2>/dev/null || echo '') "+
-			"<(sed 's/^.*\\r//' '"+currentPath+"' 2>/dev/null || echo '')")
-
-	output, err := cmd.Output()
-	if err != nil {
-		// diff returns exit code 1 when files differ (expected)
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return string(output)
-		}
-		// If files don't exist or are empty, handle gracefully
-		return ""
-	}
-
-	return string(output)
 }
