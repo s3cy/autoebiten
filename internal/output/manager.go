@@ -1,8 +1,10 @@
 package output
 
 import (
+	"bytes"
 	"io"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -84,4 +86,94 @@ func (m *OutputManager) Write(data []byte) (int, error) {
 	}
 	m.logFile.Sync()
 	return n, nil
+}
+
+// DiffAndUpdateSnapshot generates diff between snapshot and log, then copies log to snapshot.
+// Returns the diff string.
+func (m *OutputManager) DiffAndUpdateSnapshot() (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Flush log file to ensure diff sees latest content
+	m.logFile.Sync()
+
+	// Read both files content
+	snapshotContent, snapshotErr := os.ReadFile(m.snapshotPath)
+	outputContent, outputErr := os.ReadFile(m.outputPath)
+
+	// Treat non-existent files as empty content
+	if os.IsNotExist(snapshotErr) {
+		snapshotContent = nil
+	} else if snapshotErr != nil {
+		return "", snapshotErr
+	}
+	if os.IsNotExist(outputErr) {
+		outputContent = nil
+	} else if outputErr != nil {
+		return "", outputErr
+	}
+
+	// Generate diff only if content differs
+	var diff string
+	if !bytes.Equal(snapshotContent, outputContent) {
+		diff = generateUnifiedDiff(snapshotContent, outputContent)
+	}
+
+	// Copy output to snapshot
+	if err := writeSnapshot(m.snapshotPath, outputContent); err != nil {
+		return diff, err
+	}
+
+	return diff, nil
+}
+
+// generateUnifiedDiff creates a unified diff between old and new content.
+func generateUnifiedDiff(oldContent, newContent []byte) string {
+	oldLines := splitLines(oldContent)
+	newLines := splitLines(newContent)
+
+	// Build simple diff output
+	result := "--- snapshot\n+++ current\n"
+
+	// Simple approach: show all removed lines, then all added lines
+	oldSet := make(map[string]bool)
+	for _, line := range oldLines {
+		oldSet[line] = true
+	}
+
+	newSet := make(map[string]bool)
+	for _, line := range newLines {
+		newSet[line] = true
+	}
+
+	// Lines in old but not in new (removed)
+	for _, line := range oldLines {
+		if !newSet[line] {
+			result += "-" + line + "\n"
+		}
+	}
+
+	// Lines in new but not in old (added)
+	for _, line := range newLines {
+		if !oldSet[line] {
+			result += "+" + line + "\n"
+		}
+	}
+
+	return result
+}
+
+// splitLines splits content into lines without trailing newlines.
+func splitLines(content []byte) []string {
+	if len(content) == 0 {
+		return nil
+	}
+	s := string(content)
+	if s[len(s)-1] == '\n' {
+		s = s[:len(s)-1]
+	}
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, "\n")
 }
