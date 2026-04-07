@@ -36,7 +36,9 @@ func (w *Writer) Errorln(a ...any) {
 // PrintDiff prints a diff output if present.
 func (w *Writer) PrintDiff(diff string) {
 	if diff != "" {
-		fmt.Println(diff)
+		fmt.Println("<log_diff>")
+		fmt.Print(diff)
+		fmt.Println("</log_diff>")
 	}
 }
 

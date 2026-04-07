@@ -11,13 +11,6 @@ import (
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
-// Response wraps an RPC response with captured output.
-// This is the format returned by the proxy to CLI clients.
-type Response struct {
-	rpc.RPCResponse
-	Output string `json:"output,omitempty"` // Diff output from game
-}
-
 // Server wraps game RPC calls and captures output.
 type Server struct {
 	gameClient  GameClient
@@ -66,12 +59,12 @@ func (s *Server) Cleanup() error {
 
 // ForwardRequest forwards an RPC request to the game and returns a wrapped response with output.
 // This is the main proxy method - it doesn't know or care about specific RPC methods.
-func (s *Server) ForwardRequest(req *rpc.RPCRequest) (*Response, error) {
+func (s *Server) ForwardRequest(req *rpc.RPCRequest) (*rpc.RPCResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Forward request to game
-	gameResp, err := s.gameClient.SendRequest(req)
+	resp, err := s.gameClient.SendRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("game request failed: %w", err)
 	}
@@ -83,10 +76,10 @@ func (s *Server) ForwardRequest(req *rpc.RPCRequest) (*Response, error) {
 	}
 
 	// Build proxy response
-	resp := &Response{
-		RPCResponse: *gameResp,
-		Output:      diff,
+	if resp.Extra == nil {
+		resp.Extra = make(map[string]any)
 	}
+	resp.Extra["diff"] = diff
 
 	return resp, nil
 }
@@ -116,13 +109,11 @@ func (h *Handler) ProcessRequest(conn net.Conn, req *rpc.RPCRequest) {
 }
 
 func sendErrorResponse(conn net.Conn, id any, code int, message string) {
-	resp := &Response{
-		RPCResponse: rpc.ErrorResponse(id, code, message),
-	}
-	sendResponse(conn, resp)
+	resp := rpc.ErrorResponse(id, code, message)
+	sendResponse(conn, &resp)
 }
 
-func sendResponse(conn net.Conn, resp *Response) {
+func sendResponse(conn net.Conn, resp *rpc.RPCResponse) {
 	encoder := json.NewEncoder(conn)
 	encoder.Encode(resp)
 }

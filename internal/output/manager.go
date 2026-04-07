@@ -1,11 +1,12 @@
 package output
 
 import (
-	"bytes"
 	"io"
+	"log"
 	"os"
-	"strings"
 	"sync"
+
+	"github.com/aymanbagabas/go-udiff"
 )
 
 // CarriageReturnWriter interprets \r as "move cursor to line start, overwrite".
@@ -97,83 +98,49 @@ func (m *OutputManager) DiffAndUpdateSnapshot() (string, error) {
 	// Flush log file to ensure diff sees latest content
 	m.logFile.Sync()
 
-	// Read both files content
-	snapshotContent, snapshotErr := os.ReadFile(m.snapshotPath)
-	outputContent, outputErr := os.ReadFile(m.outputPath)
-
-	// Treat non-existent files as empty content
-	if os.IsNotExist(snapshotErr) {
-		snapshotContent = nil
-	} else if snapshotErr != nil {
-		return "", snapshotErr
+	// Read files content
+	snapshotContent, snapshotModTime, err := readFileAndModTime(m.snapshotPath)
+	if err != nil {
+		return "", err
 	}
-	if os.IsNotExist(outputErr) {
-		outputContent = nil
-	} else if outputErr != nil {
-		return "", outputErr
+	outputContent, outputModTime, err := readFileAndModTime(m.outputPath)
+	if err != nil {
+		return "", err
 	}
 
-	// Generate diff only if content differs
-	var diff string
-	if !bytes.Equal(snapshotContent, outputContent) {
-		diff = generateUnifiedDiff(snapshotContent, outputContent)
-	}
+	diff := generateUnifiedDiff("snapshot "+snapshotModTime, "current "+outputModTime, snapshotContent, outputContent)
 
 	// Copy output to snapshot
 	if err := writeSnapshot(m.snapshotPath, outputContent); err != nil {
-		return diff, err
+		return "", err
 	}
 
 	return diff, nil
 }
 
-// generateUnifiedDiff creates a unified diff between old and new content.
-func generateUnifiedDiff(oldContent, newContent []byte) string {
-	oldLines := splitLines(oldContent)
-	newLines := splitLines(newContent)
-
-	// Build simple diff output
-	result := "--- snapshot\n+++ current\n"
-
-	// Simple approach: show all removed lines, then all added lines
-	oldSet := make(map[string]bool)
-	for _, line := range oldLines {
-		oldSet[line] = true
-	}
-
-	newSet := make(map[string]bool)
-	for _, line := range newLines {
-		newSet[line] = true
-	}
-
-	// Lines in old but not in new (removed)
-	for _, line := range oldLines {
-		if !newSet[line] {
-			result += "-" + line + "\n"
+func readFileAndModTime(path string) ([]byte, string, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		// Treat non-existent file as empty content
+		if os.IsNotExist(err) {
+			return nil, "(empty)", nil
 		}
+		return nil, "", err
 	}
-
-	// Lines in new but not in old (added)
-	for _, line := range newLines {
-		if !oldSet[line] {
-			result += "+" + line + "\n"
-		}
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, "", err
 	}
-
-	return result
+	return content, info.ModTime().Format("2006-01-02 15:04:05.000"), nil
 }
 
-// splitLines splits content into lines without trailing newlines.
-func splitLines(content []byte) []string {
-	if len(content) == 0 {
-		return nil
+// generateUnifiedDiff creates a unified diff between old and new content.
+func generateUnifiedDiff(oldLabel, newLabel string, oldContent, newContent []byte) string {
+	edits := udiff.Bytes(oldContent, newContent)
+	unified, err := udiff.ToUnified(oldLabel, newLabel, string(oldContent), edits, udiff.DefaultContextLines)
+	if err != nil {
+		// Can't happen: edits are consistent.
+		log.Fatalf("internal error in udiff: %v", err)
 	}
-	s := string(content)
-	if s[len(s)-1] == '\n' {
-		s = s[:len(s)-1]
-	}
-	if s == "" {
-		return nil
-	}
-	return strings.Split(s, "\n")
+	return unified
 }

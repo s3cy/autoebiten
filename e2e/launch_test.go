@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -84,19 +85,20 @@ func TestLaunchSocketPath(t *testing.T) {
 
 // TestProxyResponse tests proxy response structure.
 func TestProxyResponse(t *testing.T) {
-	resp := proxy.Response{
-		RPCResponse: rpc.RPCResponse{
-			JSONRPC: "2.0",
-			ID:      1,
-			Result:  []byte(`{"success": true}`),
+	resp := rpc.RPCResponse{
+		JSONRPC: "2.0",
+		ID:      1,
+		Result:  json.RawMessage(`{"success": true}`),
+		Extra: map[string]any{
+			"diff": "--- snapshot\n+++ current\n@@ -1 +1,2 @@\n line1\n+line2",
 		},
-		Output: "--- snapshot\n+++ current\n@@ -1 +1,2 @@\n line1\n+line2",
 	}
 
 	if resp.JSONRPC != "2.0" {
 		t.Errorf("JSONRPC = %q, want %q", resp.JSONRPC, "2.0")
 	}
-	if resp.Output == "" {
+	diff, _ := resp.Extra["diff"].(string)
+	if diff == "" {
 		t.Error("Expected non-empty output")
 	}
 }

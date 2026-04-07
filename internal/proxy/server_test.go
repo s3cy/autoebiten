@@ -123,7 +123,9 @@ func TestForwardRequest(t *testing.T) {
 	if resp.JSONRPC != "2.0" {
 		t.Errorf("JSONRPC = %q, want %q", resp.JSONRPC, "2.0")
 	}
-	if resp.Output == "" {
+	// Extract diff from Extra field
+	diff, _ := resp.Extra["diff"].(string)
+	if diff == "" {
 		t.Error("Expected non-empty diff output")
 	}
 
@@ -168,7 +170,9 @@ func TestForwardRequestWithEmptyLog(t *testing.T) {
 		t.Fatalf("ForwardRequest failed: %v", err)
 	}
 
-	if resp.Output == "" {
+	// Extract diff from Extra field
+	diff, _ := resp.Extra["diff"].(string)
+	if diff == "" {
 		t.Error("Expected non-empty diff for new output")
 	}
 }
@@ -203,9 +207,11 @@ func TestForwardRequestNoChanges(t *testing.T) {
 		t.Fatalf("ForwardRequest failed: %v", err)
 	}
 
+	// Extract diff from Extra field
+	diff, _ := resp.Extra["diff"].(string)
 	// Diff should be empty when no changes
-	if resp.Output != "" {
-		t.Errorf("Expected empty diff for unchanged content, got: %q", resp.Output)
+	if diff != "" {
+		t.Errorf("Expected empty diff for unchanged content, got: %q", diff)
 	}
 }
 
@@ -396,7 +402,7 @@ func TestHandlerProcessRequest(t *testing.T) {
 
 	// Read response
 	decoder := json.NewDecoder(clientConn)
-	var resp Response
+	var resp rpc.RPCResponse
 	if err := decoder.Decode(&resp); err != nil {
 		t.Fatalf("Failed to decode response: %v", err)
 	}
@@ -404,7 +410,9 @@ func TestHandlerProcessRequest(t *testing.T) {
 	if resp.JSONRPC != "2.0" {
 		t.Errorf("JSONRPC = %q, want %q", resp.JSONRPC, "2.0")
 	}
-	if resp.Output == "" {
+	// Extract diff from Extra field
+	diff, _ := resp.Extra["diff"].(string)
+	if diff == "" {
 		t.Error("Expected non-empty output in response")
 	}
 }

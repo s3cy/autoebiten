@@ -8,7 +8,6 @@ import (
 
 	"github.com/s3cy/autoebiten/internal/input"
 	"github.com/s3cy/autoebiten/internal/output"
-	"github.com/s3cy/autoebiten/internal/proxy"
 	"github.com/s3cy/autoebiten/internal/recording"
 	"github.com/s3cy/autoebiten/internal/rpc"
 	"github.com/s3cy/autoebiten/internal/script"
@@ -79,25 +78,12 @@ func sendRequestWithProxy(req *rpc.RPCRequest) (*rpc.RPCResponse, string, error)
 	// Extract diff output from proxy response
 	var diffOutput string
 	if isProxy {
-		// Proxy returns a wrapped response with output field
-		var proxyResp proxy.Response
-		if err := json.Unmarshal(mustMarshal(resp.Result), &proxyResp); err == nil {
-			// Reconstruct the actual response from the proxy wrapper
-			resp.Result = proxyResp.Result
-			resp.Error = proxyResp.Error
-			diffOutput = proxyResp.Output
+		if diff, ok := resp.Extra["diff"].(string); ok {
+			diffOutput = diff
 		}
 	}
 
 	return resp, diffOutput, nil
-}
-
-func mustMarshal(v any) json.RawMessage {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return []byte("null")
-	}
-	return data
 }
 
 // CommandExecutor executes CLI commands via RPC.

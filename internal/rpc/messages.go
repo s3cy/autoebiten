@@ -19,6 +19,7 @@ type RPCResponse struct {
 	ID      any             `json:"id"`
 	Result  json.RawMessage `json:"result,omitempty"`
 	Error   *RPCError       `json:"error,omitempty"`
+	Extra   map[string]any  `json:"extra,omitempty"` // For additional fields
 }
 
 // RPCError represents a JSON-RPC error.
