@@ -21,6 +21,14 @@ import (
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
+// Mouse action constants to prevent typos and ensure consistency.
+const (
+	mouseActionPosition = "position"
+	mouseActionPress    = "press"
+	mouseActionRelease  = "release"
+	mouseActionHold     = "hold"
+)
+
 // keyToString converts an ebiten.Key to its string representation.
 func keyToString(key ebiten.Key) string {
 	// Reverse lookup in StringKeyMap using ebiten.Key
@@ -298,17 +306,22 @@ func (g *Game) sendInput(action string, key ebiten.Key, ticks int64) error {
 
 // MoveMouse moves the mouse cursor to the specified position.
 func (g *Game) MoveMouse(x, y int) error {
-	return g.sendMouse("move", x, y, "", 0)
+	return g.sendMouse(mouseActionPosition, x, y, "", 0)
 }
 
 // PressMouseButton sends a mouse button press event.
 func (g *Game) PressMouseButton(button ebiten.MouseButton) error {
-	return g.sendMouse("press", 0, 0, mouseButtonToString(button), 0)
+	return g.sendMouse(mouseActionPress, 0, 0, mouseButtonToString(button), 0)
 }
 
 // ReleaseMouseButton sends a mouse button release event.
 func (g *Game) ReleaseMouseButton(button ebiten.MouseButton) error {
-	return g.sendMouse("release", 0, 0, mouseButtonToString(button), 0)
+	return g.sendMouse(mouseActionRelease, 0, 0, mouseButtonToString(button), 0)
+}
+
+// HoldMouseButton holds a mouse button down for the specified number of ticks.
+func (g *Game) HoldMouseButton(button ebiten.MouseButton, ticks int64) error {
+	return g.sendMouse(mouseActionHold, 0, 0, mouseButtonToString(button), ticks)
 }
 
 // sendMouse sends a mouse command to the game.
