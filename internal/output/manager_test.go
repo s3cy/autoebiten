@@ -2,9 +2,12 @@ package output
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCarriageReturnWriterBasicOverwrite(t *testing.T) {
@@ -64,4 +67,25 @@ func TestCarriageReturnWriterBasicOverwrite(t *testing.T) {
 			assert.Equal(t, tt.expected, dst.String())
 		})
 	}
+}
+
+func TestOutputManagerWrite(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+	snapPath := filepath.Join(tmpDir, "test-snapshot.log")
+
+	logFile, err := os.Create(logPath)
+	require.NoError(t, err)
+
+	manager := NewOutputManager(logFile, logPath, snapPath)
+
+	// Write some data
+	n, err := manager.Write([]byte("Hello\n"))
+	assert.NoError(t, err)
+	assert.Equal(t, 6, n)
+
+	// Read file to verify
+	content, err := os.ReadFile(logPath)
+	require.NoError(t, err)
+	assert.Equal(t, "Hello\n", string(content))
 }

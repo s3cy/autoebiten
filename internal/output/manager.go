@@ -2,6 +2,8 @@ package output
 
 import (
 	"io"
+	"os"
+	"sync"
 )
 
 // CarriageReturnWriter interprets \r as "move cursor to line start, overwrite".
@@ -52,4 +54,34 @@ func (w *CarriageReturnWriter) Flush() error {
 		w.lineBuf = w.lineBuf[:0]
 	}
 	return nil
+}
+
+// OutputManager coordinates mutex-protected write, diff, and snapshot operations.
+type OutputManager struct {
+	mu           sync.Mutex
+	logFile      *os.File
+	outputPath   string
+	snapshotPath string
+}
+
+// NewOutputManager creates a new output manager.
+func NewOutputManager(logFile *os.File, outputPath, snapshotPath string) *OutputManager {
+	return &OutputManager{
+		logFile:      logFile,
+		outputPath:   outputPath,
+		snapshotPath: snapshotPath,
+	}
+}
+
+// Write writes data to the log file with mutex protection and flush.
+func (m *OutputManager) Write(data []byte) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	n, err := m.logFile.Write(data)
+	if err != nil {
+		return n, err
+	}
+	m.logFile.Sync()
+	return n, nil
 }
