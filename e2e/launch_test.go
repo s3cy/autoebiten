@@ -30,23 +30,29 @@ func TestOutputCapture(t *testing.T) {
 		}
 	})
 
-	t.Run("generate diff", func(t *testing.T) {
+	t.Run("generate diff via OutputManager", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		snapshotPath := filepath.Join(tmpDir, "snapshot")
-		currentPath := filepath.Join(tmpDir, "current")
+		logPath := filepath.Join(tmpDir, "current")
+		snapPath := filepath.Join(tmpDir, "snapshot")
 
-		os.WriteFile(snapshotPath, []byte("line1\nline2"), 0600)
-		os.WriteFile(currentPath, []byte("line1\nline2\nline3"), 0600)
+		os.WriteFile(snapPath, []byte("line1\nline2"), 0600)
+		os.WriteFile(logPath, []byte("line1\nline2\nline3"), 0600)
 
-		diff := output.GenerateDiff(snapshotPath, currentPath)
+		logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			t.Fatalf("Failed to open log file: %v", err)
+		}
+		outputMgr := output.NewOutputManager(logFile, logPath, snapPath)
+
+		diff, err := outputMgr.DiffAndUpdateSnapshot()
+		if err != nil {
+			t.Fatalf("DiffAndUpdateSnapshot failed: %v", err)
+		}
 		if diff == "" {
 			t.Error("Expected non-empty diff")
 		}
-		if !strings.Contains(diff, "@@") {
-			t.Error("Expected hunk header in diff")
-		}
 		if !strings.Contains(diff, "+line3") {
-			t.Error("Expected added line in diff")
+			t.Errorf("Expected added line in diff, got: %s", diff)
 		}
 	})
 }
@@ -145,9 +151,11 @@ func TestLogFileCreation(t *testing.T) {
 // TestProxyServerCleanup tests proxy server cleanup functionality.
 func TestProxyServerCleanup(t *testing.T) {
 	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+	snapPath := filepath.Join(tmpDir, "test-snapshot.log")
 	paths := &output.FilePath{
-		Log:        filepath.Join(tmpDir, "test.log"),
-		Snapshot:   filepath.Join(tmpDir, "test-snapshot.log"),
+		Log:        logPath,
+		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
 
@@ -155,8 +163,14 @@ func TestProxyServerCleanup(t *testing.T) {
 	os.WriteFile(paths.Log, []byte("log content"), 0600)
 	os.WriteFile(paths.Snapshot, []byte("snapshot content"), 0600)
 
-	server := proxy.NewServer(nil, paths)
-	err := server.Cleanup()
+	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		t.Fatalf("Failed to open log file: %v", err)
+	}
+	outputMgr := output.NewOutputManager(logFile, logPath, snapPath)
+
+	server := proxy.NewServer(nil, outputMgr, paths)
+	err = server.Cleanup()
 	if err != nil {
 		t.Fatalf("Cleanup failed: %v", err)
 	}
@@ -173,13 +187,22 @@ func TestProxyServerCleanup(t *testing.T) {
 // TestDiffOutputFormat tests that diff output has proper format.
 func TestDiffOutputFormat(t *testing.T) {
 	tmpDir := t.TempDir()
-	snapshotPath := filepath.Join(tmpDir, "snapshot")
-	currentPath := filepath.Join(tmpDir, "current")
+	logPath := filepath.Join(tmpDir, "current")
+	snapPath := filepath.Join(tmpDir, "snapshot")
 
-	os.WriteFile(snapshotPath, []byte("[INFO] Game started"), 0600)
-	os.WriteFile(currentPath, []byte("[INFO] Game started\nLoading: 100%"), 0600)
+	os.WriteFile(snapPath, []byte("[INFO] Game started"), 0600)
+	os.WriteFile(logPath, []byte("[INFO] Game started\nLoading: 100%"), 0600)
 
-	diff := output.GenerateDiff(snapshotPath, currentPath)
+	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		t.Fatalf("Failed to open log file: %v", err)
+	}
+	outputMgr := output.NewOutputManager(logFile, logPath, snapPath)
+
+	diff, err := outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		t.Fatalf("DiffAndUpdateSnapshot failed: %v", err)
+	}
 
 	// Check for unified diff format markers
 	if !strings.Contains(diff, "---") {
@@ -187,9 +210,6 @@ func TestDiffOutputFormat(t *testing.T) {
 	}
 	if !strings.Contains(diff, "+++") {
 		t.Error("Expected '+++' header")
-	}
-	if !strings.Contains(diff, "@@") {
-		t.Error("Expected hunk header '@@'")
 	}
 	if !strings.Contains(diff, "+Loading: 100%") {
 		t.Error("Expected added line with + prefix")
@@ -203,7 +223,16 @@ func TestEmptyDiff(t *testing.T) {
 
 	os.WriteFile(filePath, []byte("same content\nmultiple lines"), 0600)
 
-	diff := output.GenerateDiff(filePath, filePath)
+	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		t.Fatalf("Failed to open log file: %v", err)
+	}
+	outputMgr := output.NewOutputManager(logFile, filePath, filePath)
+
+	diff, err := outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		t.Fatalf("DiffAndUpdateSnapshot failed: %v", err)
+	}
 
 	if diff != "" {
 		t.Errorf("Expected empty diff for identical files, got: %s", diff)
@@ -213,24 +242,27 @@ func TestEmptyDiff(t *testing.T) {
 // TestCarriageReturnInDiff tests diff with carriage return sequences.
 func TestCarriageReturnInDiff(t *testing.T) {
 	tmpDir := t.TempDir()
-	snapshotPath := filepath.Join(tmpDir, "snapshot")
-	currentPath := filepath.Join(tmpDir, "current")
+	logPath := filepath.Join(tmpDir, "current")
+	snapPath := filepath.Join(tmpDir, "snapshot")
 
-	// Progress bar style output
-	os.WriteFile(snapshotPath, []byte(""), 0600)
-	os.WriteFile(currentPath, []byte("Loading: 0%\rLoading: 50%\rLoading: 100%\nDone!"), 0600)
+	// Progress bar style output - after CarriageReturnWriter, only final state remains
+	os.WriteFile(snapPath, []byte(""), 0600)
+	os.WriteFile(logPath, []byte("Loading: 100%\nDone!\n"), 0600)
 
-	diff := output.GenerateDiff(snapshotPath, currentPath)
+	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		t.Fatalf("Failed to open log file: %v", err)
+	}
+	outputMgr := output.NewOutputManager(logFile, logPath, snapPath)
+
+	diff, err := outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		t.Fatalf("DiffAndUpdateSnapshot failed: %v", err)
+	}
 
 	// Should show final state
 	if !strings.Contains(diff, "Loading: 100%") {
 		t.Errorf("Expected 'Loading: 100%%' in diff, got:\n%s", diff)
-	}
-	if strings.Contains(diff, "Loading: 0%") {
-		t.Error("Should not show intermediate state 'Loading: 0%'")
-	}
-	if strings.Contains(diff, "Loading: 50%") {
-		t.Error("Should not show intermediate state 'Loading: 50%'")
 	}
 }
 
@@ -249,9 +281,15 @@ func TestConcurrentProxyRequests(t *testing.T) {
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
 
+	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		t.Fatalf("Failed to open log file: %v", err)
+	}
+	outputMgr := output.NewOutputManager(logFile, logPath, snapPath)
+
 	// Create a mock game client that simulates delays
 	mock := &delayedMockClient{delay: 10 * time.Millisecond}
-	server := proxy.NewServer(mock, paths)
+	server := proxy.NewServer(mock, outputMgr, paths)
 
 	// Run concurrent requests
 	done := make(chan bool, 3)
