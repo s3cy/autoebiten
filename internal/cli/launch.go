@@ -30,6 +30,7 @@ type LaunchOptions struct {
 type LaunchCommand struct {
 	options      *LaunchOptions
 	outputFiles  *output.FilePath
+	outputMgr    *output.OutputManager
 	gameProc     *os.Process
 	proxyServer  *proxy.Server
 	proxyHandler *proxy.Handler
@@ -77,9 +78,14 @@ func (lc *LaunchCommand) Run() error {
 	}
 	// Note: we don't defer close here - it needs to stay open for the tee goroutines
 
-	// Tee stdout/stderr to both terminal and log file
-	go lc.teeOutput(stdoutPipe, os.Stdout, logFile)
-	go lc.teeOutput(stderrPipe, os.Stderr, logFile)
+	// Create OutputManager
+	lc.outputMgr = output.NewOutputManager(logFile, lc.outputFiles.Log, lc.outputFiles.Snapshot)
+
+	// Tee stdout/stderr through CarriageReturnWriter to OutputManager
+	stdoutWriter := output.NewCarriageReturnWriter(lc.outputMgr)
+	stderrWriter := output.NewCarriageReturnWriter(lc.outputMgr)
+	go lc.teeOutput(stdoutPipe, os.Stdout, stdoutWriter)
+	go lc.teeOutput(stderrPipe, os.Stderr, stderrWriter)
 
 	// Monitor game exit
 	go func() {
@@ -96,7 +102,7 @@ func (lc *LaunchCommand) Run() error {
 	}
 
 	// Create proxy server
-	lc.proxyServer = proxy.NewServer(gameClient, lc.outputFiles)
+	lc.proxyServer = proxy.NewServer(gameClient, lc.outputMgr, lc.outputFiles)
 	lc.proxyHandler = proxy.NewHandler(lc.proxyServer)
 
 	// Start proxy RPC server
@@ -170,22 +176,26 @@ func (lc *LaunchCommand) createGameCommand() (*exec.Cmd, io.ReadCloser, io.ReadC
 	return cmd, stdoutPipe, stderrPipe, nil
 }
 
-// teeOutput copies data from src to both dst1 (terminal) and dst2 (log file).
-func (lc *LaunchCommand) teeOutput(src io.Reader, dst1, dst2 *os.File) {
+// teeOutput copies data from src to both dst1 (terminal) and dst2 (managed writer).
+func (lc *LaunchCommand) teeOutput(src io.Reader, dst1 *os.File, dst2 io.Writer) {
 	reader := bufio.NewReader(src)
 	for {
 		data, err := reader.ReadBytes('\n')
 		if len(data) > 0 {
-			dst1.Write(data)
-			dst2.Write(data)
+			dst1.Write(data) // Terminal gets raw bytes (it interprets \r)
+			dst2.Write(data) // CarriageReturnWriter + OutputManager
 		}
 		if err != nil {
-			if err != io.EOF {
-				// Read remaining data
+			if err == io.EOF {
+				// Flush any remaining data at stream end
 				remaining, _ := reader.ReadBytes('\n')
 				if len(remaining) > 0 {
 					dst1.Write(remaining)
 					dst2.Write(remaining)
+				}
+				// Flush the CarriageReturnWriter
+				if flusher, ok := dst2.(interface{ Flush() error }); ok {
+					flusher.Flush()
 				}
 			}
 			break
@@ -292,9 +302,9 @@ func (lc *LaunchCommand) waitForExit() {
 
 	select {
 	case <-lc.done:
-		// Explicit termination requested
+		fmt.Println("Exiting immediately.")
 	case <-ctx.Done():
-		// Timeout reached
+		fmt.Println("Timeout reached, exiting.")
 	}
 
 	// Cleanup
