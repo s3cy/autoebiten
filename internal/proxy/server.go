@@ -21,6 +21,7 @@ type Response struct {
 // Server wraps game RPC calls and captures output.
 type Server struct {
 	gameClient  GameClient
+	outputMgr   *output.OutputManager
 	outputFiles *output.FilePath
 	mu          sync.Mutex
 }
@@ -32,9 +33,10 @@ type GameClient interface {
 }
 
 // NewServer creates a new proxy server.
-func NewServer(gameClient GameClient, outputFiles *output.FilePath) *Server {
+func NewServer(gameClient GameClient, outputMgr *output.OutputManager, outputFiles *output.FilePath) *Server {
 	return &Server{
 		gameClient:  gameClient,
+		outputMgr:   outputMgr,
 		outputFiles: outputFiles,
 	}
 }
@@ -74,12 +76,10 @@ func (s *Server) ForwardRequest(req *rpc.RPCRequest) (*Response, error) {
 		return nil, fmt.Errorf("game request failed: %w", err)
 	}
 
-	// Generate diff directly from file paths
-	diff := output.GenerateDiff(s.outputFiles.Snapshot, s.outputFiles.Log)
-
-	// Copy log to snapshot for next command
-	if err := output.CopyFile(s.outputFiles.Snapshot, s.outputFiles.Log); err != nil {
-		return nil, fmt.Errorf("failed to write snapshot: %w", err)
+	// Generate diff and update snapshot
+	diff, err := s.outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate diff: %w", err)
 	}
 
 	// Build proxy response

@@ -45,15 +45,31 @@ func (m *mockGameClient) SetResponse(method string, resp *rpc.RPCResponse) {
 	m.responses[method] = resp
 }
 
+// createTestOutputManager creates a test OutputManager with temp files.
+// Opens existing files in append mode, creates new files if they don't exist.
+func createTestOutputManager(t *testing.T, logPath, snapPath string) *output.OutputManager {
+	// Open or create log file in append mode
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		t.Fatalf("Failed to open log file: %v", err)
+	}
+	return output.NewOutputManager(logFile, logPath, snapPath)
+}
+
 func TestNewServer(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+	snapPath := filepath.Join(tmpDir, "test-snapshot.log")
+
 	mock := newMockGameClient()
 	paths := &output.FilePath{
-		Log:        "/tmp/test.log",
-		Snapshot:   "/tmp/test-snapshot.log",
-		LaunchSock: "/tmp/test-launch.sock",
+		Log:        logPath,
+		Snapshot:   snapPath,
+		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 	if server == nil {
 		t.Fatal("NewServer returned nil")
 	}
@@ -80,8 +96,9 @@ func TestForwardRequest(t *testing.T) {
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 
 	// Add new content to log (simulating game output during command)
 	os.WriteFile(logPath, []byte("initial line\nnew line\n"), 0600)
@@ -127,15 +144,15 @@ func TestForwardRequestWithEmptyLog(t *testing.T) {
 	logPath := filepath.Join(tmpDir, "test.log")
 	snapPath := filepath.Join(tmpDir, "test-snapshot.log")
 
-	// No log file initially
 	mock := newMockGameClient()
 	paths := &output.FilePath{
 		Log:        logPath,
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 
 	// Create log during command
 	os.WriteFile(logPath, []byte("new output\n"), 0600)
@@ -171,8 +188,9 @@ func TestForwardRequestNoChanges(t *testing.T) {
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 
 	req := &rpc.RPCRequest{
 		JSONRPC: "2.0",
@@ -202,8 +220,9 @@ func TestForwardRequestVariousMethods(t *testing.T) {
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 
 	// Test forwarding various methods
 	tests := []struct {
@@ -261,8 +280,9 @@ func TestCleanup(t *testing.T) {
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(nil, paths)
+	server := NewServer(nil, outputMgr, paths)
 	err := server.Cleanup()
 	if err != nil {
 		t.Fatalf("Cleanup failed: %v", err)
@@ -279,13 +299,17 @@ func TestCleanup(t *testing.T) {
 
 func TestCleanupNonExistentFiles(t *testing.T) {
 	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "nonexistent.log")
+	snapPath := filepath.Join(tmpDir, "nonexistent-snapshot.log")
+
 	paths := &output.FilePath{
-		Log:        filepath.Join(tmpDir, "nonexistent.log"),
-		Snapshot:   filepath.Join(tmpDir, "nonexistent-snapshot.log"),
+		Log:        logPath,
+		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(nil, paths)
+	server := NewServer(nil, outputMgr, paths)
 	err := server.Cleanup()
 	if err != nil {
 		t.Fatalf("Cleanup should succeed for non-existent files: %v", err)
@@ -303,8 +327,9 @@ func TestConcurrentRequests(t *testing.T) {
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 
 	// Simulate concurrent requests
 	done := make(chan bool, 3)
@@ -346,8 +371,9 @@ func TestHandlerProcessRequest(t *testing.T) {
 		Snapshot:   snapPath,
 		LaunchSock: filepath.Join(tmpDir, "test-launch.sock"),
 	}
+	outputMgr := createTestOutputManager(t, logPath, snapPath)
 
-	server := NewServer(mock, paths)
+	server := NewServer(mock, outputMgr, paths)
 	handler := NewHandler(server)
 
 	// Create a pipe to simulate a connection
