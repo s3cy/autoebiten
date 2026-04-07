@@ -384,6 +384,26 @@ func (e *CommandExecutor) RunGetWheelPositionCommand() error {
 	return nil
 }
 
+// RunExitCommand runs an exit command to signal the game to terminate.
+func (e *CommandExecutor) RunExitCommand() error {
+	req, err := rpc.BuildRequest("exit", nil)
+	if err != nil {
+		return fmt.Errorf("failed to build request: %w", err)
+	}
+
+	resp, diff, err := sendRequestWithProxy(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("rpc error: %s", resp.Error.Message)
+	}
+
+	e.writer.SuccessWithDiff("exit signal sent", diff)
+	return nil
+}
+
 // RunScriptCommand runs a script from a file path or inline JSON string.
 func (e *CommandExecutor) RunScriptCommand(input string, isFile bool) error {
 	// Parse the script

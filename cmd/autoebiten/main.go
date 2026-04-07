@@ -375,6 +375,17 @@ Use --dump to save the script without executing.`,
 	replayCmd.Flags().Float64VarP(&speedFlag, "speed", "s", 1.0, "Speed multiplier (default 1.0)")
 	replayCmd.Flags().StringVarP(&dumpFlag, "dump", "d", "", "Dump script to file instead of executing")
 
+		// exit command
+		exitCmd := &cobra.Command{
+			Use:   "exit",
+			Short: "Send exit signal to the game",
+			Long: `Send exit signal to the game, causing it to gracefully terminate.
+
+The game will receive the exit signal and return false from autoebiten.Update(),
+allowing it to clean up and exit gracefully.`,
+			RunE: runExitCommand,
+		}
+
 	rootCmd.AddCommand(launchCmd)
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
@@ -394,6 +405,7 @@ Use --dump to save the script without executing.`,
 	rootCmd.AddCommand(waitCmd)
 	rootCmd.AddCommand(clearRecordingCmd)
 	rootCmd.AddCommand(replayCmd)
+	rootCmd.AddCommand(exitCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
@@ -563,5 +575,10 @@ func runLaunchCommand(cmd *cobra.Command, args []string) error {
 
 	launchCmd := cli.NewLaunchCommand(options)
 	return launchCmd.Run()
+}
+
+func runExitCommand(cmd *cobra.Command, args []string) error {
+	executor := cli.NewCommandExecutor()
+	return executor.RunExitCommand()
 }
 
