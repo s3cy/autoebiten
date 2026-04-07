@@ -422,9 +422,9 @@ autoebiten input --key <KeyName> --action <Action> [--duration_ticks N]
 | --no-record | false | Skip recording this command |
 
 **Actions:**
-- `press` - Press and immediately release
+- `press` - Press key down (does NOT release - key stays pressed until `release` action)
 - `release` - Release a held key
-- `hold` - Press and hold for duration_ticks
+- `hold` - Press and hold for duration_ticks, then auto-release
 
 **Examples:**
 ```bash
@@ -458,9 +458,9 @@ autoebiten mouse --action <Action> [-x N] [-y N] [--button <ButtonName>]
 
 **Actions:**
 - `position` - Move cursor to (x, y)
-- `press` - Press button at current position
+- `press` - Press button down (does NOT release - button stays pressed until `release` action)
 - `release` - Release button
-- `hold` - Press and hold for duration_ticks (default when --button is set)
+- `hold` - Press and hold for duration_ticks, then auto-release (default when --button is set)
 
 **Examples:**
 ```bash

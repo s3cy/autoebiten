@@ -1,6 +1,6 @@
 ---
 name: using-autoebiten
-description: Automate Ebitengine games via CLI input injection, screenshots, and scripted sequences. Use when controlling games, sending inputs to games, testing Ebitengine games, or writing tests with the testkit package. Provides two integration methods (Patch for existing games, Library for new games) and two testing modes (Black-box via RPC, White-box via Mock).
+description: Automate Ebitengine games via CLI input injection, screenshots, and scripted sequences. Use when controlling games, sending inputs to games, testing Ebitengine games, or writing tests with the testkit package. Provides two integration methods (Patch for existing games, Library for new games) and two testing modes (Black-box via RPC, White-box via Mock). TRIGGER for any Ebitengine game automation, testing, or input injection task - even if user just mentions "game automation", "ebiten testing", or "control game programmatically".
 ---
 
 # Using AutoEbiten
@@ -11,10 +11,10 @@ AutoEbiten automates Ebitengine games through input injection, screenshots, and 
 
 **Step 1: Determine purpose**
 
-| Purpose | Tool |
+| Purpose | Action |
 |---------|------|
-| CLI automation (send inputs, screenshots without tests) | CLI → See [references/cli.md](references/cli.md) |
-| Writing Go tests | testkit → See [references/testkit.md](references/testkit.md) |
+| CLI automation (send inputs, screenshots without tests) | **READ [references/cli.md](references/cli.md)** for full CLI guide |
+| Writing Go tests with testkit | **READ [references/testkit.md](references/testkit.md)** for testing framework |
 
 **Step 2: Determine integration method** (detect before proceeding)
 
@@ -35,57 +35,41 @@ Run checks in order:
 
 ---
 
-## Reference Documents
+## When to Read References
 
-- **[CLI Reference](references/cli.md)** - Complete CLI command guide, integration setup, tutorials, examples
-- **[Testkit Reference](references/testkit.md)** - Go testing framework, Black-box vs White-box modes, API reference
+**READ references/cli.md when:**
+- Setting up Patch or Library integration (tutorials in Section 2 & 3)
+- Using CLI commands beyond basic input/screenshot
+- Implementing custom commands
+- Setting up State Exporter for state queries
+- Debugging connection issues
+- Writing automation scripts
 
----
-
-## Finding Examples
-
-The full project with examples is at **github.com/s3cy/autoebiten**.
-
-Examples locations in the repository:
-- `examples/` - Integration examples (Patch and Library methods)
-- `examples/testkit` - Testing examples (Black-box and White-box)
-
-To browse examples:
-```bash
-git clone https://github.com/s3cy/autoebiten
-cd autoebiten
-ls examples/ examples/testkit/
-```
+**READ references/testkit.md when:**
+- Choosing between Black-box (Launch) vs White-box (Mock)
+- Writing test assertions with StateQuery
+- Setting up State Exporter for white-box tests
+- Understanding ticks vs time
+- Writing game logic unit tests
 
 ---
 
-## Quick Reference
+## Quick Start (Minimal)
 
 ### CLI Commands
 
 ```bash
 autoebiten ping                     # Check connection
 autoebiten input --key KeySpace     # Press key
-autoebiten mouse -x 100 -y 200      # Move cursor
 autoebiten screenshot               # Capture screen
-autoebiten run --script script.json # Run automation
-autoebiten keys                     # List key names
 ```
 
-### Testkit Quick Start
+### Testkit (Black-box)
 
-**Black-box (separate process):**
 ```go
 game := testkit.Launch(t, "./mygame")
 defer game.Shutdown()
 game.HoldKey(ebiten.KeyArrowRight, 10)
-```
-
-**White-box (in-process):**
-```go
-mock := testkit.NewMock(t, game)
-mock.InjectKeyPress(ebiten.KeyArrowRight)
-mock.Ticks(10)
 ```
 
 ### Ticks vs Time
@@ -100,7 +84,31 @@ mock.Ticks(10)
 
 | Issue | Check | Fix |
 |-------|-------|-----|
+| Key stuck pressed after `press` action | Using `--action press` alone | `press` only presses DOWN. It does NOT release. Use `hold` for press+hold+release, or manually call `press` then `release` |
+| CLI command fails with connection error | `autoebiten ping` fails | Game likely crashed. Restart game: `./mygame &`. Check game logs for crash cause |
 | StateQuery fails | `grep RegisterStateExporter` returns nothing | Add `autoebiten.RegisterStateExporter("name", &game)` |
-| StateQuery returns empty/missing | Field is lowercase (unexported) | Capitalize field name. More edge cases in reference documents |
+| StateQuery returns empty/missing | Field is lowercase (unexported) | Capitalize field name. See **State Exporter** section in reference docs for full rules |
 | Binary not found | `ls ./mygame` fails | Build: `go build -o ./mygame ./cmd/mygame` |
 | Patch panics | `replace` in go.mod AND `autoebiten.Update()` calls | Remove `autoebiten.Update()` (patch handles it) |
+
+---
+
+## Reference Documents
+
+For full documentation, **READ the appropriate reference file** based on your task:
+
+- **[CLI Reference](references/cli.md)** - Integration setup, CLI commands, custom commands, state exporter, automation scripts
+- **[Testkit Reference](references/testkit.md)** - Black-box vs White-box testing, API reference, state queries, testing patterns
+
+---
+
+## Examples Repository
+
+The full project with runnable examples is at **github.com/s3cy/autoebiten**.
+
+To browse examples:
+```bash
+git clone https://github.com/s3cy/autoebiten
+cd autoebiten
+ls examples/ examples/testkit/
+```

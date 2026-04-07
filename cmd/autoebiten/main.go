@@ -92,9 +92,9 @@ Examples:
 		Long: `Inject keyboard input into the game.
 
 Actions:
-  press   - Press and immediately release the key
+  press   - Press key down (does NOT release)
   release - Release a held key
-  hold    - Press and hold for duration_ticks`,
+  hold    - Press and hold for duration_ticks, then auto-release`,
 		RunE: runInputCommand,
 	}
 	inputCmd.Flags().StringVarP(&keyFlag, "key", "k", "", "Key name (e.g., KeyA, KeySpace, KeyArrowUp)")
@@ -112,9 +112,9 @@ Actions:
 
 Actions:
   position - Move cursor to (x, y) coordinates
-  press    - Press mouse button at current position
+  press    - Press mouse button down (does NOT release)
   release  - Release mouse button
-  hold     - Press and hold for duration_ticks (default when --button is used)
+  hold     - Press and hold for duration_ticks, then auto-release (default when --button is used)
 
 After injecting mouse movement, the game will ignore real mouse movement.
 Inject "-x 0 -y 0" to ask the game to use real inputs again.

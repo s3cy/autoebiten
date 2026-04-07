@@ -63,16 +63,20 @@ go build ./cmd/my-game
 **Note on ticks:** 1 tick = 1 `Update()` call. Ebiten runs at 60 ticks per second (TPS) by default. This is **not** the same as FPS—your game can render at 120 FPS on a high refresh monitor while still running at 60 TPS. The default `--duration_ticks 6` means a key is held for 6 Update() calls (~100ms at 60 TPS). See [TPS vs FPS](https://github.com/tinne26/tps-vs-fps) for details.
 
 ```bash
-# Press a key
+# Press a key down (stays pressed until release)
 autoebiten input --key KeyW --action press
 
-# Hold a key for 6 ticks (default)
+# Release the key
+autoebiten input --key KeyW --action release
+
+# Hold a key for 6 ticks (presses, holds, then auto-releases)
 autoebiten input --key KeySpace --action hold
 
 # Move mouse and click
 autoebiten mouse --action position -x 100 -y 200
 autoebiten mouse --action press --button MouseButtonLeft
-autoebiten mouse --button MouseButtonLeft  # defaults to hold action
+autoebiten mouse --action release --button MouseButtonLeft
+autoebiten mouse --button MouseButtonLeft  # defaults to hold action (press+hold+release)
 autoebiten mouse -x 100 -y 200 --button MouseButtonLeft  # move to position, then trigger the button
 
 # Scroll wheel
