@@ -33,7 +33,18 @@ func (w *Writer) Errorln(a ...any) {
 	fmt.Fprintln(os.Stderr, a...)
 }
 
-// Success prints a success message.
+// PrintDiff prints a diff output if present.
+func (w *Writer) PrintDiff(diff string) {
+	if diff != "" {
+		fmt.Println(diff)
+	}
+}
+
+// SuccessWithDiff prints a success message with optional diff output.
+func (w *Writer) SuccessWithDiff(message, diff string) {
+	w.PrintDiff(diff)
+	w.Success(message)
+}
 func (w *Writer) Success(message string) {
 	w.Println("OK:", message)
 }

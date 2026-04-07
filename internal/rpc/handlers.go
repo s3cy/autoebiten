@@ -39,21 +39,21 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	case "ping":
 		result, err := handler.HandlePing()
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "get_mouse_position":
 		result, err := handler.HandleGetMousePosition()
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "get_wheel_position":
 		result, err := handler.HandleGetWheelPosition()
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
@@ -64,33 +64,33 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	case "custom":
 		var params CustomParams
 		if err := decodeParams(req.Req.Params, &params); err != nil {
-			return errorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
+			return ErrorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
 		}
 		params.ID = req.Req.ID // Track request ID for response routing
 		params.Conn = req.Conn // Store connection for response
 		result, err := handler.HandleCustom(&params)
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "list_custom_commands":
 		result, err := handler.HandleListCustomCommands()
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	case "input":
 		var params InputParams
 		if err := decodeParams(req.Req.Params, &params); err != nil {
-			return errorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
+			return ErrorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
 		}
 		params.ID = req.Req.ID // Track request ID for response routing
 		params.Conn = req.Conn // Store connection for response
 		result, err := handler.HandleInput(&params)
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		// For sync inputs, the response is sent by ProcessInputs in Update()
 		// so we return nil result to indicate no immediate response
@@ -102,13 +102,13 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	case "mouse":
 		var params MouseParams
 		if err := decodeParams(req.Req.Params, &params); err != nil {
-			return errorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
+			return ErrorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
 		}
 		params.ID = req.Req.ID // Track request ID for response routing
 		params.Conn = req.Conn // Store connection for response
 		result, err := handler.HandleMouse(&params)
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		// For sync mouse commands, the response is sent by processMouseResults in Update()
 		// so we return nil result to indicate no immediate response
@@ -120,13 +120,13 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 	case "wheel":
 		var params WheelParams
 		if err := decodeParams(req.Req.Params, &params); err != nil {
-			return errorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
+			return ErrorResponse(id, ErrInvalidParams, fmt.Sprintf("invalid params: %v", err))
 		}
 		params.ID = req.Req.ID // Track request ID for response routing
 		params.Conn = req.Conn // Store connection for response
 		result, err := handler.HandleWheel(&params)
 		if err != nil {
-			return errorResponse(id, ErrInvalidParams, err.Error())
+			return ErrorResponse(id, ErrInvalidParams, err.Error())
 		}
 		// For sync wheel commands, the response is sent by processWheelResults in Update()
 		// so we return nil result to indicate no immediate response
@@ -145,7 +145,7 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		params.Conn = req.Conn // Store connection for response
 		result, err := handler.HandleScreenshot(&params)
 		if err != nil {
-			return errorResponse(id, ErrScreenshotFailed, err.Error())
+			return ErrorResponse(id, ErrScreenshotFailed, err.Error())
 		}
 		// For sync screenshots, the response is sent by ProcessScreenshots in Draw()
 		// so we return nil result to indicate no immediate response
@@ -155,7 +155,7 @@ func ProcessRequest(req *Request, handler Handler) RPCResponse {
 		return RPCResponse{JSONRPC: "2.0", ID: id, Result: marshalResult(result)}
 
 	default:
-		return errorResponse(id, ErrInvalidParams, fmt.Sprintf("unknown method: %s", req.Req.Method))
+		return ErrorResponse(id, ErrInvalidParams, fmt.Sprintf("unknown method: %s", req.Req.Method))
 	}
 }
 
@@ -163,7 +163,7 @@ func decodeParams(data json.RawMessage, v any) error {
 	return json.Unmarshal(data, v)
 }
 
-func errorResponse(id any, code int, message string) RPCResponse {
+func ErrorResponse(id any, code int, message string) RPCResponse {
 	return RPCResponse{
 		JSONRPC: "2.0",
 		ID:      id,

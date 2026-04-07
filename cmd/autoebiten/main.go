@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -34,6 +35,9 @@ var (
 	speedFlag       float64
 	dumpFlag        string
 
+	// launch command flags
+	launchTimeoutFlag string
+
 	// State command flags
 	stateNameFlag string
 	statePathFlag string
@@ -59,6 +63,27 @@ For more information, visit: https://github.com/s3cy/autoebiten`,
 		PersistentPreRunE: persistentPreRunRootCommand,
 	}
 	rootCmd.PersistentFlags().IntVarP(&pidFlag, "pid", "p", 0, "Target game process PID (auto-detected if not specified)")
+
+	// launch command
+	launchCmd := &cobra.Command{
+		Use:   "launch -- ./game [args...]",
+		Short: "Launch a game with output capture",
+		Long: `Launch a game and capture its stdout/stderr for display between CLI commands.
+
+The launch command starts the game as a subprocess and acts as a proxy between
+CLI commands and the game. Output from the game is captured and displayed as
+a diff between commands.
+
+Examples:
+  autoebiten launch -- ./mygame
+  autoebiten launch -- ./mygame --level 1 --debug`,
+		RunE: runLaunchCommand,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Skip PID detection for launch command
+			return nil
+		},
+	}
+	launchCmd.Flags().StringVar(&launchTimeoutFlag, "timeout", "10s", "Timeout waiting for game RPC server (e.g., 10s, 30s, 1m)")
 
 	// input command
 	inputCmd := &cobra.Command{
@@ -350,6 +375,7 @@ Use --dump to save the script without executing.`,
 	replayCmd.Flags().Float64VarP(&speedFlag, "speed", "s", 1.0, "Speed multiplier (default 1.0)")
 	replayCmd.Flags().StringVarP(&dumpFlag, "dump", "d", "", "Dump script to file instead of executing")
 
+	rootCmd.AddCommand(launchCmd)
 	rootCmd.AddCommand(inputCmd)
 	rootCmd.AddCommand(mouseCmd)
 	rootCmd.AddCommand(wheelCmd)
@@ -517,3 +543,25 @@ func runReplayCommand(cmd *cobra.Command, args []string) error {
 	executor := cli.NewCommandExecutor()
 	return executor.Replay(speedFlag, dumpFlag)
 }
+
+func runLaunchCommand(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("no game command provided. Usage: autoebiten launch -- ./game [args...]")
+	}
+
+	// Parse timeout duration
+	timeout, err := time.ParseDuration(launchTimeoutFlag)
+	if err != nil {
+		return fmt.Errorf("invalid timeout format: %w", err)
+	}
+
+	options := &cli.LaunchOptions{
+		GameCmd:  args[0],
+		GameArgs: args[1:],
+		Timeout:  timeout,
+	}
+
+	launchCmd := cli.NewLaunchCommand(options)
+	return launchCmd.Run()
+}
+
