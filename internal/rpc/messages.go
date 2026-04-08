@@ -35,6 +35,7 @@ const (
 	ErrScriptFailed     = -32002
 	ErrScreenshotFailed = -32003
 	ErrGameNotRunning   = -32004
+	ErrGameNotConnected = -32005
 )
 
 // InputParams represents input command parameters.
