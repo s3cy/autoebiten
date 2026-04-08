@@ -48,8 +48,6 @@ func NewLaunchCommand(options *LaunchOptions) *LaunchCommand {
 	}
 }
 
-// Run executes the launch command.
-// This method blocks until the game exits or is terminated.
 func (lc *LaunchCommand) Run() error {
 	// Create game command with pipes (must be done before Start())
 	gameCmd, stdoutPipe, stderrPipe, err := lc.createGameCommand()
@@ -128,28 +126,32 @@ func (lc *LaunchCommand) waitForGameRPC() (*rpc.Client, error) {
 		timeout = 10 * time.Second
 	}
 
-	interval := 100 * time.Millisecond
-	deadline := time.Now().Add(timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	tick := time.NewTicker(100 * time.Millisecond)
+	defer tick.Stop()
 
-	for time.Now().Before(deadline) {
-		// Try to connect
-		client, err := rpc.NewClient()
-		if err == nil {
-			// Try to ping to verify it's really ready
-			req, _ := rpc.BuildRequest("ping", nil)
-			resp, err := client.SendRequest(req)
-			if err == nil && resp.Error == nil {
-				return client, nil
+	for {
+		select {
+		case <-lc.gameExited:
+			return nil, fmt.Errorf("game exited")
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timeout after %v waiting for game RPC server", timeout)
+		case <-tick.C:
+			// Try to connect
+			client, err := rpc.NewClient()
+			if err == nil {
+				// Try to ping to verify it's really ready
+				req, _ := rpc.BuildRequest("ping", nil)
+				resp, err := client.SendRequest(req)
+				if err == nil && resp.Error == nil {
+					return client, nil
+				}
+				// Ping failed, close and retry
+				client.Close()
 			}
-			// Ping failed, close and retry
-			client.Close()
 		}
-
-		// Wait before next attempt
-		time.Sleep(interval)
 	}
-
-	return nil, fmt.Errorf("timeout after %v waiting for game RPC server", timeout)
 }
 
 // createGameCommand creates the game command with pipes set up.
@@ -326,6 +328,8 @@ func (lc *LaunchCommand) cleanup() {
 	// Close proxy server
 	if lc.proxyServer != nil {
 		lc.proxyServer.Close()
+		// Remove log and snapshot files
+		lc.proxyServer.Cleanup()
 	}
 
 	// Close listener
@@ -335,7 +339,4 @@ func (lc *LaunchCommand) cleanup() {
 
 	// Remove launch socket
 	os.Remove(lc.outputFiles.LaunchSock)
-
-	// Remove log and snapshot files
-	lc.proxyServer.Cleanup()
 }
