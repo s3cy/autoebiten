@@ -51,7 +51,7 @@ func TestHandleResponseWithDiff(t *testing.T) {
 	})
 
 	// Verify diff output
-	expectedDiff := "<log_diff>\nline1\nline2\n</log_diff>\n"
+	expectedDiff := "<log_diff>\nline1\nline2</log_diff>\n"
 	if stdout != expectedDiff {
 		t.Errorf("stdout = %q, want %q", stdout, expectedDiff)
 	}
@@ -124,8 +124,8 @@ func TestHandleResponseEmptyDiff(t *testing.T) {
 		executor.handleResponse(resp, onSuccess)
 	})
 
-	// Verify empty diff still shows tags
-	expectedDiff := "<log_diff>\n\n</log_diff>\n"
+	// Verify empty diff produces no output
+	expectedDiff := ""
 	if stdout != expectedDiff {
 		t.Errorf("stdout = %q, want %q", stdout, expectedDiff)
 	}
@@ -194,7 +194,7 @@ func TestHandleResponseBothDiffAndProxyError(t *testing.T) {
 	})
 
 	// Verify both outputs
-	expected := "<log_diff>\nsome log output\n</log_diff>\n<proxy_error>\ngame crashed\n</proxy_error>\n"
+	expected := "<log_diff>\nsome log output</log_diff>\n<proxy_error>\ngame crashed\n</proxy_error>\n"
 	if stdout != expected {
 		t.Errorf("stdout = %q, want %q", stdout, expected)
 	}
@@ -233,7 +233,7 @@ func TestHandleResponseErrorWithDiffAndProxyError(t *testing.T) {
 	})
 
 	// Verify diff and proxy_error still output even on error
-	expected := "<log_diff>\nlog before error\n</log_diff>\n<proxy_error>\ncrash during processing\n</proxy_error>\n"
+	expected := "<log_diff>\nlog before error</log_diff>\n<proxy_error>\ncrash during processing\n</proxy_error>\n"
 	if stdout != expected {
 		t.Errorf("stdout = %q, want %q", stdout, expected)
 	}
