@@ -44,7 +44,16 @@ type GameInfo struct {
 	Name string
 }
 
+// LaunchSocketPath returns the path to the launch socket for a given PID.
+// Launch sockets are used for communicating with game instances during startup.
+func LaunchSocketPath(pid int) string {
+	return filepath.Join(DefaultSocketDir, fmt.Sprintf("autoebiten-%d-launch.sock", pid))
+}
+
 // findRunningGames scans for running game processes with autoebiten sockets.
+// It detects both regular sockets (autoebiten-{PID}.sock) and launch sockets
+// (autoebiten-{PID}-launch.sock). When both exist for the same PID, only the
+// launch socket is reported (launch sockets take precedence).
 func findRunningGames() ([]GameInfo, error) {
 	// Find all socket files in the autoebiten directory
 	socketDir := filepath.Dir(SocketPath())
@@ -58,6 +67,10 @@ func findRunningGames() ([]GameInfo, error) {
 	}
 
 	var games []GameInfo
+	// Track which PIDs we've already added to avoid duplicates
+	// Launch sockets take precedence over regular sockets
+	seenPIDs := make(map[int]bool)
+
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -67,21 +80,40 @@ func findRunningGames() ([]GameInfo, error) {
 			continue
 		}
 
-		// Extract PID from filename: autoebiten-{PID}.sock
-		pidStr := strings.TrimPrefix(name, "autoebiten-")
-		pidStr = strings.TrimSuffix(pidStr, ".sock")
-		pid, err := strconv.Atoi(pidStr)
+		// Parse the filename to extract PID and socket type
+		// Formats: autoebiten-{PID}.sock or autoebiten-{PID}-launch.sock
+		base := strings.TrimSuffix(name, ".sock")
+		base = strings.TrimPrefix(base, "autoebiten-")
+
+		// Check if it's a launch socket
+		isLaunchSocket := strings.HasSuffix(base, "-launch")
+		if isLaunchSocket {
+			base = strings.TrimSuffix(base, "-launch")
+		}
+
+		pid, err := strconv.Atoi(base)
 		if err != nil {
 			continue
 		}
 
 		// Check if process is actually running via syscall
 		if err := syscall.Kill(pid, 0); err != nil {
-			// Process is dead, remove stale socket file
-			socketPath := filepath.Join(socketDir, name)
-			os.Remove(socketPath)
+			// Process is dead, remove stale socket file(s)
+			// Clean up both the socket we found and its companion
+			os.Remove(filepath.Join(socketDir, name))
+			if isLaunchSocket {
+				os.Remove(filepath.Join(socketDir, fmt.Sprintf("autoebiten-%d.sock", pid)))
+			} else {
+				os.Remove(filepath.Join(socketDir, fmt.Sprintf("autoebiten-%d-launch.sock", pid)))
+			}
 			continue
 		}
+
+		// Skip if we've already seen this PID (launch socket takes precedence)
+		if seenPIDs[pid] {
+			continue
+		}
+		seenPIDs[pid] = true
 
 		// Try to get process name
 		procName := fmt.Sprintf("process-%d", pid)
