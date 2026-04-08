@@ -11,18 +11,185 @@ import (
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
-// Server wraps game RPC calls and captures output.
-type Server struct {
-	gameClient  GameClient
-	outputMgr   *output.OutputManager
-	outputFiles *output.FilePath
-	mu          sync.Mutex
+// ProxyState represents the state of the proxy handler.
+type ProxyState int
+
+const (
+	StateWaiting ProxyState = iota   // Waiting for game RPC connection
+	StateConnected                   // Game connected, proxy active
+	StateCrashed                     // Game crashed/exited
+)
+
+// String returns the string representation of the state.
+func (s ProxyState) String() string {
+	switch s {
+	case StateWaiting:
+		return "waiting"
+	case StateConnected:
+		return "connected"
+	case StateCrashed:
+		return "crashed"
+	default:
+		return "unknown"
+	}
 }
 
 // GameClient is the interface for game RPC clients.
 type GameClient interface {
 	SendRequest(req *rpc.RPCRequest) (*rpc.RPCResponse, error)
 	Close() error
+}
+
+// UnifiedHandler handles all proxy RPC requests with state machine.
+type UnifiedHandler struct {
+	state       ProxyState
+	gameClient  GameClient
+	outputMgr   *output.OutputManager
+	launchError error
+	onCrashed   func()
+	mu          sync.Mutex
+}
+
+// NewUnifiedHandler creates a new unified handler starting in Waiting state.
+func NewUnifiedHandler(outputMgr *output.OutputManager, onCrashed func()) *UnifiedHandler {
+	return &UnifiedHandler{
+		state:     StateWaiting,
+		outputMgr: outputMgr,
+		onCrashed: onCrashed,
+	}
+}
+
+// TransitionToConnected transitions the handler to Connected state.
+func (h *UnifiedHandler) TransitionToConnected(gameClient GameClient) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.state = StateConnected
+	h.gameClient = gameClient
+}
+
+// TransitionToCrashed transitions the handler to Crashed state with an error.
+func (h *UnifiedHandler) TransitionToCrashed(err error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.state = StateCrashed
+	if h.launchError == nil {
+		h.launchError = err
+	} else {
+		h.launchError = fmt.Errorf("%v; %v", h.launchError, err)
+	}
+}
+
+// GetState returns the current state (for testing).
+func (h *UnifiedHandler) GetState() ProxyState {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.state
+}
+
+// ProcessRequest processes an RPC request based on current state.
+func (h *UnifiedHandler) ProcessRequest(conn net.Conn, req *rpc.RPCRequest) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	switch h.state {
+	case StateWaiting:
+		h.handleWaitingRequest(conn, req)
+	case StateConnected:
+		h.handleConnectedRequest(conn, req)
+	case StateCrashed:
+		h.handleCrashedRequest(conn, req)
+	}
+}
+
+func (h *UnifiedHandler) handleWaitingRequest(conn net.Conn, req *rpc.RPCRequest) {
+	// Generate diff (always do this)
+	diff, err := h.outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		diff = ""
+	}
+
+	// Build error response
+	resp := rpc.ErrorResponse(req.ID, rpc.ErrGameNotConnected, "game not connected")
+	resp.Extra = map[string]any{
+		"diff":        diff,
+		"proxy_error": "", // Empty in waiting state
+	}
+
+	h.sendResponse(conn, &resp)
+}
+
+func (h *UnifiedHandler) handleConnectedRequest(conn net.Conn, req *rpc.RPCRequest) {
+	// Generate diff before forwarding
+	diff, err := h.outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		diff = ""
+	}
+
+	// Forward to game
+	gameResp, err := h.gameClient.SendRequest(req)
+	if err != nil {
+		// Game request failed - transition to crashed
+		h.state = StateCrashed
+		h.launchError = fmt.Errorf("game request failed: %w", err)
+
+		resp := rpc.ErrorResponse(req.ID, rpc.ErrGameNotConnected, "game not connected")
+		resp.Extra = map[string]any{
+			"diff":        diff,
+			"proxy_error": h.launchError.Error(),
+		}
+		h.sendResponse(conn, &resp)
+		return
+	}
+
+	// Add diff to response
+	if gameResp.Extra == nil {
+		gameResp.Extra = make(map[string]any)
+	}
+	gameResp.Extra["diff"] = diff
+
+	h.sendResponse(conn, gameResp)
+}
+
+func (h *UnifiedHandler) handleCrashedRequest(conn net.Conn, req *rpc.RPCRequest) {
+	// Generate diff
+	diff, err := h.outputMgr.DiffAndUpdateSnapshot()
+	if err != nil {
+		diff = ""
+	}
+
+	// Build error response with accumulated error
+	proxyErr := ""
+	if h.launchError != nil {
+		proxyErr = h.launchError.Error()
+	}
+
+	resp := rpc.ErrorResponse(req.ID, rpc.ErrGameNotConnected, "game not connected")
+	resp.Extra = map[string]any{
+		"diff":        diff,
+		"proxy_error": proxyErr,
+	}
+
+	// Signal that CLI has queried us (trigger exit)
+	if h.onCrashed != nil {
+		go h.onCrashed()
+	}
+
+	h.sendResponse(conn, &resp)
+}
+
+func (h *UnifiedHandler) sendResponse(conn net.Conn, resp *rpc.RPCResponse) {
+	encoder := json.NewEncoder(conn)
+	encoder.Encode(resp)
+}
+
+// ==================== Legacy Server and Handler (for backward compatibility) ====================
+
+// Server wraps game RPC calls and captures output.
+type Server struct {
+	gameClient  GameClient
+	outputMgr   *output.OutputManager
+	outputFiles *output.FilePath
+	mu          sync.Mutex
 }
 
 // NewServer creates a new proxy server.
