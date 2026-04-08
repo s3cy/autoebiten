@@ -194,7 +194,7 @@ func TestHandleResponseBothDiffAndProxyError(t *testing.T) {
 	})
 
 	// Verify both outputs
-	expected := "<log_diff>\nsome log output</log_diff>\n<proxy_error>\ngame crashed</proxy_error>\n"
+	expected := "<log_diff>\nsome log output</log_diff>\n<proxy_error>\ngame crashed\n</proxy_error>\n"
 	if stdout != expected {
 		t.Errorf("stdout = %q, want %q", stdout, expected)
 	}
@@ -233,7 +233,7 @@ func TestHandleResponseErrorWithDiffAndProxyError(t *testing.T) {
 	})
 
 	// Verify diff and proxy_error still output even on error
-	expected := "<log_diff>\nlog before error</log_diff>\n<proxy_error>\ncrash during processing</proxy_error>\n"
+	expected := "<log_diff>\nlog before error</log_diff>\n<proxy_error>\ncrash during processing\n</proxy_error>\n"
 	if stdout != expected {
 		t.Errorf("stdout = %q, want %q", stdout, expected)
 	}
