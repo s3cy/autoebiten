@@ -62,28 +62,14 @@ func detectProxyOrDirect() (*rpc.Client, bool, error) {
 }
 
 // sendRequestWithProxy sends an RPC request, auto-detecting launch proxy.
-// Returns the response and any diff output from the proxy.
-func sendRequestWithProxy(req *rpc.RPCRequest) (*rpc.RPCResponse, string, error) {
-	client, isProxy, err := detectProxyOrDirect()
+func sendRequestWithProxy(req *rpc.RPCRequest) (*rpc.RPCResponse, error) {
+	client, _, err := detectProxyOrDirect()
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	defer client.Close()
 
-	resp, err := client.SendRequest(req)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// Extract diff output from proxy response
-	var diffOutput string
-	if isProxy {
-		if diff, ok := resp.Extra["diff"].(string); ok {
-			diffOutput = diff
-		}
-	}
-
-	return resp, diffOutput, nil
+	return client.SendRequest(req)
 }
 
 // CommandExecutor executes CLI commands via RPC.
@@ -95,6 +81,27 @@ type CommandExecutor struct {
 func NewCommandExecutor() *CommandExecutor {
 	return &CommandExecutor{
 		writer: NewWriter(),
+	}
+}
+
+// handleResponse processes an RPC response with unified output handling.
+// Always prints log_diff and proxy_error if present, calls onSuccess only if no RPC error.
+func (e *CommandExecutor) handleResponse(resp *rpc.RPCResponse, onSuccess func()) {
+	// Always print log_diff if present
+	if diff, ok := resp.Extra["diff"].(string); ok {
+		fmt.Fprintf(os.Stdout, "<log_diff>\n%s\n</log_diff>\n", diff)
+	}
+
+	// Always print proxy_error if present
+	if proxyError, ok := resp.Extra["proxy_error"].(string); ok && proxyError != "" {
+		fmt.Fprintf(os.Stdout, "<proxy_error>\n%s\n</proxy_error>\n", proxyError)
+	}
+
+	// Handle result/error
+	if resp.Error != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Error.Message)
+	} else {
+		onSuccess()
 	}
 }
 
@@ -118,30 +125,28 @@ func (e *CommandExecutor) RunInputCommand(key, action string, durationTicks int6
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
-	}
-
-	// Record after successful execution
-	if shouldRecord {
-		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
-		cmd := &script.InputCmd{
-			Action:        action,
-			Key:           key,
-			DurationTicks: durationTicks,
-			Async:         async,
+	e.handleResponse(resp, func() {
+		// Record after successful execution
+		if shouldRecord {
+			recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
+			cmd := &script.InputCmd{
+				Action:        action,
+				Key:           key,
+				DurationTicks: durationTicks,
+				Async:         async,
+			}
+			if err := recorder.Record(cmd); err != nil {
+				fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+			}
 		}
-		if err := recorder.Record(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
-		}
-	}
+		e.writer.Success(fmt.Sprintf("input %s %s", action, key))
+	})
 
-	e.writer.SuccessWithDiff(fmt.Sprintf("input %s %s", action, key), diff)
 	return nil
 }
 
@@ -171,13 +176,9 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
 	var result rpc.MouseResult
@@ -185,23 +186,25 @@ func (e *CommandExecutor) RunMouseCommand(action string, x, y int, button string
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	// Record after successful execution
-	if shouldRecord {
-		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
-		cmd := &script.MouseCmd{
-			Action:        action,
-			X:             x,
-			Y:             y,
-			Button:        button,
-			DurationTicks: durationTicks,
-			Async:         async,
+	e.handleResponse(resp, func() {
+		// Record after successful execution
+		if shouldRecord {
+			recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
+			cmd := &script.MouseCmd{
+				Action:        action,
+				X:             x,
+				Y:             y,
+				Button:        button,
+				DurationTicks: durationTicks,
+				Async:         async,
+			}
+			if err := recorder.Record(cmd); err != nil {
+				fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+			}
 		}
-		if err := recorder.Record(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
-		}
-	}
+		e.writer.Success(fmt.Sprintf("mouse %s at (%d, %d)", action, result.X, result.Y))
+	})
 
-	e.writer.SuccessWithDiff(fmt.Sprintf("mouse %s at (%d, %d)", action, result.X, result.Y), diff)
 	return nil
 }
 
@@ -218,29 +221,27 @@ func (e *CommandExecutor) RunWheelCommand(x, y float64, async bool, shouldRecord
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
-	}
-
-	// Record after successful execution
-	if shouldRecord {
-		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
-		cmd := &script.WheelCmd{
-			X:     x,
-			Y:     y,
-			Async: async,
+	e.handleResponse(resp, func() {
+		// Record after successful execution
+		if shouldRecord {
+			recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
+			cmd := &script.WheelCmd{
+				X:     x,
+				Y:     y,
+				Async: async,
+			}
+			if err := recorder.Record(cmd); err != nil {
+				fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+			}
 		}
-		if err := recorder.Record(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
-		}
-	}
+		e.writer.Success(fmt.Sprintf("wheel moved by (%.2f, %.2f)", x, y))
+	})
 
-	e.writer.SuccessWithDiff(fmt.Sprintf("wheel moved by (%.2f, %.2f)", x, y), diff)
 	return nil
 }
 
@@ -257,13 +258,9 @@ func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bo
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
 	var result rpc.ScreenshotResult
@@ -271,31 +268,30 @@ func (e *CommandExecutor) RunScreenshotCommand(output string, b64 bool, async bo
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	// Print diff before success message
-	e.writer.PrintDiff(diff)
-
-	if result.Path != "" && result.Data != "" {
-		e.writer.Success(fmt.Sprintf("screenshot saved to %s and captured (base64)\n%s", result.Path, result.Data))
-	} else if result.Path != "" {
-		e.writer.Success(fmt.Sprintf("screenshot saved to %s", result.Path))
-	} else if result.Data != "" {
-		e.writer.Success(fmt.Sprintf("screenshot captured (base64)\n%s", result.Data))
-	} else {
-		e.writer.Success("screenshot captured")
-	}
-
-	// Record after successful execution (only if output path was provided)
-	if shouldRecord && output != "" {
-		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
-		cmd := &script.ScreenshotCmd{
-			Output: output,
-			Base64: b64,
-			Async:  async,
+	e.handleResponse(resp, func() {
+		if result.Path != "" && result.Data != "" {
+			e.writer.Success(fmt.Sprintf("screenshot saved to %s and captured (base64)\n%s", result.Path, result.Data))
+		} else if result.Path != "" {
+			e.writer.Success(fmt.Sprintf("screenshot saved to %s", result.Path))
+		} else if result.Data != "" {
+			e.writer.Success(fmt.Sprintf("screenshot captured (base64)\n%s", result.Data))
+		} else {
+			e.writer.Success("screenshot captured")
 		}
-		if err := recorder.Record(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+
+		// Record after successful execution (only if output path was provided)
+		if shouldRecord && output != "" {
+			recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
+			cmd := &script.ScreenshotCmd{
+				Output: output,
+				Base64: b64,
+				Async:  async,
+			}
+			if err := recorder.Record(cmd); err != nil {
+				fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+			}
 		}
-	}
+	})
 
 	return nil
 }
@@ -307,16 +303,15 @@ func (e *CommandExecutor) RunPingCommand() error {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
-	}
+	e.handleResponse(resp, func() {
+		e.writer.Success("game is running")
+	})
 
-	e.writer.SuccessWithDiff("game is running", diff)
 	return nil
 }
 
@@ -327,13 +322,9 @@ func (e *CommandExecutor) RunGetMousePositionCommand() error {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
 	var result rpc.GetMousePositionResult
@@ -341,7 +332,10 @@ func (e *CommandExecutor) RunGetMousePositionCommand() error {
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	e.writer.SuccessWithDiff(fmt.Sprintf("mouse position: (%d, %d)", result.X, result.Y), diff)
+	e.handleResponse(resp, func() {
+		e.writer.Success(fmt.Sprintf("mouse position: (%d, %d)", result.X, result.Y))
+	})
+
 	return nil
 }
 
@@ -352,13 +346,9 @@ func (e *CommandExecutor) RunGetWheelPositionCommand() error {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
 	var result rpc.GetWheelPositionResult
@@ -366,7 +356,10 @@ func (e *CommandExecutor) RunGetWheelPositionCommand() error {
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	e.writer.SuccessWithDiff(fmt.Sprintf("wheel position: (%.2f, %.2f)", result.X, result.Y), diff)
+	e.handleResponse(resp, func() {
+		e.writer.Success(fmt.Sprintf("wheel position: (%.2f, %.2f)", result.X, result.Y))
+	})
+
 	return nil
 }
 
@@ -377,16 +370,15 @@ func (e *CommandExecutor) RunExitCommand() error {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
-	}
+	e.handleResponse(resp, func() {
+		e.writer.Success("exit signal sent")
+	})
 
-	e.writer.SuccessWithDiff("exit signal sent", diff)
 	return nil
 }
 
@@ -474,13 +466,9 @@ func (e *CommandExecutor) ListCustomCommands() error {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
 	var names []string
@@ -488,14 +476,15 @@ func (e *CommandExecutor) ListCustomCommands() error {
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	e.writer.PrintDiff(diff)
+	e.handleResponse(resp, func() {
+		if len(names) == 0 {
+			e.writer.Success("no custom commands registered")
+		} else {
+			e.writer.PrintJSON(names)
+		}
+	})
 
-	if len(names) == 0 {
-		e.writer.Success("no custom commands registered")
-		return nil
-	}
-
-	return e.writer.PrintJSON(names)
+	return nil
 }
 
 // RunCustomCommand runs a custom command.
@@ -510,13 +499,9 @@ func (e *CommandExecutor) RunCustomCommand(name, request string, shouldRecord bo
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	resp, diff, err := sendRequestWithProxy(req)
+	resp, err := sendRequestWithProxy(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	if resp.Error != nil {
-		return fmt.Errorf("rpc error: %s", resp.Error.Message)
 	}
 
 	var result rpc.CustomResult
@@ -524,19 +509,21 @@ func (e *CommandExecutor) RunCustomCommand(name, request string, shouldRecord bo
 		return fmt.Errorf("invalid response format: %w", err)
 	}
 
-	// Record after successful execution
-	if shouldRecord {
-		recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
-		cmd := &script.CustomCmd{
-			Name:    name,
-			Request: request,
+	e.handleResponse(resp, func() {
+		// Record after successful execution
+		if shouldRecord {
+			recorder := recording.NewRecorderFromSocket(rpc.SocketPath())
+			cmd := &script.CustomCmd{
+				Name:    name,
+				Request: request,
+			}
+			if err := recorder.Record(cmd); err != nil {
+				fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
+			}
 		}
-		if err := recorder.Record(cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "autoebiten: recording failed: %v\n", err)
-		}
-	}
+		e.writer.Success(result.Response)
+	})
 
-	e.writer.SuccessWithDiff(result.Response, diff)
 	return nil
 }
 
