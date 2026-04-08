@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 
@@ -28,15 +29,17 @@ type LaunchOptions struct {
 
 // LaunchCommand handles the `autoebiten launch` functionality.
 type LaunchCommand struct {
-	options     *LaunchOptions
-	outputFiles *output.FilePath
-	outputMgr   *output.OutputManager
-	gameProc    *os.Process
-	handler     *proxy.UnifiedHandler
-	listener    net.Listener
-	gameExited  chan struct{}
-	crashed     chan struct{}
-	done        chan struct{}
+	options       *LaunchOptions
+	outputFiles   *output.FilePath
+	outputMgr     *output.OutputManager
+	gameProc      *os.Process
+	handler       *proxy.UnifiedHandler
+	listener      net.Listener
+	gameExited    chan struct{}
+	crashed       chan struct{}
+	crashedOnce   sync.Once
+	done          chan struct{}
+	doneOnce      sync.Once
 }
 
 // NewLaunchCommand creates a new launch command handler.
@@ -91,7 +94,9 @@ func (lc *LaunchCommand) createLaunchSocket(path string) (net.Listener, error) {
 // onCrashedCallback is called when the handler is in Crashed state and receives a CLI query.
 // It signals the launch command to exit immediately.
 func (lc *LaunchCommand) onCrashedCallback() {
-	close(lc.crashed)
+	lc.crashedOnce.Do(func() {
+		close(lc.crashed)
+	})
 }
 
 // createHandler creates the UnifiedHandler with the onCrashed callback.
@@ -311,7 +316,9 @@ func (lc *LaunchCommand) handleConnection(conn net.Conn) {
 		// Handle exit specially - it should trigger cleanup
 		if req.Method == "exit" {
 			lc.handler.ProcessRequest(conn, &req)
-			close(lc.done)
+			lc.doneOnce.Do(func() {
+				close(lc.done)
+			})
 			return
 		}
 
@@ -328,7 +335,9 @@ func (lc *LaunchCommand) setupSignalHandling() {
 		<-sigChan
 		fmt.Println("\nReceived interrupt signal, terminating game...")
 		lc.terminateGame()
-		close(lc.done)
+		lc.doneOnce.Do(func() {
+			close(lc.done)
+		})
 	}()
 }
 

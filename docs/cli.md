@@ -408,22 +408,16 @@ If multiple games are running and --pid is not specified, autoebiten will list a
 
 #### launch
 
-Launch a game with output capture between CLI commands.
+Launch a game with output capture and crash diagnostics.
 
 ```bash
 autoebiten launch -- ./game [args...]
 ```
 
-**Purpose:**
-The launch command starts the game as a subprocess and acts as a proxy between CLI commands and the game. Output from the game (stdout/stderr) is captured and displayed as a diff between commands, making it easy to see game responses during automation.
-
 **Flags:**
 | Flag | Default | Description |
 |------|---------|-------------|
 | --timeout | 10s | Timeout waiting for game RPC server (e.g., 10s, 30s, 1m) |
-
-**Arguments:**
-- Game command and arguments after `--`
 
 **Examples:**
 ```bash
@@ -437,14 +431,25 @@ autoebiten launch -- ./mygame --level 1 --debug
 autoebiten launch --timeout 30s -- ./mygame
 ```
 
-**How it works:**
-1. Launches the game subprocess
-2. Creates a proxy socket that intercepts CLI commands
-3. Forwards commands to the game's RPC server
-4. Captures game output and displays diff between commands
-5. Exit signal (Ctrl+C or `autoebiten exit`) terminates the game
+**Crash Diagnostics:**
+When a game crashes or fails to start, the launch proxy captures error information and game output. CLI commands will show:
+- Log diff since last command in `<log_diff>` tags
+- Error details from the game exit in `<proxy_error>` tags
 
-**Tip:** When using launch, all other CLI commands automatically connect to the proxy instead of the game directly, enabling output capture.
+```bash
+autoebiten launch -- ./mygame
+autoebiten ping
+# If game crashed, shows:
+# <log_diff>
+# --- snapshot ...
+# +++ current ...
+# @@ ... @@
+# +panic: runtime error: index out of range
+# </log_diff>
+# <proxy_error>
+# game exited: exit status 2
+# </proxy_error>
+# Error: game not connected
 
 ---
 
@@ -456,26 +461,16 @@ Send exit signal to gracefully terminate the game.
 autoebiten exit
 ```
 
-**Purpose:**
-Sends an exit signal to the game, causing `autoebiten.Update()` to return `false`. This allows the game to clean up and exit gracefully.
-
-**Flags:** None
-
 **Examples:**
 ```bash
-# Exit a game running directly (background or foreground)
+# Exit a game running directly
 ./mygame &
 autoebiten exit
 
-# Exit a game launched via launch proxy (also terminates launch command)
+# Exit a game launched via launch
+autoebiten launch -- ./mygame &
 autoebiten exit
 ```
-
-**Behavior:**
-- Game receives exit signal via RPC
-- `autoebiten.Update()` returns `false`
-- Game should return error from Update to trigger shutdown
-- Works with any running game - no launch required
 
 ---
 
@@ -974,17 +969,10 @@ go build -tags release ./cmd/mygame
 
 **Goal:** Confirm CLI can communicate with game.
 
-**Actions:**
-
-There are two ways to start the game for automation:
-
-**Option A: Using launch (recommended for automation)**
+**Option A: Using launch (recommended)**
 ```bash
-# Start game with output capture
+# Start game with output capture and crash diagnostics
 autoebiten launch -- ./mygame &
-
-# The launch command starts the game and waits for RPC
-# Game output is captured between CLI commands
 ```
 
 **Option B: Running game directly**
@@ -996,13 +984,12 @@ autoebiten launch -- ./mygame &
 autoebiten ping
 ```
 
-**Expected:**
-- Using launch: Game starts, proxy socket created
-- Direct connection: Output `game is running`
+**Expected:** Output `game is running`
 
 **Troubleshooting:**
 - "connection failed": Game not started or socket not created
 - "timeout waiting for RPC": Game takes longer to initialize, use `--timeout 30s`
+- "game not connected": Game crashed; check `<log_diff>` for error output
 - Multiple games running: Use `--pid` to specify
 
 ---
@@ -1152,11 +1139,11 @@ autoebiten input --key KeySpace --action press
 
 ### Launch and Output Capture
 
-**Scenario:** Automate game with visibility into game responses.
+**Scenario:** Automate game with visibility into game responses and crash detection.
 
 **Using launch:**
 ```bash
-# Start game with launch proxy (blocks until game exits)
+# Start game with launch proxy
 autoebiten launch -- ./mygame
 
 # In another terminal, CLI commands connect through the proxy:
@@ -1167,39 +1154,33 @@ autoebiten ping
 # +++ current 2026-04-07 23:42:11.844
 # @@ -0,0 +1,7 @@
 # +2026-04-07 23:42:11.743 simple[37214:10490862] [CAMetalLayer nextDrawable] ...
-# +2026-04-07 23:42:11.759 simple[37214:10490862] [CAMetalLayer nextDrawable] ...
-# +...
 # </log_diff>
 # OK: game is running
 
 autoebiten input --key KeySpace --action hold
-# Shows diff of new output since ping command:
-# <log_diff>
-# --- snapshot 2026-04-07 23:42:11.844
-# +++ current 2026-04-07 23:42:12.100
-# @@ -1,7 +1,9 @@
-# 2026-04-07 23:42:11.743 simple[37214:10490862] [CAMetalLayer nextDrawable] ...
-# +Space pressed!
-# +Player jumped
-# </log_diff>
-# OK: input hold KeySpace
-
-# To gracefully exit the game (optional - works with any running game)
-autoebiten exit
-# Game receives exit signal, Update() returns false, game terminates
-# Launch command exits immediately when exit is used (instead of 30s timeout)
+# Shows diff of new output since ping command
 ```
 
-**How output capture works:**
-1. Launch creates a log file capturing game stdout/stderr
-2. `CarriageReturnWriter` interprets `\r` as line overwrite (handles progress bars)
-3. Each CLI command generates a unified diff between previous snapshot and current log
-4. Diff is returned in response and printed wrapped in `<log_diff>` tags
-5. Snapshot is updated after each command for next diff comparison
+**Crash Diagnostics:**
+When the game crashes, commands show error context:
+```bash
+autoebiten ping
+# <log_diff>
+# --- snapshot ...
+# +++ current ...
+# @@ ... @@
+# +panic: runtime error: index out of range [3] with length 3
+# +main.(*Game).Update(0x14000112060)
+# +    /path/to/game/main.go:42
+# </log_diff>
+# <proxy_error>
+# game exited: exit status 2
+# </proxy_error>
+# Error: game not connected
+```
 
-**Key files created:**
+**Key files:**
 - Log: `/tmp/autoebiten/autoebiten-{PID}-output.log` - raw game output
-- Snapshot: `/tmp/autoebiten/autoebiten-{PID}-snapshot.log` - previous state for diff
 - Launch socket: `/tmp/autoebiten/autoebiten-{PID}-launch.sock` - proxy connection
 
 ---
