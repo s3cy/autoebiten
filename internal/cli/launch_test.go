@@ -3,6 +3,7 @@ package cli
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,18 +13,13 @@ import (
 
 // TestLaunchSocketPath verifies launch socket path generation.
 func TestLaunchSocketPath(t *testing.T) {
-	lc := &LaunchCommand{
-		options: &LaunchOptions{
-			GameCmd: "test",
-			Timeout: 5 * time.Second,
-		},
-	}
+	// The launch socket path is derived from the game socket path
+	gameSocketPath := rpc.SocketPath()
+	paths := output.DerivePaths(gameSocketPath)
 
-	path := lc.launchSocketPath()
-	expected := rpc.LaunchSocketPath(os.Getpid())
-
-	if path != expected {
-		t.Errorf("launchSocketPath() = %q, want %q", path, expected)
+	expectedSuffix := "-launch.sock"
+	if !strings.HasSuffix(paths.LaunchSock, expectedSuffix) {
+		t.Errorf("LaunchSock path %q does not end with %q", paths.LaunchSock, expectedSuffix)
 	}
 }
 

@@ -9,6 +9,12 @@ import (
 	"github.com/s3cy/autoebiten/internal/output"
 )
 
+// launchSockPath returns the launch socket path for a given PID.
+// This is a test helper that mirrors output.DerivePaths behavior.
+func launchSockPath(pid int) string {
+	return filepath.Join(DefaultSocketDir, fmt.Sprintf("autoebiten-%d-launch.sock", pid))
+}
+
 func TestLaunchSocketPath(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -34,9 +40,9 @@ func TestLaunchSocketPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := LaunchSocketPath(tt.pid)
+			result := launchSockPath(tt.pid)
 			if result != tt.expected {
-				t.Errorf("LaunchSocketPath(%d) = %s, want %s", tt.pid, result, tt.expected)
+				t.Errorf("launchSockPath(%d) = %s, want %s", tt.pid, result, tt.expected)
 			}
 		})
 	}

@@ -54,12 +54,6 @@ func NewLaunchCommand(options *LaunchOptions) *LaunchCommand {
 	}
 }
 
-// launchSocketPath returns the path for the launch socket.
-// Format: autoebiten-{LAUNCH_PID}-launch.sock
-func (lc *LaunchCommand) launchSocketPath() string {
-	return rpc.LaunchSocketPath(os.Getpid())
-}
-
 // gameSocketPath returns the path for the game socket.
 // Format: autoebiten-{LAUNCH_PID}.sock
 // This is set as AUTOEBITEN_SOCKET env var for the game process.
@@ -107,16 +101,15 @@ func (lc *LaunchCommand) createHandler() *proxy.UnifiedHandler {
 }
 
 func (lc *LaunchCommand) Run() error {
-	// Step 1: Create launch socket BEFORE starting the game
-	launchSock := lc.launchSocketPath()
-	listener, err := lc.createLaunchSocket(launchSock)
+	// Step 1: Create launch socket BEFORE starting the game. In step 2 we will ask the game
+	// to use our PID for the socket path so we can predict it here.
+	rpc.SetTargetPID(os.Getpid())
+	lc.outputFiles = output.DerivePaths(lc.gameSocketPath())
+	listener, err := lc.createLaunchSocket(lc.outputFiles.LaunchSock)
 	if err != nil {
 		return fmt.Errorf("failed to create launch socket: %w", err)
 	}
 	lc.listener = listener
-
-	// Derive output file paths using the launch socket path
-	lc.outputFiles = output.DerivePaths(launchSock)
 
 	// Create log file
 	logFile, err := output.CreateLogFile(lc.outputFiles.Log)
@@ -148,8 +141,6 @@ func (lc *LaunchCommand) Run() error {
 		return fmt.Errorf("failed to start game: %w", err)
 	}
 
-	// Set target PID to the game process and store reference
-	rpc.SetTargetPID(gameCmd.Process.Pid)
 	lc.gameProc = gameCmd.Process
 
 	// Tee stdout/stderr through CarriageReturnWriter to OutputManager

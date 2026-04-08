@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +12,12 @@ import (
 
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
+
+// launchSocketPath returns the launch socket path for a given PID.
+// This helper mirrors the behavior of output.DerivePaths.
+func launchSocketPath(pid int) string {
+	return filepath.Join(rpc.DefaultSocketDir, fmt.Sprintf("autoebiten-%d-launch.sock", pid))
+}
 
 // TestPreRPCCrashDiagnostics verifies that when a game crashes before RPC connection,
 // the CLI can connect to the launch socket and receive crash diagnostics.
@@ -34,7 +41,7 @@ func TestPreRPCCrashDiagnostics(t *testing.T) {
 
 	// Get the launch PID for socket discovery
 	launchPID := launchCmd.Process.Pid
-	launchSocketPath := rpc.LaunchSocketPath(launchPID)
+	launchSocketPath := launchSocketPath(launchPID)
 
 	// Wait for socket creation with timeout
 	var socketFound bool
@@ -111,7 +118,7 @@ func TestExecutableNotFound(t *testing.T) {
 
 	// Get the launch PID for socket discovery
 	launchPID := launchCmd.Process.Pid
-	launchSocketPath := rpc.LaunchSocketPath(launchPID)
+	launchSocketPath := launchSocketPath(launchPID)
 
 	// Wait for socket creation with timeout
 	var socketFound bool
@@ -173,7 +180,7 @@ func TestLaunchSocketExistsBeforeGameStart(t *testing.T) {
 	}
 
 	launchPID := launchCmd.Process.Pid
-	launchSocketPath := rpc.LaunchSocketPath(launchPID)
+	launchSocketPath := launchSocketPath(launchPID)
 
 	// Verify socket is created quickly (within reasonable time)
 	socketCreated := false
@@ -221,7 +228,7 @@ func TestLaunchExitsAfterCLIQuery(t *testing.T) {
 	}
 
 	launchPID := launchCmd.Process.Pid
-	launchSocketPath := rpc.LaunchSocketPath(launchPID)
+	launchSocketPath := launchSocketPath(launchPID)
 
 	// Wait for socket creation
 	for i := 0; i < 50; i++ {
@@ -281,7 +288,7 @@ func TestMultipleCLIQueriesAfterCrash(t *testing.T) {
 	}
 
 	launchPID := launchCmd.Process.Pid
-	launchSocketPath := rpc.LaunchSocketPath(launchPID)
+	launchSocketPath := launchSocketPath(launchPID)
 
 	// Wait for socket creation
 	for i := 0; i < 50; i++ {

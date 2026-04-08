@@ -44,12 +44,6 @@ type GameInfo struct {
 	Name string
 }
 
-// LaunchSocketPath returns the path to the launch socket for a given PID.
-// Launch sockets are used for communicating with game instances during startup.
-func LaunchSocketPath(pid int) string {
-	return filepath.Join(DefaultSocketDir, fmt.Sprintf("autoebiten-%d-launch.sock", pid))
-}
-
 // findRunningGames scans for running game processes with autoebiten sockets.
 // It detects both regular sockets (autoebiten-{PID}.sock) and launch sockets
 // (autoebiten-{PID}-launch.sock). When both exist for the same PID, only the
