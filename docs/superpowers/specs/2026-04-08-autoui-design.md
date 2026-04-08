@@ -5,7 +5,7 @@
 
 ## Overview
 
-`autoui` is a helper package that enables autoebiten to interact with ebitenui widget trees. It provides CLI-accessible commands for inspecting UI state, finding widgets by attributes, invoking widget methods, and visual debugging.
+`autoui` is a helper package that enables autoebiten to interact with ebitenui widget trees. It provides CLI-accessible commands for inspecting UI state, finding widgets by attributes or XPath, invoking widget methods, and visual debugging.
 
 This package bridges the gap between autoebiten's RPC-based automation and ebitenui's widget hierarchy, enabling LLM-assisted E2E testing without hardcoded coordinates.
 
@@ -133,11 +133,6 @@ Returns full widget tree as XML.
 autoebiten custom autoui.tree
 ```
 
-Optional: Filter by type
-```bash
-autoebiten custom autoui.tree --request "type=Button"
-```
-
 ### 2. `autoui.at`
 
 Returns widget at specific screen coordinates.
@@ -177,7 +172,35 @@ autoebiten custom autoui.find --request "focused=true"
 - JSON object for multiple criteria (AND logic)
 - Special keys: `type`, `x`, `y`, `width`, `height`, `visible`, `disabled`
 
-### 4. `autoui.call`
+### 4. `autoui.xpath`
+
+Find widgets using XPath 1.0 expressions.
+
+**Request**: XPath expression string  
+**Response**: XML list of matching widgets
+
+```bash
+# Find button by ID
+autoebiten custom autoui.xpath --request "//Button[@id='start-btn']"
+
+# Find all visible buttons
+autoebiten custom autoui.xpath --request "//Button[@visible='true']"
+
+# Find focused widget anywhere in tree
+autoebiten custom autoui.xpath --request "//*[@focused='true']"
+
+# Find container with specific child
+autoebiten custom autoui.xpath --request "//Container[Button[@id='ok-btn']]"
+
+# Find widget at specific position
+autoebiten custom autoui.xpath --request "//*[@x<100 and @y<100]"
+```
+
+**Implementation**: Uses `github.com/antchfx/xmlquery` for XPath evaluation.
+
+**Performance note**: XPath queries are executed on the fly by first generating XML tree representation, then running the query. For large UIs, prefer `autoui.find` for simple lookups.
+
+### 5. `autoui.call`
 
 Invoke method on widget via reflection.
 
@@ -204,7 +227,7 @@ autoebiten custom autoui.call --request '{"target":"id=volume","method":"SetCurr
 
 **Safety**: Only methods on exported types with specific signatures are invocable.
 
-### 5. `autoui.highlight`
+### 6. `autoui.highlight`
 
 Visually highlight widget(s) for debugging.
 
@@ -256,14 +279,15 @@ widget.WidgetOpts.CustomData(WidgetMeta{
 <Button x="10" y="10" ... id="start-btn" name="Start Button" section="main"/>
 ```
 
-**3. Struct without tags** (field names lowercased):
+**3. Struct without tags** (field names preserved as-is):
 ```go
 type SimpleMeta struct {
-    ID   string
-    Name string
+    ID   string  // XML: ID="..."
+    Name string  // XML: Name="..."
 }
-// XML: id="..." name="..."
 ```
+
+Note: XML attributes preserve original case. `ID` becomes `ID="..."`, not `id="..."`. Users can use struct tags to control naming: `xml:"id,attr"` for lowercase.
 
 **4. Map[string]string**:
 ```go
@@ -507,6 +531,7 @@ autoui.Register(ui)
 
 - `github.com/s3cy/autoebiten` - RPC registration
 - `github.com/ebitenui/ebitenui` - UI framework
+- `github.com/antchfx/xmlquery` - XPath 1.0 support
 - `encoding/xml` - Standard library
 - `reflect` - Standard library
 - `image` - Standard library
