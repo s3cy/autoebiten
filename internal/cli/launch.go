@@ -133,7 +133,11 @@ func (lc *LaunchCommand) Run() error {
 
 	// Step 3: Start the game
 	if err := gameCmd.Start(); err != nil {
-		lc.cleanup()
+		lc.handler.TransitionToCrashed(fmt.Errorf("failed to start game: %w", err))
+		// Start accept loop to allow CLI to query for error
+		go lc.acceptLoop()
+		// Wait for CLI query before cleaning up
+		lc.waitForExit()
 		return fmt.Errorf("failed to start game: %w", err)
 	}
 
@@ -153,20 +157,20 @@ func (lc *LaunchCommand) Run() error {
 		close(lc.gameExited)
 	}()
 
-	// Step 4: Wait for game RPC server to be ready (with timeout)
+	// Step 4: Start accept loop in background (before waiting for RPC)
+	go lc.acceptLoop()
+
+	// Step 5: Wait for game RPC server to be ready (with timeout)
 	gameClient, err := lc.waitForGameRPC()
 	if err != nil {
 		lc.handler.TransitionToCrashed(err)
-		lc.cleanup()
-		lc.terminateGame()
+		// Wait for CLI query before cleaning up
+		lc.waitForExit()
 		return fmt.Errorf("failed to connect to game RPC server: %w", err)
 	}
 
-	// Step 5: Transition to Connected state
+	// Step 6: Transition to Connected state
 	lc.handler.TransitionToConnected(gameClient)
-
-	// Step 6: Start accept loop in background
-	go lc.acceptLoop()
 
 	// Setup signal handling
 	lc.setupSignalHandling()
