@@ -151,7 +151,8 @@ func (lc *LaunchCommand) Run() error {
 
 	// Monitor game exit in a goroutine
 	go func() {
-		gameCmd.Wait()
+		err := gameCmd.Wait()
+		lc.handler.TransitionToCrashed(fmt.Errorf("game process exited: %w", err))
 		close(lc.gameExited)
 	}()
 
@@ -196,7 +197,7 @@ func (lc *LaunchCommand) waitForGameRPC() (proxy.GameClient, error) {
 	for {
 		select {
 		case <-lc.gameExited:
-			return nil, fmt.Errorf("game exited")
+			return nil, fmt.Errorf("game exited before RPC server was ready")
 		case <-ctx.Done():
 			return nil, fmt.Errorf("timeout after %v waiting for game RPC server", timeout)
 		default:

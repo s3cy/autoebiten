@@ -88,8 +88,8 @@ func NewCommandExecutor() *CommandExecutor {
 // Always prints log_diff and proxy_error if present, calls onSuccess only if no RPC error.
 func (e *CommandExecutor) handleResponse(resp *rpc.RPCResponse, onSuccess func()) {
 	// Always print log_diff if present
-	if diff, ok := resp.Extra["diff"].(string); ok {
-		fmt.Fprintf(os.Stdout, "<log_diff>\n%s\n</log_diff>\n", diff)
+	if diff, ok := resp.Extra["diff"].(string); ok && diff != "" {
+		fmt.Fprintf(os.Stdout, "<log_diff>\n%s</log_diff>\n", diff)
 	}
 
 	// Always print proxy_error if present
