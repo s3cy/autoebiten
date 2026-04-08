@@ -28,15 +28,15 @@ type LaunchOptions struct {
 
 // LaunchCommand handles the `autoebiten launch` functionality.
 type LaunchCommand struct {
-	options      *LaunchOptions
-	outputFiles  *output.FilePath
-	outputMgr    *output.OutputManager
-	gameProc     *os.Process
-	proxyServer  *proxy.Server
-	proxyHandler *proxy.Handler
-	listener     net.Listener
-	gameExited   chan struct{}
-	done         chan struct{}
+	options     *LaunchOptions
+	outputFiles *output.FilePath
+	outputMgr   *output.OutputManager
+	gameProc    *os.Process
+	handler     *proxy.UnifiedHandler
+	listener    net.Listener
+	gameExited  chan struct{}
+	crashed     chan struct{}
+	done        chan struct{}
 }
 
 // NewLaunchCommand creates a new launch command handler.
@@ -44,19 +44,96 @@ func NewLaunchCommand(options *LaunchOptions) *LaunchCommand {
 	return &LaunchCommand{
 		options:    options,
 		gameExited: make(chan struct{}),
+		crashed:    make(chan struct{}),
 		done:       make(chan struct{}),
 	}
 }
 
+// launchSocketPath returns the path for the launch socket.
+// Format: autoebiten-{LAUNCH_PID}-launch.sock
+func (lc *LaunchCommand) launchSocketPath() string {
+	return rpc.LaunchSocketPath(os.Getpid())
+}
+
+// gameSocketPath returns the path for the game socket.
+// Format: autoebiten-{LAUNCH_PID}.sock
+// This is set as AUTOEBITEN_SOCKET env var for the game process.
+func (lc *LaunchCommand) gameSocketPath() string {
+	return rpc.SocketPath()
+}
+
+// createLaunchSocket creates and listens on the launch socket.
+func (lc *LaunchCommand) createLaunchSocket(path string) (net.Listener, error) {
+	// Ensure socket directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create socket directory: %w", err)
+	}
+
+	// Remove existing socket if present
+	os.Remove(path)
+
+	// Create listener
+	listener, err := net.Listen("unix", path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to listen on socket %s: %w", path, err)
+	}
+
+	// Set socket permissions
+	if err := os.Chmod(path, 0777); err != nil {
+		listener.Close()
+		return nil, fmt.Errorf("failed to set socket permissions: %w", err)
+	}
+
+	return listener, nil
+}
+
+// onCrashedCallback is called when the handler is in Crashed state and receives a CLI query.
+// It signals the launch command to exit immediately.
+func (lc *LaunchCommand) onCrashedCallback() {
+	close(lc.crashed)
+}
+
+// createHandler creates the UnifiedHandler with the onCrashed callback.
+func (lc *LaunchCommand) createHandler() *proxy.UnifiedHandler {
+	return proxy.NewUnifiedHandler(lc.outputMgr, lc.onCrashedCallback)
+}
+
 func (lc *LaunchCommand) Run() error {
-	// Create game command with pipes (must be done before Start())
+	// Step 1: Create launch socket BEFORE starting the game
+	launchSock := lc.launchSocketPath()
+	listener, err := lc.createLaunchSocket(launchSock)
+	if err != nil {
+		return fmt.Errorf("failed to create launch socket: %w", err)
+	}
+	lc.listener = listener
+
+	// Derive output file paths using the launch socket path
+	lc.outputFiles = output.DerivePaths(launchSock)
+
+	// Create log file
+	logFile, err := output.CreateLogFile(lc.outputFiles.Log)
+	if err != nil {
+		lc.cleanup()
+		return fmt.Errorf("failed to create log file: %w", err)
+	}
+
+	// Create OutputManager
+	lc.outputMgr = output.NewOutputManager(logFile, lc.outputFiles.Log, lc.outputFiles.Snapshot)
+
+	// Create the UnifiedHandler with onCrashed callback
+	lc.handler = lc.createHandler()
+
+	// Step 2: Create game command with pipes (must be done before Start())
 	gameCmd, stdoutPipe, stderrPipe, err := lc.createGameCommand()
 	if err != nil {
+		lc.cleanup()
 		return fmt.Errorf("failed to create game command: %w", err)
 	}
 
-	// Start the game
+	// Step 3: Start the game
 	if err := gameCmd.Start(); err != nil {
+		lc.cleanup()
 		return fmt.Errorf("failed to start game: %w", err)
 	}
 
@@ -64,62 +141,48 @@ func (lc *LaunchCommand) Run() error {
 	rpc.SetTargetPID(gameCmd.Process.Pid)
 	lc.gameProc = gameCmd.Process
 
-	// Now derive output file paths using the game PID
-	gameSocketPath := rpc.SocketPath()
-	lc.outputFiles = output.DerivePaths(gameSocketPath)
-
-	// Create log file
-	logFile, err := output.CreateLogFile(lc.outputFiles.Log)
-	if err != nil {
-		lc.terminateGame()
-		return fmt.Errorf("failed to create log file: %w", err)
-	}
-	// Note: we don't defer close here - it needs to stay open for the tee goroutines
-
-	// Create OutputManager
-	lc.outputMgr = output.NewOutputManager(logFile, lc.outputFiles.Log, lc.outputFiles.Snapshot)
-
 	// Tee stdout/stderr through CarriageReturnWriter to OutputManager
 	stdoutWriter := output.NewCarriageReturnWriter(lc.outputMgr)
 	stderrWriter := output.NewCarriageReturnWriter(lc.outputMgr)
 	go lc.teeOutput(stdoutPipe, os.Stdout, stdoutWriter)
 	go lc.teeOutput(stderrPipe, os.Stderr, stderrWriter)
 
-	// Monitor game exit
+	// Monitor game exit in a goroutine
 	go func() {
 		gameCmd.Wait()
 		close(lc.gameExited)
 	}()
 
-	// Wait for game RPC server to be ready (with timeout)
+	// Step 4: Wait for game RPC server to be ready (with timeout)
 	gameClient, err := lc.waitForGameRPC()
 	if err != nil {
+		lc.handler.TransitionToCrashed(err)
 		lc.cleanup()
 		lc.terminateGame()
 		return fmt.Errorf("failed to connect to game RPC server: %w", err)
 	}
 
-	// Create proxy server
-	lc.proxyServer = proxy.NewServer(gameClient, lc.outputMgr, lc.outputFiles)
-	lc.proxyHandler = proxy.NewHandler(lc.proxyServer)
+	// Step 5: Transition to Connected state
+	lc.handler.TransitionToConnected(gameClient)
 
-	// Start proxy RPC server
-	if err := lc.startProxyServer(); err != nil {
-		lc.cleanup()
-		return fmt.Errorf("failed to start proxy server: %w", err)
-	}
+	// Step 6: Start accept loop in background
+	go lc.acceptLoop()
 
 	// Setup signal handling
 	lc.setupSignalHandling()
 
-	// Wait for game to exit or termination signal
+	// Step 7: Wait for game exit
+	<-lc.gameExited
+
+	// Step 8: Wait for CLI query or timeout
+	fmt.Println("Game exited, waiting for CLI to read final output...")
 	lc.waitForExit()
 
 	return nil
 }
 
 // waitForGameRPC polls the game's RPC server until it's ready or timeout.
-func (lc *LaunchCommand) waitForGameRPC() (*rpc.Client, error) {
+func (lc *LaunchCommand) waitForGameRPC() (proxy.GameClient, error) {
 	// Default timeout if not specified
 	timeout := lc.options.Timeout
 	if timeout <= 0 {
@@ -128,8 +191,6 @@ func (lc *LaunchCommand) waitForGameRPC() (*rpc.Client, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	tick := time.NewTicker(100 * time.Millisecond)
-	defer tick.Stop()
 
 	for {
 		select {
@@ -137,7 +198,7 @@ func (lc *LaunchCommand) waitForGameRPC() (*rpc.Client, error) {
 			return nil, fmt.Errorf("game exited")
 		case <-ctx.Done():
 			return nil, fmt.Errorf("timeout after %v waiting for game RPC server", timeout)
-		case <-tick.C:
+		default:
 			// Try to connect
 			client, err := rpc.NewClient()
 			if err == nil {
@@ -150,6 +211,8 @@ func (lc *LaunchCommand) waitForGameRPC() (*rpc.Client, error) {
 				// Ping failed, close and retry
 				client.Close()
 			}
+			// Wait a bit before retrying
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
@@ -161,6 +224,10 @@ func (lc *LaunchCommand) createGameCommand() (*exec.Cmd, io.ReadCloser, io.ReadC
 
 	// Pass through all environment variables
 	cmd.Env = os.Environ()
+
+	// Set AUTOEBITEN_SOCKET to the game socket path
+	gameSock := lc.gameSocketPath()
+	cmd.Env = append(cmd.Env, "AUTOEBITEN_SOCKET="+gameSock)
 
 	// Pass through stdin for interactive games
 	cmd.Stdin = os.Stdin
@@ -205,36 +272,6 @@ func (lc *LaunchCommand) teeOutput(src io.Reader, dst1 *os.File, dst2 io.Writer)
 	}
 }
 
-// startProxyServer starts the proxy RPC server on the launch socket.
-func (lc *LaunchCommand) startProxyServer() error {
-	// Ensure socket directory exists
-	dir := filepath.Dir(lc.outputFiles.LaunchSock)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("failed to create socket directory: %w", err)
-	}
-
-	// Remove existing socket if present
-	os.Remove(lc.outputFiles.LaunchSock)
-
-	// Create listener
-	listener, err := net.Listen("unix", lc.outputFiles.LaunchSock)
-	if err != nil {
-		return fmt.Errorf("failed to listen on socket %s: %w", lc.outputFiles.LaunchSock, err)
-	}
-	lc.listener = listener
-
-	// Set socket permissions
-	if err := os.Chmod(lc.outputFiles.LaunchSock, 0777); err != nil {
-		listener.Close()
-		return fmt.Errorf("failed to set socket permissions: %w", err)
-	}
-
-	// Start accept loop in background
-	go lc.acceptLoop()
-
-	return nil
-}
-
 // acceptLoop accepts incoming RPC connections.
 func (lc *LaunchCommand) acceptLoop() {
 	for {
@@ -269,12 +306,12 @@ func (lc *LaunchCommand) handleConnection(conn net.Conn) {
 
 		// Handle exit specially - it should trigger cleanup
 		if req.Method == "exit" {
-			lc.proxyHandler.ProcessRequest(conn, &req)
+			lc.handler.ProcessRequest(conn, &req)
 			close(lc.done)
 			return
 		}
 
-		lc.proxyHandler.ProcessRequest(conn, &req)
+		lc.handler.ProcessRequest(conn, &req)
 	}
 }
 
@@ -291,20 +328,17 @@ func (lc *LaunchCommand) setupSignalHandling() {
 	}()
 }
 
-// waitForExit waits for the game to exit or termination signal.
+// waitForExit waits for the done signal, crashed signal, or timeout.
+// It exits immediately when CLI queries after crash (via crashed channel).
 func (lc *LaunchCommand) waitForExit() {
-	// Wait for game to exit
-	<-lc.gameExited
-
-	fmt.Println("Game exited, waiting 30s for CLI to read final output...")
-
-	// Wait for either: done signal (from exit command or interrupt) or 30s timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	select {
 	case <-lc.done:
-		fmt.Println("Exiting immediately.")
+		fmt.Println("Exit command received, exiting immediately.")
+	case <-lc.crashed:
+		fmt.Println("CLI queried after crash, exiting immediately.")
 	case <-ctx.Done():
 		fmt.Println("Timeout reached, exiting.")
 	}
@@ -325,18 +359,19 @@ func (lc *LaunchCommand) terminateGame() {
 
 // cleanup removes all temporary files.
 func (lc *LaunchCommand) cleanup() {
-	// Close proxy server
-	if lc.proxyServer != nil {
-		lc.proxyServer.Close()
-		// Remove log and snapshot files
-		lc.proxyServer.Cleanup()
-	}
-
 	// Close listener
 	if lc.listener != nil {
 		lc.listener.Close()
 	}
 
 	// Remove launch socket
-	os.Remove(lc.outputFiles.LaunchSock)
+	if lc.outputFiles != nil {
+		os.Remove(lc.outputFiles.LaunchSock)
+	}
+
+	// Remove log and snapshot files
+	if lc.outputFiles != nil {
+		os.Remove(lc.outputFiles.Log)
+		os.Remove(lc.outputFiles.Snapshot)
+	}
 }
