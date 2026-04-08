@@ -20,6 +20,8 @@ import (
 	"github.com/s3cy/autoebiten/internal/rpc"
 )
 
+var WaitForExitTimeout = 30 * time.Second
+
 // LaunchOptions contains options for the launch command.
 type LaunchOptions struct {
 	GameCmd  string
@@ -29,17 +31,17 @@ type LaunchOptions struct {
 
 // LaunchCommand handles the `autoebiten launch` functionality.
 type LaunchCommand struct {
-	options       *LaunchOptions
-	outputFiles   *output.FilePath
-	outputMgr     *output.OutputManager
-	gameProc      *os.Process
-	handler       *proxy.UnifiedHandler
-	listener      net.Listener
-	gameExited    chan struct{}
-	crashed       chan struct{}
-	crashedOnce   sync.Once
-	done          chan struct{}
-	doneOnce      sync.Once
+	options     *LaunchOptions
+	outputFiles *output.FilePath
+	outputMgr   *output.OutputManager
+	gameProc    *os.Process
+	handler     *proxy.UnifiedHandler
+	listener    net.Listener
+	gameExited  chan struct{}
+	crashed     chan struct{}
+	crashedOnce sync.Once
+	done        chan struct{}
+	doneOnce    sync.Once
 }
 
 // NewLaunchCommand creates a new launch command handler.
@@ -142,7 +144,7 @@ func (lc *LaunchCommand) Run() error {
 		// Start accept loop to allow CLI to query for error
 		go lc.acceptLoop()
 		// Wait for CLI query before cleaning up
-		lc.waitForExit()
+		lc.waitForExit("Failed to start game: " + err.Error())
 		return fmt.Errorf("failed to start game: %w", err)
 	}
 
@@ -170,7 +172,7 @@ func (lc *LaunchCommand) Run() error {
 	if err != nil {
 		lc.handler.TransitionToCrashed(err)
 		// Wait for CLI query before cleaning up
-		lc.waitForExit()
+		lc.waitForExit("Failed to connect to game RPC server: " + err.Error())
 		return fmt.Errorf("failed to connect to game RPC server: %w", err)
 	}
 
@@ -184,8 +186,7 @@ func (lc *LaunchCommand) Run() error {
 	<-lc.gameExited
 
 	// Step 8: Wait for CLI query or timeout
-	fmt.Println("Game exited, waiting for CLI to read final output...")
-	lc.waitForExit()
+	lc.waitForExit("Game exited")
 
 	return nil
 }
@@ -343,8 +344,11 @@ func (lc *LaunchCommand) setupSignalHandling() {
 
 // waitForExit waits for the done signal, crashed signal, or timeout.
 // It exits immediately when CLI queries after crash (via crashed channel).
-func (lc *LaunchCommand) waitForExit() {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+func (lc *LaunchCommand) waitForExit(message string) {
+	fmt.Println(message)
+	go printWaitingMessage()
+
+	ctx, cancel := context.WithTimeout(context.Background(), WaitForExitTimeout)
 	defer cancel()
 
 	select {
@@ -386,5 +390,18 @@ func (lc *LaunchCommand) cleanup() {
 	if lc.outputFiles != nil {
 		os.Remove(lc.outputFiles.Log)
 		os.Remove(lc.outputFiles.Snapshot)
+	}
+}
+
+func printWaitingMessage() {
+	timeout := WaitForExitTimeout
+	interval := 1 * time.Second
+	for {
+		fmt.Printf("\033[2K\rWait %s for CLI to read final output... (Ctrl-C to interrupt)", timeout)
+		time.Sleep(interval)
+		timeout = timeout - interval
+		if timeout <= 0 {
+			break
+		}
 	}
 }

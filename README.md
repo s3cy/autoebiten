@@ -350,7 +350,9 @@ func TestPlayerTakesDamage(t *testing.T) {
 
 ## Documentation
 
-- **CLI Automation** - Control games via command line → [docs/cli.md](docs/cli.md)
+- **Integration Guide** - Setup Patch or Library method → [docs/integration.md](docs/integration.md)
+- **CLI Commands** - Complete command reference → [docs/commands.md](docs/commands.md)
+- **Tutorial & Examples** - Step-by-step guide and examples → [docs/tutorial.md](docs/tutorial.md)
 - **Game Testing** - Write automated tests → [docs/testkit.md](docs/testkit.md)
 - **Technical Specs** - Architecture & protocol → [docs/SPEC.md](docs/SPEC.md)
 

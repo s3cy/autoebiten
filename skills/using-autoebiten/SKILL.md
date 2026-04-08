@@ -37,13 +37,22 @@ Run checks in order:
 
 ## When to Read References
 
-**READ references/cli.md when:**
-- Setting up Patch or Library integration (tutorials in Section 2 & 3)
-- Using CLI commands beyond basic input/screenshot
+**READ references/integration.md when:**
+- Setting up Patch or Library integration
 - Implementing custom commands
 - Setting up State Exporter for state queries
+- Understanding API functions (Update, Capture, input wrappers)
+
+**READ references/commands.md when:**
+- Using CLI commands beyond basic input/screenshot
+- Looking up command flags and options
 - Debugging connection issues
 - Writing automation scripts
+
+**READ references/tutorial.md when:**
+- Following step-by-step integration tutorial
+- Looking for practical examples
+- Understanding crash diagnostics
 
 **READ references/testkit.md when:**
 - Choosing between Black-box (Launch) vs White-box (Mock)
@@ -97,8 +106,10 @@ game.HoldKey(ebiten.KeyArrowRight, 10)
 
 For full documentation, **READ the appropriate reference file** based on your task:
 
-- **[CLI Reference](references/cli.md)** - Integration setup, CLI commands, custom commands, state exporter, automation scripts
-- **[Testkit Reference](references/testkit.md)** - Black-box vs White-box testing, API reference, state queries, testing patterns
+- **[Integration Guide](references/integration.md)** - Patch vs Library integration, API reference, custom commands, state exporter setup
+- **[CLI Commands](references/commands.md)** - Complete CLI command reference with all flags and options
+- **[Tutorial & Examples](references/tutorial.md)** - Step-by-step tutorial and practical examples
+- **[Testkit Reference](references/testkit.md)** - Black-box vs White-box testing, test API, state queries, testing patterns
 
 ---
 

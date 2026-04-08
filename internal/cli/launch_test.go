@@ -143,9 +143,9 @@ func TestOnCrashedCallback(t *testing.T) {
 // TestCreateGameCommandEnv verifies AUTOEBITEN_SOCKET is set.
 func TestCreateGameCommandEnv(t *testing.T) {
 	lc := NewLaunchCommand(&LaunchOptions{
-		GameCmd: "echo",
+		GameCmd:  "echo",
 		GameArgs: []string{"hello"},
-		Timeout: 5 * time.Second,
+		Timeout:  5 * time.Second,
 	})
 
 	cmd, _, _, err := lc.createGameCommand()
@@ -217,7 +217,7 @@ func TestWaitForExitChannels(t *testing.T) {
 
 		// Should exit quickly
 		start := time.Now()
-		lc.waitForExit()
+		lc.waitForExit("")
 		elapsed := time.Since(start)
 
 		if elapsed > 50*time.Millisecond {
@@ -239,7 +239,7 @@ func TestWaitForExitChannels(t *testing.T) {
 
 		// Should exit quickly
 		start := time.Now()
-		lc.waitForExit()
+		lc.waitForExit("")
 		elapsed := time.Since(start)
 
 		if elapsed > 50*time.Millisecond {
