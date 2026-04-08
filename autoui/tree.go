@@ -74,3 +74,31 @@ func extractWidgetType(w widget.PreferredSizeLocateableWidget) string {
 
 	return t.Name()
 }
+
+// WalkTree traverses the widget hierarchy depth-first and returns a flat list of all widgets.
+// It starts from the root widget and recursively visits all children in Container widgets.
+func WalkTree(root widget.PreferredSizeLocateableWidget) []WidgetInfo {
+	if root == nil {
+		return nil
+	}
+
+	var result []WidgetInfo
+	walkTreeRecursive(root, &result)
+	return result
+}
+
+// walkTreeRecursive recursively traverses the widget tree and appends widget info to the result.
+// It performs depth-first traversal, processing the current widget before its children.
+func walkTreeRecursive(w widget.PreferredSizeLocateableWidget, result *[]WidgetInfo) {
+	// Extract info for current widget
+	info := ExtractWidgetInfo(w)
+	*result = append(*result, info)
+
+	// If this is a Container, traverse children
+	if container, ok := w.(widget.Containerer); ok {
+		children := container.Children()
+		for _, child := range children {
+			walkTreeRecursive(child, result)
+		}
+	}
+}

@@ -228,3 +228,102 @@ func createTestNineSlice(w, h int, c color.Color) *ebitenuiImage.NineSlice {
 	img.Fill(c)
 	return ebitenuiImage.NewNineSliceSimple(img, 0, 0)
 }
+
+// TestWalkTree_ContainerWithChildren tests traversing a container with children.
+func TestWalkTree_ContainerWithChildren(t *testing.T) {
+	// Create container with children
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed:  createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+		Disabled: createTestNineSlice(100, 30, color.RGBA{150, 150, 150, 255}),
+	}
+
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+
+	btn := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Button 1", nil, buttonColor),
+	)
+	btn.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+	container.AddChild(btn)
+
+	infoList := autoui.WalkTree(container)
+
+	if len(infoList) != 2 {
+		t.Errorf("Expected 2 widgets, got %d", len(infoList))
+	}
+	if infoList[0].Type != "Container" {
+		t.Errorf("Expected first widget to be Container, got %s", infoList[0].Type)
+	}
+	if infoList[1].Type != "Button" {
+		t.Errorf("Expected second widget to be Button, got %s", infoList[1].Type)
+	}
+	// Note: text state may require validation, so we just check Type
+}
+
+// TestWalkTree_NestedContainers tests traversing nested containers.
+func TestWalkTree_NestedContainers(t *testing.T) {
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	childContainer := widget.NewContainer()
+	childContainer.GetWidget().Rect = image.Rect(0, 50, 800, 550)
+	root.AddChild(childContainer)
+
+	btn := widget.NewButton()
+	btn.GetWidget().Rect = image.Rect(20, 60, 120, 90)
+	childContainer.AddChild(btn)
+
+	infoList := autoui.WalkTree(root)
+
+	if len(infoList) != 3 {
+		t.Errorf("Expected 3 widgets, got %d", len(infoList))
+	}
+	if infoList[0].Type != "Container" {
+		t.Errorf("Expected first widget to be Container, got %s", infoList[0].Type)
+	}
+	if infoList[1].Type != "Container" {
+		t.Errorf("Expected second widget to be Container, got %s", infoList[1].Type)
+	}
+	if infoList[2].Type != "Button" {
+		t.Errorf("Expected third widget to be Button, got %s", infoList[2].Type)
+	}
+}
+
+// TestWalkTree_SingleWidget tests traversing a single widget without children.
+func TestWalkTree_SingleWidget(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed:  createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+		Disabled: createTestNineSlice(100, 30, color.RGBA{150, 150, 150, 255}),
+	}
+
+	btn := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+	)
+	btn.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	infoList := autoui.WalkTree(btn)
+
+	if len(infoList) != 1 {
+		t.Errorf("Expected 1 widget, got %d", len(infoList))
+	}
+	if infoList[0].Type != "Button" {
+		t.Errorf("Expected widget to be Button, got %s", infoList[0].Type)
+	}
+}
+
+// TestWalkTree_NilWidget tests traversing with nil root.
+func TestWalkTree_NilWidget(t *testing.T) {
+	infoList := autoui.WalkTree(nil)
+
+	if len(infoList) != 0 {
+		t.Errorf("Expected 0 widgets for nil root, got %d", len(infoList))
+	}
+}
