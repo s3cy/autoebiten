@@ -3,6 +3,8 @@ package docgen
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -32,4 +34,13 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+// Normalize applies all normalization rules to the input string.
+func Normalize(s string, rules []NormalizeRule) string {
+	for _, r := range rules {
+		re := regexp.MustCompile(r.Pattern)
+		s = re.ReplaceAllString(s, r.Replace)
+	}
+	return strings.TrimSpace(s)
 }
