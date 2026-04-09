@@ -3,7 +3,6 @@ package autoui
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 
 	"github.com/antchfx/xmlquery"
 )
@@ -43,51 +42,35 @@ func QueryXPath(widgets []WidgetInfo, xpathExpr string) ([]WidgetInfo, error) {
 }
 
 // xmlNodesToWidgetInfo maps XML nodes back to their corresponding WidgetInfo.
-// Matching is done by widget type and position (x, y coordinates).
-// This handles the case where multiple widgets might share the same type.
+// Matching is done by _addr attribute (widget pointer address) for exact identification.
 func xmlNodesToWidgetInfo(nodes []*xmlquery.Node, widgets []WidgetInfo) []WidgetInfo {
 	if len(nodes) == 0 || len(widgets) == 0 {
 		return nil
+	}
+
+	// Build addr -> WidgetInfo map for efficient lookup
+	addrMap := make(map[string]WidgetInfo, len(widgets))
+	for _, w := range widgets {
+		addrMap[w.Addr] = w
 	}
 
 	result := make([]WidgetInfo, 0, len(nodes))
 	for _, node := range nodes {
 		// Skip the UI root element
 		if node.Data == "UI" {
-			// UI is a wrapper, not a real widget
 			continue
 		}
 
-		// Get type from element name
-		widgetType := node.Data
-
-		// Get position attributes
-		xAttr := node.SelectAttr("x")
-		yAttr := node.SelectAttr("y")
-
-		if xAttr == "" || yAttr == "" {
-			// Cannot match without position
+		// Get _addr attribute
+		addr := node.SelectAttr("_addr")
+		if addr == "" {
+			// Cannot match without _addr
 			continue
 		}
 
-		// Parse position values
-		xVal, err := strconv.Atoi(xAttr)
-		if err != nil {
-			continue
-		}
-		yVal, err := strconv.Atoi(yAttr)
-		if err != nil {
-			continue
-		}
-
-		// Find matching widget
-		for _, w := range widgets {
-			if w.Type == widgetType &&
-				w.Rect.Min.X == xVal &&
-				w.Rect.Min.Y == yVal {
-				result = append(result, w)
-				break // Only add first match
-			}
+		// Find matching widget by address
+		if w, ok := addrMap[addr]; ok {
+			result = append(result, w)
 		}
 	}
 

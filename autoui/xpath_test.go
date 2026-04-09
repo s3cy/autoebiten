@@ -420,6 +420,56 @@ func TestXPath_EmptyWidgetList(t *testing.T) {
 	}
 }
 
+// TestXPath_OverlappingWidgets tests matching overlapping widgets by _addr.
+func TestXPath_OverlappingWidgets(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	buttonImage := &widget.ButtonImage{
+		Idle:    createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed: createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+	}
+
+	// Two buttons at same position (overlapping)
+	btn1 := widget.NewButton(widget.ButtonOpts.Image(buttonImage))
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+	btn1.GetWidget().CustomData = map[string]string{"id": "btn1"}
+	container.AddChild(btn1)
+
+	btn2 := widget.NewButton(widget.ButtonOpts.Image(buttonImage))
+	btn2.GetWidget().Rect = image.Rect(10, 10, 110, 40) // Same position as btn1
+	btn2.GetWidget().CustomData = map[string]string{"id": "btn2"}
+	container.AddChild(btn2)
+
+	widgets := autoui.WalkTree(container)
+
+	// Both buttons should be returned by //Button
+	results, err := autoui.QueryXPath(widgets, "//Button")
+	if err != nil {
+		t.Fatalf("QueryXPath failed: %v", err)
+	}
+
+	if len(results) != 2 {
+		t.Errorf("Expected 2 overlapping buttons to both match, got %d", len(results))
+	}
+
+	// Verify both different buttons matched
+	ids := []string{results[0].CustomData["id"], results[1].CustomData["id"]}
+	if !containsStr(ids, "btn1") || !containsStr(ids, "btn2") {
+		t.Errorf("Expected both btn1 and btn2 to match, got ids: %v", ids)
+	}
+}
+
+// containsStr checks if a string is in a slice.
+func containsStr(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
 // TestXPath_InvalidExpression tests handling of invalid XPath expressions.
 func TestXPath_InvalidExpression(t *testing.T) {
 	container := widget.NewContainer()
