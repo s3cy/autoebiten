@@ -1,6 +1,7 @@
 package autoui_test
 
 import (
+	"encoding/json"
 	"image"
 	"image/color"
 	"strings"
@@ -389,4 +390,26 @@ func createButtonImage() *widget.ButtonImage {
 		Pressed:  createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
 		Disabled: createTestNineSlice(100, 30, color.RGBA{150, 150, 150, 255}),
 	}
+}
+
+func TestExistsResponse_WaitForCompatible(t *testing.T) {
+	// Verify response format works with wait-for's JSON comparison
+
+	// Simulate game response for found=true
+	resp := autoui.ExistsResponse{Found: true, Count: 1}
+	data, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	// Parse as JSON (wait-for does this)
+	var parsed map[string]any
+	err = json.Unmarshal(data, &parsed)
+	require.NoError(t, err)
+
+	// Verify structure
+	assert.Equal(t, true, parsed["found"])
+	assert.Equal(t, 1.0, parsed["count"]) // JSON numbers are float64
+
+	// Simulate comparison that wait-for would do
+	expected := map[string]any{"found": true}
+	assert.Equal(t, expected["found"], parsed["found"])
 }
