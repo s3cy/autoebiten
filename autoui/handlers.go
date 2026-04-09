@@ -368,6 +368,50 @@ func handleHighlightCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext)
 	}
 }
 
+// handleExistsCommand handles the "exists" command which returns JSON indicating
+// if widgets matching a query exist. Returns JSON for use with wait-for.
+// Unlike find, this never returns an error for empty results.
+func handleExistsCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
+	return func(ctx autoebiten.CommandContext) {
+		if ui == nil {
+			// Return JSON error, not plain text
+			resp := ExistsResponse{Found: false, Count: 0}
+			data, _ := json.Marshal(resp)
+			ctx.Respond(string(data))
+			return
+		}
+
+		request := ctx.Request()
+
+		// Walk the widget tree
+		widgets := WalkTree(ui.Container)
+
+		// Determine query format and find widgets
+		var matching []WidgetInfo
+		if strings.HasPrefix(request, "{") {
+			// JSON format
+			matching = FindByQueryJSON(widgets, request)
+		} else {
+			// Simple key=value format (empty request matches all)
+			matching = FindByQuery(widgets, request)
+		}
+
+		// Build response - always valid JSON, no error on empty
+		resp := ExistsResponse{
+			Found: len(matching) > 0,
+			Count: len(matching),
+		}
+
+		data, err := json.Marshal(resp)
+		if err != nil {
+			ctx.Respond(`{"found":false,"count":0}`)
+			return
+		}
+
+		ctx.Respond(string(data))
+	}
+}
+
 // parseCoordinates parses coordinates from "x,y" format or JSON format.
 func parseCoordinates(request string) (int, int, error) {
 	// Try JSON format first
