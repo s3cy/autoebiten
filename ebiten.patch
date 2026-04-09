@@ -30,7 +30,7 @@ index 1f75dabcd..eb8ee5251 100644
  
  func (g *gameForUI) DrawOffscreen() error {
  	g.game.Draw(g.offscreen)
-+	integrate.Capture(g.offscreen)
++	integrate.AfterDraw(g.offscreen)
  	if err := g.imageDumper.dump(g.offscreen, g.transparent); err != nil {
  		return err
  	}
