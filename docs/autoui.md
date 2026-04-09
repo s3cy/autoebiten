@@ -1,753 +1,417 @@
-# autoui Reference
+# autoui Package Documentation
 
-> Purpose: EbitenUI widget automation for CLI, tests, and LLM agents
-> Audience: CLI users, test writers, LLM agents automating EbitenUI games
-
----
-
-## Quick Decision
-
-**Querying widgets:**
-```
-├─ Need widget at coordinates? → autoui.at command
-├─ Need widgets by attribute? → autoui.find command
-├─ Need complex query? → autoui.xpath command
-└─ Need full tree? → autoui.tree command
-```
-
-**Acting on widgets:**
-```
-├─ Need to click/interact? → autoui.call command
-└─ Need visual debugging? → autoui.highlight command
-```
-
-**Testing:**
-```
-└─ Need autoui in tests? → Use RunCustom with autoui commands
-```
-
----
+EbitenUI automation helper for autoebiten. Enables CLI-based widget tree inspection, search, method invocation, and visual debugging for LLM-assisted E2E testing.
 
 ## Overview
 
-autoui provides EbitenUI automation via CLI commands:
+`autoui` bridges the gap between autoebiten's RPC-based automation and ebitenui's widget hierarchy. It provides commands for:
 
-- Widget tree inspection → XML export
-- Widget search → coordinates, attributes, XPath
-- Method invocation → reflection-based calls
-- Visual debugging → highlight rectangles
+- **Tree inspection**: Export full widget hierarchy as XML
+- **Widget search**: Find widgets by attributes or XPath queries
+- **Method invocation**: Call widget methods via reflection
+- **Visual debugging**: Highlight widgets on screen
 
-**Key concepts:**
+## Installation
 
-1. **WidgetInfo**: Internal representation (type, rect, state, customData)
-2. **XML output**: Widget tree as XML (type as element name)
-3. **ae tags**: Custom attributes via struct field tags
-
-**Integration:**
-```go
-ui := ebitenui.UI{Container: root}
-autoui.Register(&ui)  // Registers autoui.* commands
+```bash
+go get github.com/s3cy/autoebiten
 ```
 
----
+## Quick Start
+
+```go
+package main
+
+import (
+    "github.com/ebitenui/ebitenui"
+    "github.com/ebitenui/ebitenui/widget"
+    "github.com/s3cy/autoebiten/autoui"
+)
+
+func main() {
+    // Create your UI
+    root := widget.NewContainer(
+        widget.ContainerOpts.Layout(widget.NewRowLayout()),
+    )
+
+    btn := widget.NewButton(
+        widget.ButtonOpts.Text("Start Game", face, colors),
+        widget.WidgetOpts.CustomData(struct {
+            ID string `ae:"id"`
+        }{ID: "start-btn"}),
+    )
+    root.AddChild(btn)
+
+    ui := ebitenui.UI{Container: root}
+
+    // Register autoui commands
+    autoui.Register(&ui)
+
+    // Run your game...
+}
+```
 
 ## Commands
 
+All commands are accessed via `autoebiten custom <command>`:
+
 ### autoui.tree
 
-Export full widget tree as XML.
-
-**Usage:**
-```bash
-autoebiten custom autoui.tree
-```
-
-**Runnable Example:**
+Returns the full widget tree as XML.
 
 ```bash
-# Build and run the demo
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# Get widget tree
 autoebiten custom autoui.tree
 ```
 
 **Output:**
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <UI>
-  <Container x="0" y="0" width="640" height="480" visible="true">
-    <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-    <Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false"/>
+  <Container _addr="0x14000123450" x="0" y="0" width="800" height="600" visible="true" disabled="false">
+    <Button _addr="0x14000123480" x="100" y="50" width="200" height="40" visible="true" disabled="false" text="Start Game" state="idle" id="start-btn"/>
   </Container>
 </UI>
 ```
-
----
-
-### autoui.at
-
-Find widget at coordinates.
-
-**Usage:**
-```bash
-autoebiten custom autoui.at --request "100,200"
-autoebiten custom autoui.at --request '{"x":100,"y":200}'
-```
-
-**Runnable Example:**
-
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# Find widget at position (150, 70) - the Submit button
-autoebiten custom autoui.at --request "150,70"
-```
-
-**Output:**
-```xml
-<Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false" visible="true"/>
-```
-
-**Error:** `no widget found at coordinates`
-
----
 
 ### autoui.find
 
-Find widgets by attribute (AND logic for multiple criteria).
-
-**Usage:**
-```bash
-autoebiten custom autoui.find --request "type=Button"
-autoebiten custom autoui.find --request '{"type":"Button","text":"Submit"}'
-```
-
-**Runnable Example:**
+Find widgets by simple attribute matching.
 
 ```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
+# Find by ID (uses ae tag from CustomData)
+autoebiten custom autoui.find --request "id=start-btn"
 
-```bash
 # Find all buttons
 autoebiten custom autoui.find --request "type=Button"
+
+# Find visible buttons
+autoebiten custom autoui.find --request "visible=true"
+
+# JSON for multiple criteria (AND logic)
+autoebiten custom autoui.find --request '{"type":"Button","state":"idle"}'
 ```
 
-**Output:**
+**Output format:** `autoui.find` returns matched widgets directly without `<UI>` wrapper or hierarchy reconstruction. For full hierarchy, use `autoui.tree`.
+
 ```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-  <Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false"/>
-</UI>
+<Button _addr="0x14000123480" x="100" y="50" width="200" height="40" visible="true" disabled="false" text="Start Game" state="idle" id="start-btn"/>
+<Button _addr="0x14000123500" x="100" y="200" width="200" height="40" visible="true" disabled="false" text="Cancel" state="idle" id="cancel-btn"/>
 ```
-
-```bash
-# Find submit button specifically
-autoebiten custom autoui.find --request "id=submit-btn"
-```
-
-**Output:**
-```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-</UI>
-```
-
-**Error:** `no widgets found matching query`
-
----
 
 ### autoui.xpath
 
-XPath 1.0 query on widget tree.
-
-**Usage:**
-```bash
-autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
-autoebiten custom autoui.xpath --request "//Button[contains(@id,'submit')]"
-```
-
-**Runnable Example:**
+Find widgets using XPath 1.0 expressions.
 
 ```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
+# Find by ID
+autoebiten custom autoui.xpath --request "//Button[@id='start-btn']"
+
+# Find all visible buttons
+autoebiten custom autoui.xpath --request "//Button[@visible='true']"
+
+# Find focused widget
+autoebiten custom autoui.xpath --request "//*[@focused='true']"
+
+# Find widget at position
+autoebiten custom autoui.xpath --request "//*[@x<100 and @y<100]"
 ```
+
+**Output format:** Same flat format as `autoui.find` - matched widgets directly without `<UI>` wrapper.
+
+### autoui.at
+
+Get widget at specific screen coordinates.
 
 ```bash
-# Find all buttons
-autoebiten custom autoui.xpath --request "//Button"
+autoebiten custom autoui.at --request "100,200"
+# or
+autoebiten custom autoui.at --request '{"x":100,"y":200}'
 ```
-
-**Output:**
-```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-  <Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false"/>
-</UI>
-```
-
-**XPath examples:**
-```
-//Button                      → All Button widgets
-//Button[@disabled='true']    → Disabled buttons
-//Button[@id='submit-btn']    → Button with specific id
-//*[contains(@id,'submit')]   → Any widget with 'submit' in id
-```
-
-**Error:** `no widgets found matching XPath`
-
----
 
 ### autoui.call
 
-Invoke method on widget.
-
-**Usage:**
-```bash
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click","args":[]}'
-```
-
-**Runnable Example:**
+Invoke methods on widgets via reflection.
 
 ```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
+# Click a button
+autoebiten custom autoui.call --request '{"target":"id=start-btn","method":"Click"}'
+
+# Focus a text input
+autoebiten custom autoui.call --request '{"target":"id=username","method":"Focus","args":[true]}'
+
+# Set slider value
+autoebiten custom autoui.call --request '{"target":"id=volume","method":"SetCurrentValue","args":[0.5]}'
 ```
-
-```bash
-# Click the Submit button
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click","args":[]}'
-```
-
-**Output:**
-```json
-{"success":true}
-```
-
-**Request format:**
-```json
-{
-  "target": "type=Button",     // Query to find widget (key=value or JSON)
-  "method": "Click",           // Method name to invoke
-  "args": []                   // Arguments (optional)
-}
-```
-
-**Whitelisted signatures:**
-- `func()`
-- `func(bool)`, `func(int)`, `func(float64)`, `func(string)`
-- `func() error`, `func(bool) error`, etc.
-
-**Error:** `{"success":false,"error":"method 'X' not found"}`
-
----
 
 ### autoui.highlight
 
-Add visual highlight rectangles (red, 3-second duration).
+Visually highlight widgets for debugging.
 
-**Usage:**
 ```bash
-autoebiten custom autoui.highlight --request "clear"
+# Highlight by ID
+autoebiten custom autoui.highlight --request "id=start-btn"
+
+# Highlight at coordinates
 autoebiten custom autoui.highlight --request "100,200"
-autoebiten custom autoui.highlight --request "type=Button"
-autoebiten custom autoui.highlight --request '{"query":"type=Button"}'
-```
 
-**Runnable Example:**
-
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# Highlight all buttons
-autoebiten custom autoui.highlight --request "type=Button"
-```
-
-**Output:**
-```
-ok: highlighted 2 widgets
-```
-
-```bash
-# Take screenshot to see the highlights
-autoebiten screenshot --output highlighted.png
-```
-
-```bash
-# Clear highlights
+# Clear all highlights
 autoebiten custom autoui.highlight --request "clear"
 ```
-
-**Output:**
-```
-ok: highlights cleared
-```
-
----
-
-## Clicking Without Coordinates
-
-Instead of mouse clicks with hard-coded x,y:
-
-```bash
-# OLD: Hard-coded coordinates (breaks if UI changes)
-autoebiten mouse -x 150 -y 70 --button MouseButtonLeft
-```
-
-Use autoui to find and click by widget identity:
-
-```bash
-# NEW: Click by widget identity (resilient to layout changes)
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
-```
-
-**Runnable Example:**
-
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# Click Submit button without knowing its position
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
-```
-
-**Output:**
-```json
-{"success":true}
-```
-
-**Why this matters:**
-
-1. Layout changes don't break tests
-2. No screenshot measurement needed
-3. Works across screen sizes
-4. Same pattern for any widget method
-
-**Workflow for LLM:**
-1. Run `autoui.tree` to discover widgets
-2. Identify target by type, text, or custom attributes
-3. Call method: `autoui.call '{"target":"...","method":"Click"}'`
-
----
 
 ## XML Format
 
-### Structure
+Widgets are serialized to XML with the following structure:
 
-All autoui commands return XML (except autoui.call which returns JSON).
-
-**Element names:** Widget type (Button, Container, TextInput, etc.)
-
-**Standard attributes:**
-```
-x, y          → Position (pixels)
-width, height → Size (pixels)
-visible       → "true" or "false"
-disabled      → "true" or "false"
+```xml
+<WidgetType _addr="ptr" x="0" y="0" width="100" height="30" visible="true" disabled="false" .../>
 ```
 
-**Widget-specific attributes:**
+### Standard Attributes
 
-| Widget | Attributes |
-|--------|------------|
-| Button | text, state, toggle, focused |
-| TextInput | text, focused |
-| Checkbox | checked, state, text, focused |
-| Slider | value, min, max, focused |
-| Label | text |
+All widgets include these attributes:
+
+| Attribute | Description |
+|-----------|-------------|
+| `_addr` | Pointer address for exact identification |
+| `x`, `y` | Screen position (top-left corner) |
+| `width`, `height` | Dimensions in pixels |
+| `visible` | Visibility state (`true`/`false`) |
+| `disabled` | Disabled state (`true`/`false`) |
+
+### Widget-specific attributes
+
+| Widget Type | Extra Attributes |
+|-------------|------------------|
+| Button | text (requires font), state, toggle, focused |
+| TextInput | text, cursor, selection_start, selection_end, focused |
+| Checkbox | checked, state |
+| Slider | value, min, max |
 | ProgressBar | value, min, max |
-| List | entries, selected, focused |
-| TextArea | text |
-| ComboButton | label, open |
-| ListComboButton | label, selected, open, focused |
-| TabBook | active_tab |
-| ScrollContainer | scroll_x, scroll_y, content_width, content_height |
-| Text | text, max_width |
+| Label | text |
+| Container | (layout info if available) |
 
----
-
-### Custom Data (ae tags)
-
-Add custom attributes via struct field tags:
+**Note:** Button `text` attribute requires font setup via `ButtonOpts.Text()`. For buttons without fonts, use `id` from CustomData for queries:
 
 ```go
-type PlayerCard struct {
-    PlayerID   string `ae:"player_id"`
-    PlayerName string `ae:"player_name"`
-    Level      int    `ae:"level"`
-    Hidden     string `ae:"-"`  // Skip this field
+btn.GetWidget().CustomData = map[string]string{"id": "submit-btn"}
+```
+
+```bash
+autoebiten custom autoui.find --request "id=submit-btn"
+```
+
+## Custom Data (ae tags)
+
+Attach custom attributes to widgets via `WidgetOpts.CustomData()` using the `ae` tag for custom naming:
+
+### Struct with ae tags
+
+```go
+type WidgetMeta struct {
+    ID      string `ae:"id"`
+    Section string `ae:"section"`
+}
+
+widget.WidgetOpts.CustomData(WidgetMeta{
+    ID:      "start-btn",
+    Section: "main-menu",
+})
+```
+
+**Output:**
+```xml
+<Button id="start-btn" section="main-menu" .../>
+```
+
+### Map[string]string
+
+```go
+widget.WidgetOpts.CustomData(map[string]string{
+    "id": "btn1",
+    "test-id": "start-button",
+})
+```
+
+**Output:**
+```xml
+<Button id="btn1" test-id="start-button" .../>
+```
+
+### Nested structs
+
+```go
+type PlayerData struct {
+    Name string `ae:"name"`
+    Pos  struct {
+        X int `ae:"x"`
+        Y int `ae:"y"`
+    } `ae:"pos"`
+}
+```
+
+**Output:**
+```xml
+<Button name="Alice" pos.x="100" pos.y="200" .../>
+```
+
+### Slice flattening
+
+```go
+type PlayerData struct {
+    Name string   `ae:"name"`
+    Tags []string `ae:"tags"`
 }
 
 // In widget creation:
-btn := widget.NewButton(
-    widget.ButtonOpts.Image(buttonImage),
-    widget.ButtonOpts.WidgetOpts(
-        widget.WidgetOpts.CustomData(&PlayerCard{
-            PlayerID:   "p001",
-            PlayerName: "Alice",
-            Level:      42,
-        }),
-    ),
-)
+widget.WidgetOpts.CustomData(&PlayerData{
+    Name: "Alice",
+    Tags: []string{"fire", "ice", "wind"},
+})
 ```
 
 **Output:**
 ```xml
-<Button id="submit-btn" player_id="p001" player_name="Alice" level="42"/>
+<Button name="Alice" tags.0="fire" tags.1="ice" tags.2="wind"/>
 ```
 
-**Rules:**
-- `ae:"name"` → Use specified name as attribute
-- `ae:"-"` → Skip field
-- No ae tag → Use field name as-is
+**XPath query:**
+```bash
+autoebiten custom autoui.xpath --request "//Button[@tags.0='fire']"
+```
 
-Nested structs flatten with dot notation:
+Nested slices use multi-level indexing:
+```xml
+<!-- [][]string{{"a","b"},{"c"}} -->
+<data.0.0="a" data.0.1="b" data.1.0="c"/>
+```
+
+## Attribute Lookup Order
+
+When searching with `autoui.find` or `autoui.xpath`, attributes are resolved in this order:
+
+1. **Widget type** - `type` returns "Button", "Container", etc.
+2. **Position** - `x`, `y`, `width`, `height` from widget rect
+3. **State** - `visible`, `disabled`
+4. **Widget-specific** - e.g., Button's `text`, `state`
+5. **CustomData** - flattened attributes from `ae` tags or map
+
+## Widget Identification (_addr)
+
+Every widget includes an `_addr` attribute containing its pointer address:
+
+```xml
+<Button _addr="0x14000abc0" x="100" y="50" id="submit-btn"/>
+```
+
+**Note:** `_addr` is an internal attribute for exact widget identification. It changes between runs, so do not hard-code it in tests. Instead, read `_addr` dynamically from `autoui.tree` output if you need it for subsequent queries.
+
+**Usage pattern:**
+```bash
+# Get widget tree, note the _addr
+autoebiten custom autoui.tree
+
+# Use _addr for exact query (if needed)
+autoebiten custom autoui.xpath --request "//Button[@_addr='0x14000abc0']"
+```
+
+Most queries should use `id` or other stable attributes instead of `_addr`.
+
+## Method Invocation
+
+The `autoui.call` command uses reflection with a whitelist for safety:
+
+**Supported signatures:**
+- `func()` - No args
+- `func(bool)` - Boolean
+- `func(int)` - Integer
+- `func(float64)` - Float
+- `func(string)` - String
+
+**Common methods:**
+
+| Widget | Method | Args | Description |
+|--------|--------|------|-------------|
+| Button | `Click` | none | Simulate click |
+| TextInput | `Focus` | `bool` | Set focus state |
+| Slider | `SetCurrentValue` | `float64` | Set value |
+| Checkbox | `Click` | none | Toggle state |
+
+## Visual Debugging
+
+Draw highlight rectangles in your game's Draw method:
+
 ```go
-type Data struct {
-    Player struct {
-        Name string `ae:"name"`
-    } `ae:"player"`
+func (g *Game) Draw(screen *ebiten.Image) {
+    g.ui.Draw(screen)
+    autoui.DrawHighlights(screen) // Draw active highlights
 }
-// Output: player.name="Alice"
 ```
 
----
-
-### Attribute Lookup Order
-
-When querying with `autoui.find` or XPath:
-
-1. **Built-in:** type, x, y, width, height, visible, disabled
-2. **Widget state:** text, checked, value, etc.
-3. **Custom data:** ae tag attributes
-
-All attributes are strings. Use XPath for numeric comparison:
-```bash
-# String comparison (lexicographic)
-//Slider[@value > '50']
-
-# Numeric comparison
-//Slider[number(@value) > 50]
-```
-
----
-
-## XPath Queries
-
-XPath 1.0 syntax for widget tree queries.
-
-**Runnable Example:**
-
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# All buttons
-autoebiten custom autoui.xpath --request "//Button"
-```
-
-**Output:**
-```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn"/>
-  <Button x="100" y="200" width="200" height="40" id="cancel-btn"/>
-</UI>
-```
-
----
-
-### Common Patterns
-
-**Find by type:**
-```
-//Button               → All Button widgets
-//Container            → All Container widgets
-//*                    → All widgets
-```
-
-**Find by attribute:**
-```
-//Button[@id='submit-btn']           → Exact match by id
-//Button[@disabled='true']           → Disabled buttons
-//*[contains(@id,'submit')]          → Id contains 'submit'
-//Button[@role='primary']            → By custom attribute
-```
-
-**Numeric comparisons:**
-```
-//Slider[number(@value) > 50]        → Value > 50
-//*[number(@width) > 100]            → Width > 100px
-```
-
-**Position-based:**
-```
-//Button[1]                          → First button
-//Button[last()]                     → Last button
-```
-
-**Parent-child:**
-```
-//Container/Button                   → Buttons inside Container
-```
-
-**Multiple conditions:**
-```
-//Button[@disabled='false' and contains(@text,'Click')]
-```
-
-**Union:**
-```
-//Button | //Label                   → Buttons and Labels
-```
-
----
-
-### XPath Functions
-
-**String:**
-```
-contains(@attr, 'text')             → Attribute contains text
-starts-with(@attr, 'pre')           → Starts with prefix
-```
-
-**Numeric:**
-```
-number(@attr)                       → Convert for comparison
-```
-
-**Position:**
-```
-position()                          → Current position
-last()                              → Last position
-```
-
-**Boolean:**
-```
-not(@disabled='true')               → Negation
-```
-
----
-
-## testkit Integration
-
-Use autoui commands in tests via `RunCustom`:
+Configure highlight duration:
 
 ```go
-func TestButtonExists(t *testing.T) {
+autoui.SetHighlightDuration(5 * time.Second) // Default: 3 seconds
+```
+
+## Testing
+
+Use with testkit for E2E tests:
+
+```go
+func TestMainMenu(t *testing.T) {
     game := testkit.Launch(t, "./mygame")
     defer game.Shutdown()
 
-    // Find button
-    output, err := game.RunCustom("autoui.find", "type=Button")
-    require.NoError(t, err)
-    assert.NotContains(t, output, "no widgets found")
+    // Get UI tree
+    tree := game.Custom("autoui.tree", "")
+    t.Logf("UI Tree:\n%s", tree)
+
+    // Find and click button
+    result := game.Custom("autoui.find", "id=start-btn")
+    require.Contains(t, result, "start-btn")
+
+    game.Custom("autoui.call", `{"target":"id=start-btn","method":"Click"}`)
 }
 ```
 
----
+## API Reference
 
-### Test Patterns
+### Functions
 
-**Verify widget exists:**
 ```go
-output, _ := game.RunCustom("autoui.find", `{"type":"Button","id":"submit-btn"}`)
-assert.NotContains(t, output, "no widgets found")
-```
+// Register all autoui commands
+func Register(ui *ebitenui.UI)
 
-**Verify widget state:**
-```go
-output, _ := game.RunCustom("autoui.xpath", "//Button[@disabled='true']")
-assert.NotContains(t, output, "no widgets found")
-```
+// Register with custom prefix
+func RegisterWithPrefix(ui *ebitenui.UI, prefix string)
 
-**Click a button:**
-```go
-_, err := game.RunCustom("autoui.call", `{"target":"id=submit-btn","method":"Click"}`)
-require.NoError(t, err)
-```
+// Draw highlight overlays (call in Draw)
+func DrawHighlights(screen *ebiten.Image)
 
-**Highlight for debugging:**
-```go
-game.RunCustom("autoui.highlight", "type=Button")
-game.ScreenshotToFile("debug.png")
-game.RunCustom("autoui.highlight", "clear")
+// Configure highlight duration
+func SetHighlightDuration(d time.Duration)
 ```
-
----
 
 ## Examples
 
-### Example 1: Discover and Interact
+See [examples/autoui](../examples/autoui/main.go) for a complete working example.
 
-**Scenario:** Find a button and click it.
+## Troubleshooting
 
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
+### Widget not found
 
-```bash
-# Step 1: See what widgets exist
-autoebiten custom autoui.tree
-```
+- Check that `autoui.Register(&ui)` was called after UI construction
+- Verify CustomData attributes are being extracted (check `autoui.tree` output)
+- Ensure widget is visible (invisible widgets are still in tree but may be skipped by some queries)
 
-**Output:**
-```xml
-<UI>
-  <Container x="0" y="0" width="640" height="480">
-    <Button x="100" y="50" id="submit-btn" disabled="false"/>
-    <Button x="100" y="200" id="cancel-btn" disabled="false"/>
-  </Container>
-</UI>
-```
+### Method invocation fails
 
-```bash
-# Step 2: Click Submit button
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
-```
+- Verify method name matches exactly (case-sensitive)
+- Check that method signature is in the whitelist
+- Ensure target widget exists before calling
 
-**Output:**
-```json
-{"success":true}
-```
+### XPath queries not working
 
----
-
-### Example 2: Debug Widget State
-
-**Scenario:** Check why a button isn't responding.
-
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# Highlight all buttons to see positions
-autoebiten custom autoui.highlight --request "type=Button"
-```
-
-```bash
-# Check if submit button is disabled
-autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
-```
-
-**Output:**
-```xml
-<Button x="100" y="50" id="submit-btn" disabled="false"/>
-```
-
-```bash
-# Clear highlights
-autoebiten custom autoui.highlight --request "clear"
-```
-
----
-
-### Example 3: Find by Custom Data
-
-**Scenario:** Locate widgets by game-specific attributes.
-
-```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
-# Find by custom player_id attribute
-autoebiten custom autoui.find --request "player_id=p001"
-```
-
-**Output:**
-```xml
-<Button id="submit-btn" player_id="p001" player_name="Alice" level="42"/>
-```
-
-```bash
-# XPath with custom attribute
-autoebiten custom autoui.xpath --request "//*[number(@level) > 40]"
-```
-
-**Output:**
-```xml
-<Button id="submit-btn" level="42"/>
-```
-
----
-
-### Example 4: E2E Test
-
-**Scenario:** Complete user flow in black-box test.
-
-**Test file:** `e2e/autoui_test.go`
-
-```go
-package e2e_test
-
-import (
-    "testing"
-    "time"
-
-    "github.com/s3cy/autoebiten/testkit"
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
-)
-
-func TestButtonClickFlow(t *testing.T) {
-    game := testkit.Launch(t, "./examples/autoui/autoui_demo")
-    defer game.Shutdown()
-
-    require.True(t, game.WaitFor(func() bool {
-        return game.Ping() == nil
-    }, 5*time.Second))
-
-    // Verify Submit button exists
-    output, err := game.RunCustom("autoui.find", `{"type":"Button","id":"submit-btn"}`)
-    require.NoError(t, err)
-    assert.NotContains(t, output, "no widgets found")
-
-    // Click Submit
-    output, err = game.RunCustom("autoui.call", `{"target":"id=submit-btn","method":"Click"}`)
-    require.NoError(t, err)
-    assert.Contains(t, output, `"success":true`)
-}
-```
-
-**Run:**
-```bash
-cd examples/autoui && go build -o autoui_demo && cd ../..
-go test -v ./e2e -run TestButtonClickFlow
-```
-
-**Output:**
-```
-=== RUN   TestButtonClickFlow
-    --- PASS: TestButtonClickFlow (2.34s)
-PASS
-```
+- Use single quotes for string values: `[@id='btn']` not `[@id="btn"]`
+- Remember XPath is case-sensitive for element names
+- Test query with `autoui.tree` output first
