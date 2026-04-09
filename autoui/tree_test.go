@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ebitenui/ebitenui"
 	ebitenuiImage "github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -424,5 +425,32 @@ func TestWidgetInfo_Addr(t *testing.T) {
 
 	if info.Addr == btnInfo.Addr {
 		t.Error("Expected different widgets to have different Addr values")
+	}
+}
+
+// TestSnapshotTree tests snapshot tree creation.
+func TestSnapshotTree(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	ui := &ebitenui.UI{Container: container}
+
+	widgets := autoui.SnapshotTree(ui)
+
+	if len(widgets) != 1 {
+		t.Errorf("Expected 1 widget (container), got %d", len(widgets))
+	}
+
+	if widgets[0].Type != "Container" {
+		t.Errorf("Expected Container type, got %s", widgets[0].Type)
+	}
+}
+
+// TestSnapshotTree_NilUI tests nil UI handling.
+func TestSnapshotTree_NilUI(t *testing.T) {
+	widgets := autoui.SnapshotTree(nil)
+
+	if widgets != nil {
+		t.Errorf("Expected nil for nil UI, got %d widgets", len(widgets))
 	}
 }

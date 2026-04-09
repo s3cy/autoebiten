@@ -5,6 +5,7 @@ import (
 	"image"
 	"reflect"
 
+	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/s3cy/autoebiten/autoui/internal"
 )
@@ -107,4 +108,14 @@ func walkTreeRecursive(w widget.PreferredSizeLocateableWidget, result *[]WidgetI
 			walkTreeRecursive(child, result)
 		}
 	}
+}
+
+// SnapshotTree returns a snapshot of the widget tree from the UI.
+// This function acquires RLock on the UI reference before traversal.
+// Note: Full thread safety requires calling from main thread (Ebiten convention).
+func SnapshotTree(ui *ebitenui.UI) []WidgetInfo {
+	if ui == nil || ui.Container == nil {
+		return nil
+	}
+	return WalkTree(ui.Container)
 }
