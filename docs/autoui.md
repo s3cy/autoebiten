@@ -12,18 +12,15 @@
 ├─ Need widget at coordinates? → autoui.at command
 ├─ Need widgets by attribute? → autoui.find command
 ├─ Need complex query? → autoui.xpath command
+├─ Need to check existence? → autoui.exists command (returns JSON)
 └─ Need full tree? → autoui.tree command
 ```
 
 **Acting on widgets:**
 ```
 ├─ Need to click/interact? → autoui.call command
+├─ Need to set text? → autoui.call SetText method
 └─ Need visual debugging? → autoui.highlight command
-```
-
-**Testing:**
-```
-└─ Need autoui in tests? → Use RunCustom with autoui commands
 ```
 
 ---
@@ -210,6 +207,43 @@ autoebiten custom autoui.xpath --request "//Button"
 
 ---
 
+### autoui.exists
+
+Check if widgets matching a query exist. Returns JSON for use with `wait-for`.
+
+**Usage:**
+```bash
+autoebiten custom autoui.exists --request "type=Dialog"
+autoebiten custom autoui.exists --request '{"type":"TextInput","id":"name-input"}'
+```
+
+**Runnable Example:**
+
+```bash
+cd examples/autoui
+go build -o autoui_demo
+autoebiten launch -- ./autoui_demo &
+```
+
+```bash
+# Check if any Button widgets exist
+autoebiten custom autoui.exists --request "type=Button"
+```
+
+**Output (found):**
+```json
+{"found":true,"count":2}
+```
+
+**Output (not found):**
+```json
+{"found":false,"count":0}
+```
+
+**Key difference from autoui.find:** Returns JSON instead of XML. Never errors on empty results - useful with `wait-for`.
+
+---
+
 ### autoui.call
 
 Invoke method on widget.
@@ -250,6 +284,20 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 - `func()`
 - `func(bool)`, `func(int)`, `func(float64)`, `func(string)`
 - `func() error`, `func(bool) error`, etc.
+
+**SetText Example:**
+
+```bash
+# Set text in a TextInput widget
+autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
+```
+
+**Output:**
+```json
+{"success":true}
+```
+
+**Why use SetText:** TextInput's `SetText(string)` method fires `ChangedEvent` for game logic. Setting the field directly would bypass events.
 
 **Error:** `{"success":false,"error":"method 'X' not found"}`
 
@@ -347,6 +395,38 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 1. Run `autoui.tree` to discover widgets
 2. Identify target by type, text, or custom attributes
 3. Call method: `autoui.call '{"target":"...","method":"Click"}'`
+
+---
+
+## Waiting for Widgets
+
+Use `autoui.exists` with `wait-for` to block until a widget appears.
+
+**CLI:**
+```bash
+# Wait up to 5 seconds for a Dialog widget
+autoebiten wait-for 'custom:autoui.exists:type=Dialog == {"found":true}' --timeout 5s
+```
+
+**testkit:**
+```go
+func TestDialogAppears(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    // Wait for dialog to appear
+    game.WaitFor(
+        "custom:autoui.exists:type=Dialog == {\"found\":true}",
+        "5s",
+        "",
+    )
+
+    // Now interact with the dialog
+    game.RunCustom("autoui.call", `{"target":"type=Dialog","method":"Close"}`)
+}
+```
+
+**Why autoui.exists returns JSON:** The `wait-for` command compares JSON values. Other autoui commands return XML, which can't be parsed as JSON.
 
 ---
 
