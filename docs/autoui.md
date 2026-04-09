@@ -385,7 +385,7 @@ func Register(ui *ebitenui.UI)
 // Register with custom prefix
 func RegisterWithPrefix(ui *ebitenui.UI, prefix string)
 
-// Register with options (see Thread Safety below)
+// Register with RWLock for concurrent UI modifications
 func RegisterWithOptions(ui *ebitenui.UI, prefix string, opts *RegisterOptions)
 
 // Draw highlight overlays (call in Draw)
@@ -397,38 +397,20 @@ func SetHighlightDuration(d time.Duration)
 
 ### Thread Safety
 
-autoui reads the widget tree during `Update()` processing (called from the main Ebiten thread).
-
-**If you modify the UI tree only from the main thread**, no additional configuration is needed.
-
-**If you modify the UI tree from goroutines** (e.g., `AddChild`, `RemoveChild`), you must provide an `RWLock` to prevent race conditions:
+If you modify the UI tree from goroutines (`AddChild`, `RemoveChild`), provide an `RWLock`:
 
 ```go
-import (
-    "sync"
-    "github.com/s3cy/autoebiten/autoui"
-)
-
 var uiLock sync.RWMutex
 
-func main() {
-    ui := &ebitenui.UI{Container: root}
+autoui.RegisterWithOptions(ui, "autoui", &autoui.RegisterOptions{
+    RWLock: &uiLock,
+})
 
-    // Register with RWLock for thread safety
-    autoui.RegisterWithOptions(ui, "autoui", &autoui.RegisterOptions{
-        RWLock: &uiLock,
-    })
-
-    // In goroutines that modify UI, acquire WriteLock:
-    go func() {
-        uiLock.Lock()
-        container.AddChild(newWidget)
-        uiLock.Unlock()
-    }()
-}
+// In goroutines modifying UI:
+uiLock.Lock()
+container.AddChild(newWidget)
+uiLock.Unlock()
 ```
-
-**Note:** Ebiten's rendering is not thread-safe. Even with the lock, you should limit goroutine UI modifications to structural changes (add/remove children), not rendering state.
 
 ## Examples
 

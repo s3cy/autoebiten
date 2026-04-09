@@ -111,13 +111,7 @@ func walkTreeRecursive(w widget.PreferredSizeLocateableWidget, result *[]WidgetI
 }
 
 // SnapshotTree returns a snapshot of the widget tree from the UI.
-// If a RWLock was provided via RegisterOptions, it acquires RLock before traversal.
-//
-// Thread Safety:
-// autoui reads the widget tree during Update() processing (main thread).
-// If you modify the UI from goroutines, you must provide an RWLock via
-// RegisterOptions and acquire WriteLock when modifying the tree.
-// Without an RWLock, ensure all UI modifications happen on the main thread.
+// If RWLock was provided via RegisterOptions, it acquires RLock before traversal.
 func SnapshotTree(ui *ebitenui.UI) []WidgetInfo {
 	if ui == nil || ui.Container == nil {
 		return nil
