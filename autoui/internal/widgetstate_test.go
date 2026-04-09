@@ -80,3 +80,31 @@ func createTestNineSlice(w, h int, c color.Color) *ebitenuiImage.NineSlice {
 	img.Fill(c)
 	return ebitenuiImage.NewNineSliceSimple(img, 0, 0)
 }
+
+// TestExtractWidgetState_List tests list state extraction.
+func TestExtractWidgetState_List(t *testing.T) {
+	scrollImage := &widget.ScrollContainerImage{
+		Idle: createTestNineSlice(100, 100, color.RGBA{50, 50, 50, 255}),
+		Mask: createTestNineSlice(100, 100, color.RGBA{255, 255, 255, 255}),
+	}
+
+	list := widget.NewList(
+		widget.ListOpts.Entries([]any{"item1", "item2", "item3"}),
+		widget.ListOpts.EntryLabelFunc(func(e any) string { return e.(string) }),
+		widget.ListOpts.ScrollContainerImage(scrollImage),
+		widget.ListOpts.HideVerticalSlider(),
+		widget.ListOpts.HideHorizontalSlider(),
+	)
+	// Note: List.Validate() requires EntryFontFace which needs font loading
+	// Testing extraction on unvalidated widget - Entries() should still work
+	list.SetLocation(image.Rect(0, 0, 100, 100))
+
+	state := internal.ExtractWidgetState(list)
+	if state == nil {
+		t.Fatal("Expected non-nil state")
+	}
+
+	if state["entries"] != "3" {
+		t.Errorf("Expected entries='3', got '%s'", state["entries"])
+	}
+}

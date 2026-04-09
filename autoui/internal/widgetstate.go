@@ -25,6 +25,8 @@ func ExtractWidgetState(w widget.PreferredSizeLocateableWidget) map[string]strin
 		extractLabelState(v, result)
 	case *widget.ProgressBar:
 		extractProgressBarState(v, result)
+	case *widget.List:
+		extractListState(v, result)
 	}
 
 	return result
@@ -116,6 +118,20 @@ func extractProgressBarState(pb *widget.ProgressBar, result map[string]string) {
 	result["value"] = fmt.Sprintf("%d", pb.GetCurrent())
 	result["min"] = fmt.Sprintf("%d", pb.Min)
 	result["max"] = fmt.Sprintf("%d", pb.Max)
+}
+
+// extractListState extracts state from a List widget.
+// Attributes: entries, selected, focused
+func extractListState(list *widget.List, result map[string]string) {
+	result["entries"] = fmt.Sprintf("%d", len(list.Entries()))
+
+	if selected := list.SelectedEntry(); selected != nil {
+		result["selected"] = fmt.Sprintf("%v", selected)
+	}
+
+	if list.IsFocused() {
+		result["focused"] = "true"
+	}
 }
 
 // widgetStateToString converts a WidgetState enum to string.
