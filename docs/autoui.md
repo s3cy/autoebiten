@@ -288,12 +288,6 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 **SetText Example:**
 
 ```bash
-cd examples/autoui
-go build -o autoui_demo
-autoebiten launch -- ./autoui_demo &
-```
-
-```bash
 # Set text in a TextInput widget
 autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
 ```
@@ -411,7 +405,8 @@ Use `autoui.exists` with `wait-for` to block until a widget appears.
 **CLI:**
 ```bash
 # Wait up to 5 seconds for a Dialog widget
-autoebiten wait-for 'custom:autoui.exists:type=Dialog == {"found":true}' --timeout 5s
+# Use .found to extract the boolean from the JSON response
+autoebiten wait-for --condition 'custom:autoui.exists:type=Dialog.found == true' --timeout 5s
 ```
 
 **testkit:**
@@ -421,8 +416,9 @@ func TestDialogAppears(t *testing.T) {
     defer game.Shutdown()
 
     // Wait for dialog to appear
+    // Use .found to extract the boolean from the JSON response
     game.WaitFor(
-        "custom:autoui.exists:type=Dialog == {\"found\":true}",
+        "custom:autoui.exists:type=Dialog.found == true",
         "5s",
         "",
     )
@@ -431,6 +427,8 @@ func TestDialogAppears(t *testing.T) {
     game.RunCustom("autoui.call", `{"target":"type=Dialog","method":"Close"}`)
 }
 ```
+
+**Response path syntax:** Use `.found` or `.count` after the query to extract a specific field from the JSON response `{"found":true,"count":1}`.
 
 ---
 

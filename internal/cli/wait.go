@@ -16,14 +16,18 @@ import (
 
 // Condition represents a parsed wait condition.
 type Condition struct {
-	Type     string // "state" or "custom"
-	Name     string // exporter or command name
-	Path     string // path or request
-	Operator string // ==, !=, <, >, <=, >=
-	Value    any    // expected value (parsed from JSON)
+	Type         string // "state" or "custom"
+	Name         string // exporter or command name
+	Path         string // path or request
+	ResponsePath string // optional JSON path to extract from response (e.g., ".found")
+	Operator     string // ==, !=, <, >, <=, >=
+	Value        any    // expected value (parsed from JSON)
 }
 
 // ParseCondition parses a condition string in the format "type:name:path operator value".
+// Path can include an optional response path suffix: "request.responsePath" where
+// responsePath is a dot-separated path to extract from the JSON response.
+// Example: "custom:autoui.exists:type=Button.found == true"
 func ParseCondition(s string) (*Condition, error) {
 	// Find the operator
 	operators := []string{"==", "!=", "<=", ">=", "<", ">"}
@@ -58,6 +62,27 @@ func ParseCondition(s string) (*Condition, error) {
 		return nil, fmt.Errorf("invalid condition type: %q (expected 'state' or 'custom')", condType)
 	}
 
+	// Parse path and optional response path
+	// Format: "request.responsePath" where request contains = or starts with {
+	// For state exporters, the path is used directly (e.g., Player.Health)
+	path := parts[2]
+	var responsePath string
+
+	// Only check for response path if:
+	// 1. This is a custom command (not state)
+	// 2. The path contains "."
+	// 3. The segment before "." looks like a request (contains = or starts with {)
+	if condType == "custom" {
+		if dotIdx := strings.Index(path, "."); dotIdx != -1 {
+			firstSegment := path[:dotIdx]
+			// Check if first segment looks like a request
+			if strings.Contains(firstSegment, "=") || strings.HasPrefix(firstSegment, "{") {
+				responsePath = path[dotIdx:]
+				path = firstSegment
+			}
+		}
+	}
+
 	// Parse value as JSON
 	var value any
 	if err := json.Unmarshal([]byte(valuePart), &value); err != nil {
@@ -65,11 +90,12 @@ func ParseCondition(s string) (*Condition, error) {
 	}
 
 	return &Condition{
-		Type:     condType,
-		Name:     parts[1],
-		Path:     parts[2],
-		Operator: op,
-		Value:    value,
+		Type:         condType,
+		Name:         parts[1],
+		Path:         path,
+		ResponsePath: responsePath,
+		Operator:     op,
+		Value:        value,
 	}, nil
 }
 
@@ -247,12 +273,57 @@ func pollCondition(customName string, cond *Condition, logger *waitLogger) (bool
 		return false, logger.logError("parse response error: %v", err)
 	}
 
+	// Extract value from response path if specified
+	if cond.ResponsePath != "" {
+		queried, err = extractResponsePath(queried, cond.ResponsePath)
+		if err != nil {
+			return false, logger.logError("extract response path error: %v", err)
+		}
+	}
+
 	met, err := CheckCondition(queried, cond.Operator, cond.Value)
 	if err != nil {
 		return false, logger.logError("condition check error: %v", err)
 	}
 
 	return met, nil
+}
+
+// extractResponsePath extracts a value from a JSON response using a dot-separated path.
+// Path format: ".field" or ".field.nested"
+func extractResponsePath(queried any, path string) (any, error) {
+	if path == "" {
+		return queried, nil
+	}
+
+	// Path should start with "."
+	if !strings.HasPrefix(path, ".") {
+		return nil, fmt.Errorf("response path must start with '.': %s", path)
+	}
+
+	// Navigate the path
+	current := queried
+	parts := strings.Split(strings.TrimPrefix(path, "."), ".")
+
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+
+		obj, ok := current.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("cannot access field %q on non-object type %T", part, current)
+		}
+
+		val, exists := obj[part]
+		if !exists {
+			return nil, fmt.Errorf("field %q not found in response", part)
+		}
+
+		current = val
+	}
+
+	return current, nil
 }
 
 // waitLogger handles verbose logging for wait commands.

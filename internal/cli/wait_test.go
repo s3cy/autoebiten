@@ -81,6 +81,30 @@ func TestParseCondition(t *testing.T) {
 			input:     "state:gamestate:Player.Health ~= 100",
 			wantError: true,
 		},
+		{
+			name:  "custom command with response path",
+			input: "custom:autoui.exists:type=Button.found == true",
+			want: &Condition{
+				Type:         "custom",
+				Name:         "autoui.exists",
+				Path:         "type=Button",
+				ResponsePath: ".found",
+				Operator:     "==",
+				Value:        true,
+			},
+		},
+		{
+			name:  "custom command with JSON request and response path",
+			input: `custom:autoui.exists:{"type":"Dialog"}.count == 0`,
+			want: &Condition{
+				Type:         "custom",
+				Name:         "autoui.exists",
+				Path:         `{"type":"Dialog"}`,
+				ResponsePath: ".count",
+				Operator:     "==",
+				Value:        float64(0),
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -105,6 +129,9 @@ func TestParseCondition(t *testing.T) {
 			if got.Path != tt.want.Path {
 				t.Errorf("Path: got %q, want %q", got.Path, tt.want.Path)
 			}
+				if got.ResponsePath != tt.want.ResponsePath {
+					t.Errorf("ResponsePath: got %q, want %q", got.ResponsePath, tt.want.ResponsePath)
+				}
 			if got.Operator != tt.want.Operator {
 				t.Errorf("Operator: got %q, want %q", got.Operator, tt.want.Operator)
 			}
