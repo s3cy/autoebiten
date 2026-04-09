@@ -59,6 +59,14 @@ func ExtractCustomData(data any) map[string]string {
 		// Extract struct fields, checking for xml tags
 		extractStructFields(v, result, "")
 
+	case reflect.Slice, reflect.Array:
+		// Handle nil/empty slices
+		if v.Len() == 0 {
+			return nil
+		}
+		// Flatten slice with indexed keys
+		extractSliceElements(v, result, "")
+
 	default:
 		// For other types, convert to string as fallback
 		result["custom_data"] = fmt.Sprintf("%v", data)
@@ -113,6 +121,18 @@ func extractStructFields(v reflect.Value, result map[string]string, prefix strin
 			continue
 		}
 
+		// Handle slices/arrays
+		if fieldValue.Kind() == reflect.Slice || fieldValue.Kind() == reflect.Array {
+			nestedPrefix := name
+			if prefix != "" {
+				nestedPrefix = prefix + "." + name
+			}
+			if fieldValue.Len() > 0 {
+				extractSliceElements(fieldValue, result, nestedPrefix)
+			}
+			continue
+		}
+
 		// Build full name with prefix
 		fullName := name
 		if prefix != "" {
@@ -121,6 +141,51 @@ func extractStructFields(v reflect.Value, result map[string]string, prefix strin
 
 		// Convert value to string
 		result[fullName] = valueToString(fieldValue)
+	}
+}
+
+// extractSliceElements flattens a slice/array with indexed keys.
+// Nested slices use dot notation (e.g., "0.0", "0.1").
+func extractSliceElements(v reflect.Value, result map[string]string, prefix string) {
+	for i := 0; i < v.Len(); i++ {
+		elem := v.Index(i)
+
+		// Build key for this element
+		key := fmt.Sprintf("%d", i)
+		if prefix != "" {
+			key = prefix + "." + key
+		}
+
+		// Handle nested types
+		if elem.Kind() == reflect.Ptr {
+			if elem.IsNil() {
+				continue
+			}
+			elem = elem.Elem()
+		}
+
+		switch elem.Kind() {
+		case reflect.Struct:
+			extractStructFields(elem, result, key)
+		case reflect.Slice, reflect.Array:
+			extractSliceElements(elem, result, key)
+		case reflect.Map:
+			// Handle map within slice
+			if elem.Type().Key().Kind() == reflect.String {
+				iter := elem.MapRange()
+				for iter.Next() {
+					mapKey := key + "." + iter.Key().String()
+					val := iter.Value()
+					if val.Kind() == reflect.String {
+						result[mapKey] = val.String()
+					} else {
+						result[mapKey] = fmt.Sprintf("%v", val.Interface())
+					}
+				}
+			}
+		default:
+			result[key] = valueToString(elem)
+		}
 	}
 }
 

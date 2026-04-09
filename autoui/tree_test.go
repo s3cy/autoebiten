@@ -3,8 +3,10 @@ package autoui_test
 import (
 	"image"
 	"image/color"
+	"strings"
 	"testing"
 
+	"github.com/ebitenui/ebitenui"
 	ebitenuiImage "github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -397,5 +399,58 @@ func TestWalkTree_WideTree(t *testing.T) {
 		if infoList[i].CustomData["id"] != expected {
 			t.Errorf("Position %d: expected id='%s', got '%s'", i, expected, infoList[i].CustomData["id"])
 		}
+	}
+}
+
+// TestWidgetInfo_Addr tests that Addr field is populated with pointer address.
+func TestWidgetInfo_Addr(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+
+	info := autoui.ExtractWidgetInfo(container)
+
+	if info.Addr == "" {
+		t.Error("Expected Addr to be populated")
+	}
+
+	// Addr should be hex format like "0x14000abc0"
+	if !strings.HasPrefix(info.Addr, "0x") {
+		t.Errorf("Expected Addr to start with '0x', got '%s'", info.Addr)
+	}
+
+	// Addr should be unique per widget
+	btn := widget.NewButton()
+	btn.GetWidget().Rect = image.Rect(0, 0, 50, 30)
+	btnInfo := autoui.ExtractWidgetInfo(btn)
+
+	if info.Addr == btnInfo.Addr {
+		t.Error("Expected different widgets to have different Addr values")
+	}
+}
+
+// TestSnapshotTree tests snapshot tree creation.
+func TestSnapshotTree(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	ui := &ebitenui.UI{Container: container}
+
+	widgets := autoui.SnapshotTree(ui)
+
+	if len(widgets) != 1 {
+		t.Errorf("Expected 1 widget (container), got %d", len(widgets))
+	}
+
+	if widgets[0].Type != "Container" {
+		t.Errorf("Expected Container type, got %s", widgets[0].Type)
+	}
+}
+
+// TestSnapshotTree_NilUI tests nil UI handling.
+func TestSnapshotTree_NilUI(t *testing.T) {
+	widgets := autoui.SnapshotTree(nil)
+
+	if widgets != nil {
+		t.Errorf("Expected nil for nil UI, got %d widgets", len(widgets))
 	}
 }

@@ -293,3 +293,104 @@ func TestExtractCustomData_NestedAETag(t *testing.T) {
 		t.Errorf("Expected nested.inner_value='nested-value', got '%s'", result["nested.inner_value"])
 	}
 }
+
+// TestExtractCustomData_StringSlice tests string slice flattening.
+func TestExtractCustomData_StringSlice(t *testing.T) {
+	input := []string{"fire", "ice", "wind"}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["0"] != "fire" {
+		t.Errorf("Expected 0='fire', got '%s'", result["0"])
+	}
+	if result["1"] != "ice" {
+		t.Errorf("Expected 1='ice', got '%s'", result["1"])
+	}
+	if result["2"] != "wind" {
+		t.Errorf("Expected 2='wind', got '%s'", result["2"])
+	}
+}
+
+// TestExtractCustomData_IntSlice tests int slice flattening.
+func TestExtractCustomData_IntSlice(t *testing.T) {
+	input := []int{1, 2, 3}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["0"] != "1" {
+		t.Errorf("Expected 0='1', got '%s'", result["0"])
+	}
+	if result["1"] != "2" {
+		t.Errorf("Expected 1='2', got '%s'", result["1"])
+	}
+	if result["2"] != "3" {
+		t.Errorf("Expected 2='3', got '%s'", result["2"])
+	}
+}
+
+// TestExtractCustomData_StructWithSlice tests struct containing slice.
+func TestExtractCustomData_StructWithSlice(t *testing.T) {
+	type Meta struct {
+		ID   string   `ae:"id"`
+		Tags []string `ae:"tags"`
+	}
+
+	input := Meta{
+		ID:   "widget-1",
+		Tags: []string{"fire", "ice"},
+	}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["id"] != "widget-1" {
+		t.Errorf("Expected id='widget-1', got '%s'", result["id"])
+	}
+	if result["tags.0"] != "fire" {
+		t.Errorf("Expected tags.0='fire', got '%s'", result["tags.0"])
+	}
+	if result["tags.1"] != "ice" {
+		t.Errorf("Expected tags.1='ice', got '%s'", result["tags.1"])
+	}
+}
+
+// TestExtractCustomData_NestedSlice tests nested slice flattening.
+func TestExtractCustomData_NestedSlice(t *testing.T) {
+	input := [][]string{
+		{"a", "b"},
+		{"c"},
+	}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["0.0"] != "a" {
+		t.Errorf("Expected 0.0='a', got '%s'", result["0.0"])
+	}
+	if result["0.1"] != "b" {
+		t.Errorf("Expected 0.1='b', got '%s'", result["0.1"])
+	}
+	if result["1.0"] != "c" {
+		t.Errorf("Expected 1.0='c', got '%s'", result["1.0"])
+	}
+}
+
+// TestExtractCustomData_EmptySlice tests empty slice handling.
+func TestExtractCustomData_EmptySlice(t *testing.T) {
+	input := []string{}
+
+	result := internal.ExtractCustomData(input)
+	if result != nil {
+		t.Errorf("Expected nil for empty slice, got %v", result)
+	}
+}

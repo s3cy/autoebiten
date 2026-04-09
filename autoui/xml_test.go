@@ -435,6 +435,30 @@ func TestMarshalXML_WideTree(t *testing.T) {
 	}
 }
 
+// TestWidgetXML_Addr tests that _addr appears in XML output.
+func TestWidgetXML_Addr(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+	container.GetWidget().CustomData = map[string]string{"id": "test"}
+
+	info := autoui.ExtractWidgetInfo(container)
+
+	xmlData, err := autoui.MarshalWidgetXML(info)
+	if err != nil {
+		t.Fatalf("MarshalWidgetXML failed: %v", err)
+	}
+
+	// Check _addr appears in output
+	if !strings.Contains(string(xmlData), "_addr=") {
+		t.Errorf("Expected _addr attribute in XML, got: %s", xmlData)
+	}
+
+	// Check _addr format (hex string with 0x prefix)
+	if !strings.Contains(string(xmlData), "_addr=\"0x") {
+		t.Errorf("Expected _addr to be hex format (0x...), got: %s", xmlData)
+	}
+}
+
 // TestMarshalXML_DistinguishesTreeStructures demonstrates that DeepChain and WideTree
 // produce DIFFERENT XML structures. If they produce the same XML, there's a bug.
 func TestMarshalXML_DistinguishesTreeStructures(t *testing.T) {
@@ -488,5 +512,76 @@ func TestMarshalXML_DistinguishesTreeStructures(t *testing.T) {
 	if deepStr == wideStr {
 		t.Errorf("BUG: Deep chain and wide tree produce identical XML!\nDeep:\n%s\nWide:\n%s",
 			deepStr, wideStr)
+	}
+}
+
+// TestMarshalWidgetsXML_SingleWidget tests single widget output without wrapper.
+func TestMarshalWidgetsXML_SingleWidget(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+	container.GetWidget().CustomData = map[string]string{"id": "single"}
+
+	widgets := []autoui.WidgetInfo{autoui.ExtractWidgetInfo(container)}
+
+	xmlData, err := autoui.MarshalWidgetsXML(widgets)
+	if err != nil {
+		t.Fatalf("MarshalWidgetsXML failed: %v", err)
+	}
+
+	// Should NOT have <UI> wrapper
+	if strings.Contains(string(xmlData), "<UI>") {
+		t.Errorf("Expected no <UI> wrapper, got: %s", xmlData)
+	}
+
+	// Should be just the widget element
+	if !strings.HasPrefix(string(xmlData), "<Container") {
+		t.Errorf("Expected output to start with <Container, got: %s", xmlData)
+	}
+}
+
+// TestMarshalWidgetsXML_MultipleWidgets tests multiple widgets without hierarchy.
+func TestMarshalWidgetsXML_MultipleWidgets(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+
+	buttonImage := &widget.ButtonImage{
+		Idle: createTestNineSlice(50, 30, color.RGBA{100, 100, 100, 255}),
+	}
+
+	btn := widget.NewButton(widget.ButtonOpts.Image(buttonImage))
+	btn.GetWidget().Rect = image.Rect(10, 10, 60, 40)
+	btn.GetWidget().CustomData = map[string]string{"id": "child"}
+	container.AddChild(btn)
+
+	// Only return the button (not container) - simulating filtered result
+	widgets := []autoui.WidgetInfo{autoui.ExtractWidgetInfo(btn)}
+
+	xmlData, err := autoui.MarshalWidgetsXML(widgets)
+	if err != nil {
+		t.Fatalf("MarshalWidgetsXML failed: %v", err)
+	}
+
+	// Should NOT have <UI> wrapper
+	if strings.Contains(string(xmlData), "<UI>") {
+		t.Errorf("Expected no <UI> wrapper, got: %s", xmlData)
+	}
+
+	// Should have just the button
+	if !strings.Contains(string(xmlData), "<Button") {
+		t.Errorf("Expected Button element, got: %s", xmlData)
+	}
+}
+
+// TestMarshalWidgetsXML_Empty tests empty widget list.
+func TestMarshalWidgetsXML_Empty(t *testing.T) {
+	widgets := []autoui.WidgetInfo{}
+
+	xmlData, err := autoui.MarshalWidgetsXML(widgets)
+	if err != nil {
+		t.Fatalf("MarshalWidgetsXML failed: %v", err)
+	}
+
+	if xmlData != nil {
+		t.Errorf("Expected nil for empty widgets, got: %s", xmlData)
 	}
 }

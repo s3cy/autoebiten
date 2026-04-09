@@ -14,32 +14,62 @@ var uiReference *ebitenui.UI
 // uiMu protects uiReference for concurrent access.
 var uiMu sync.RWMutex
 
+// treeRWLock protects the widget tree during traversal.
+// Set via RegisterOptions.RWLock for users who modify UI from goroutines.
+var treeRWLock *sync.RWMutex
+
+// RegisterOptions holds optional configuration for autoui registration.
+type RegisterOptions struct {
+	// RWLock protects concurrent UI tree access.
+	// Provide this if you modify the UI tree from goroutines.
+	// Acquire WriteLock when modifying, autoui acquires RLock during traversal.
+	RWLock *sync.RWMutex
+}
+
 // Register registers all autoui commands with the default "autoui." prefix.
 // The UI must be non-nil; otherwise Register panics.
-//
-// Commands registered:
-//   - autoui.tree - Returns full widget tree as XML
-//   - autoui.at - Returns widget at coordinates (x,y or JSON)
-//   - autoui.find - Returns widgets matching query (key=value or JSON)
-//   - autoui.xpath - Returns widgets matching XPath expression
-//   - autoui.call - Invokes method on widget (JSON request)
-//   - autoui.highlight - Adds visual highlights (clear, coordinates, or query)
 func Register(ui *ebitenui.UI) {
 	RegisterWithPrefix(ui, "autoui")
 }
 
 // RegisterWithPrefix registers all autoui commands with a custom prefix.
 // The UI must be non-nil; otherwise RegisterWithPrefix panics.
-// The prefix is prepended to all command names (e.g., prefix + ".tree").
 func RegisterWithPrefix(ui *ebitenui.UI, prefix string) {
+	RegisterWithOptions(ui, prefix, nil)
+}
+
+// RegisterWithOptions registers all autoui commands with a custom prefix and options.
+// The UI must be non-nil; otherwise RegisterWithOptions panics.
+// Use RegisterOptions.RWLock if you modify the UI tree from goroutines.
+//
+// Example:
+//
+//	var uiLock sync.RWMutex
+//	ui := &ebitenui.UI{Container: root}
+//	autoui.RegisterWithOptions(ui, "autoui", &autoui.RegisterOptions{
+//	    RWLock: &uiLock,
+//	})
+//
+//	// In a goroutine that modifies the UI:
+//	uiLock.Lock()
+//	container.AddChild(newWidget)
+//	uiLock.Unlock()
+func RegisterWithOptions(ui *ebitenui.UI, prefix string, opts *RegisterOptions) {
 	if ui == nil {
-		panic("autoui.RegisterWithPrefix: UI cannot be nil")
+		panic("autoui.RegisterWithOptions: UI cannot be nil")
 	}
 
 	// Store UI reference
 	uiMu.Lock()
 	uiReference = ui
 	uiMu.Unlock()
+
+	// Store optional tree RWLock
+	if opts != nil && opts.RWLock != nil {
+		treeRWLock = opts.RWLock
+	} else {
+		treeRWLock = nil
+	}
 
 	// Register highlight callback for patch method
 	integrate.RegisterDrawHighlights(drawHighlightsCallback)

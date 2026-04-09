@@ -1,6 +1,7 @@
 package autoui
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"maps"
@@ -50,6 +51,27 @@ func MarshalWidgetTreeXML(widgets []WidgetInfo) ([]byte, error) {
 	return xml.MarshalIndent(uiNode, "", "  ")
 }
 
+// MarshalWidgetsXML converts a flat list of widgets to XML elements.
+// Unlike MarshalWidgetTreeXML, this returns widgets directly without
+// hierarchy reconstruction or <UI> wrapper. Follows XPath convention.
+func MarshalWidgetsXML(widgets []WidgetInfo) ([]byte, error) {
+	if len(widgets) == 0 {
+		return nil, nil
+	}
+
+	var buf bytes.Buffer
+	for _, info := range widgets {
+		node := widgetInfoToNode(info)
+		data, err := xml.Marshal(node)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal widget: %w", err)
+		}
+		buf.Write(data)
+	}
+
+	return buf.Bytes(), nil
+}
+
 // widgetInfoToNode converts a WidgetInfo to a WidgetNode.
 // It extracts position, state, and custom data attributes.
 func widgetInfoToNode(info WidgetInfo) *WidgetNode {
@@ -67,6 +89,9 @@ func widgetInfoToNode(info WidgetInfo) *WidgetNode {
 	// Add state attributes
 	node.Attrs["visible"] = formatBool(info.Visible)
 	node.Attrs["disabled"] = formatBool(info.Disabled)
+
+	// Add unique address for identification
+	node.Attrs["_addr"] = info.Addr
 
 	// Add widget-specific state
 	maps.Copy(node.Attrs, info.State)

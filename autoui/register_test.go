@@ -2,6 +2,7 @@ package autoui
 
 import (
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/ebitenui/ebitenui"
@@ -226,9 +227,10 @@ func TestHandleFindCommand_EmptyQuery(t *testing.T) {
 	// Execute handler
 	handler(ctx)
 
-	// Should return XML tree
-	if !strings.Contains(response, "<UI>") {
-		t.Errorf("Empty query should return full tree, got: %s", response)
+	// Should return widgets (flat output, no <UI> wrapper)
+	// Empty query returns all widgets
+	if !strings.Contains(response, "<Container") {
+		t.Errorf("Empty query should return widgets, got: %s", response)
 	}
 }
 
@@ -498,4 +500,93 @@ func createTestUI() *ebitenui.UI {
 	return &ebitenui.UI{
 		Container: rootContainer,
 	}
+}
+func TestRegisterWithOptions_PanicsOnNilUI(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("RegisterWithOptions did not panic on nil UI")
+		}
+	}()
+
+	RegisterWithOptions(nil, "test", nil)
+}
+
+func TestRegisterWithOptions_WithRWLock(t *testing.T) {
+	// Clean up any existing commands
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	ui := createTestUI()
+	var lock sync.RWMutex
+
+	RegisterWithOptions(ui, "testui", &RegisterOptions{
+		RWLock: &lock,
+	})
+
+	// Verify treeRWLock is set
+	if treeRWLock != &lock {
+		t.Error("treeRWLock was not set from RegisterOptions")
+	}
+
+	// Verify commands are registered with prefix
+	expectedCommands := []string{
+		"testui.tree",
+		"testui.at",
+		"testui.find",
+		"testui.xpath",
+		"testui.call",
+		"testui.highlight",
+	}
+
+	for _, cmd := range expectedCommands {
+		if !containsStr(autoebiten.ListCustomCommands(), cmd) {
+			t.Errorf("Command %s not registered", cmd)
+		}
+	}
+}
+
+func TestRegisterWithOptions_NilOptions(t *testing.T) {
+	// Clean up any existing commands
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	ui := createTestUI()
+
+	RegisterWithOptions(ui, "testnil", nil)
+
+	// Verify treeRWLock is nil
+	if treeRWLock != nil {
+		t.Error("treeRWLock should be nil when options is nil")
+	}
+}
+
+func TestSnapshotTree_UsesRWLock(t *testing.T) {
+	ui := createTestUI()
+	var lock sync.RWMutex
+
+	// Reset treeRWLock
+	treeRWLock = &lock
+
+	// Test that SnapshotTree acquires the read lock
+	// This test verifies the lock path is exercised, not the actual locking
+	widgets := SnapshotTree(ui)
+
+	if len(widgets) == 0 {
+		t.Error("SnapshotTree should return widgets")
+	}
+
+	// Clean up
+	treeRWLock = nil
+}
+
+// containsStr checks if a string is in a slice.
+func containsStr(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
 }

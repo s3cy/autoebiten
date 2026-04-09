@@ -142,10 +142,8 @@ autoebiten custom autoui.find --request "type=Button"
 
 **Output:**
 ```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-  <Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false"/>
-</UI>
+<Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false" visible="true"/>
+<Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false" visible="true"/>
 ```
 
 ```bash
@@ -155,10 +153,10 @@ autoebiten custom autoui.find --request "id=submit-btn"
 
 **Output:**
 ```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-</UI>
+<Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false" visible="true"/>
 ```
+
+**Note:** `autoui.find` returns matched widgets directly without `<UI>` wrapper or hierarchy reconstruction. For full hierarchy, use `autoui.tree`.
 
 **Error:** `no widgets found matching query`
 
@@ -189,11 +187,11 @@ autoebiten custom autoui.xpath --request "//Button"
 
 **Output:**
 ```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false"/>
-  <Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false"/>
-</UI>
+<Button x="100" y="50" width="200" height="40" id="submit-btn" disabled="false" visible="true"/>
+<Button x="100" y="200" width="200" height="40" id="cancel-btn" disabled="false" visible="true"/>
 ```
+
+**Note:** `autoui.xpath` returns matched widgets directly without `<UI>` wrapper. For full hierarchy, use `autoui.tree`.
 
 **XPath examples:**
 ```
@@ -452,7 +450,7 @@ disabled      → "true" or "false"
 
 | Widget | Attributes |
 |--------|------------|
-| Button | text, state, toggle, focused |
+| Button | text (requires font), state, toggle, focused |
 | TextInput | text, focused |
 | Checkbox | checked, state, text, focused |
 | Slider | value, min, max, focused |
@@ -465,6 +463,20 @@ disabled      → "true" or "false"
 | TabBook | active_tab |
 | ScrollContainer | scroll_x, scroll_y, content_width, content_height |
 | Text | text, max_width |
+
+**Note:** Button `text` attribute requires font setup via `ButtonOpts.Text()`. For buttons without fonts, use `id` from CustomData for queries.
+
+---
+
+### Widget Identification (_addr)
+
+Every widget includes a `_addr` attribute containing its pointer address:
+
+```xml
+<Button _addr="0x14000abc0" x="100" y="50" id="submit-btn"/>
+```
+
+`_addr` is used internally for exact widget identification. It changes between runs, so don't hard-code it in tests. Most queries should use `id` or other stable attributes instead.
 
 ---
 
@@ -513,6 +525,38 @@ type Data struct {
 // Output: player.name="Alice"
 ```
 
+**Slice flattening:**
+
+Slices and arrays are flattened with indexed keys:
+
+```go
+type PlayerData struct {
+    Name string   `ae:"name"`
+    Tags []string `ae:"tags"`
+}
+
+widget.WidgetOpts.CustomData(&PlayerData{
+    Name: "Alice",
+    Tags: []string{"fire", "ice", "wind"},
+})
+```
+
+**Output:**
+```xml
+<Button name="Alice" tags.0="fire" tags.1="ice" tags.2="wind"/>
+```
+
+**XPath query:**
+```bash
+autoebiten custom autoui.xpath --request "//Button[@tags.0='fire']"
+```
+
+Nested slices use multi-level indexing:
+```xml
+<!-- [][]string{{"a","b"},{"c"}} -->
+<Widget data.0.0="a" data.0.1="b" data.1.0="c"/>
+```
+
 ---
 
 ### Attribute Lookup Order
@@ -553,10 +597,8 @@ autoebiten custom autoui.xpath --request "//Button"
 
 **Output:**
 ```xml
-<UI>
-  <Button x="100" y="50" width="200" height="40" id="submit-btn"/>
-  <Button x="100" y="200" width="200" height="40" id="cancel-btn"/>
-</UI>
+<Button x="100" y="50" width="200" height="40" id="submit-btn"/>
+<Button x="100" y="200" width="200" height="40" id="cancel-btn"/>
 ```
 
 ---
@@ -833,3 +875,65 @@ go test -v ./e2e -run TestButtonClickFlow
     --- PASS: TestButtonClickFlow (2.34s)
 PASS
 ```
+
+---
+
+## API Reference
+
+### Functions
+
+```go
+// Register all autoui commands (default "autoui." prefix)
+func Register(ui *ebitenui.UI)
+
+// Register with custom prefix
+func RegisterWithPrefix(ui *ebitenui.UI, prefix string)
+
+// Register with RWLock for concurrent UI modifications
+func RegisterWithOptions(ui *ebitenui.UI, prefix string, opts *RegisterOptions)
+
+// Draw highlight overlays (call in Draw)
+func DrawHighlights(screen *ebiten.Image)
+
+// Configure highlight duration
+func SetHighlightDuration(d time.Duration)
+```
+
+### Thread Safety
+
+If you modify the UI tree from goroutines (`AddChild`, `RemoveChild`), provide an `RWLock`:
+
+```go
+var uiLock sync.RWMutex
+
+autoui.RegisterWithOptions(ui, "autoui", &autoui.RegisterOptions{
+    RWLock: &uiLock,
+})
+
+// In goroutines modifying UI:
+uiLock.Lock()
+container.AddChild(newWidget)
+uiLock.Unlock()
+```
+
+---
+
+## Troubleshooting
+
+### Widget not found
+
+- Check that `autoui.Register(&ui)` was called after UI construction
+- Verify CustomData attributes are being extracted (check `autoui.tree` output)
+- Ensure widget is visible (invisible widgets are still in tree but may be skipped by some queries)
+
+### Method invocation fails
+
+- Verify method name matches exactly (case-sensitive)
+- Check that method signature is in the whitelist
+- Ensure target widget exists before calling
+
+### XPath queries not working
+
+- Use single quotes for string values: `[@id='btn']` not `[@id="btn"]`
+- Remember XPath is case-sensitive for element names
+- Test query with `autoui.tree` output first

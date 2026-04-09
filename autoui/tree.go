@@ -1,9 +1,11 @@
 package autoui
 
 import (
+	"fmt"
 	"image"
 	"reflect"
 
+	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/s3cy/autoebiten/autoui/internal"
 )
@@ -33,6 +35,10 @@ type WidgetInfo struct {
 	// CustomData contains extracted custom data attributes.
 	// Flattened from the widget's CustomData field.
 	CustomData map[string]string
+
+	// Addr is the widget pointer address for unique identification.
+	// Format: "0x14000abc0" (hex string).
+	Addr string
 }
 
 // ExtractWidgetInfo extracts widget information from a widget instance.
@@ -51,6 +57,7 @@ func ExtractWidgetInfo(w widget.PreferredSizeLocateableWidget) WidgetInfo {
 		Rect:     baseWidget.Rect,
 		Visible:  baseWidget.IsVisible(),
 		Disabled: baseWidget.Disabled,
+		Addr:     fmt.Sprintf("0x%x", reflect.ValueOf(w).Pointer()),
 	}
 
 	// Extract widget-specific state
@@ -101,4 +108,20 @@ func walkTreeRecursive(w widget.PreferredSizeLocateableWidget, result *[]WidgetI
 			walkTreeRecursive(child, result)
 		}
 	}
+}
+
+// SnapshotTree returns a snapshot of the widget tree from the UI.
+// If RWLock was provided via RegisterOptions, it acquires RLock before traversal.
+func SnapshotTree(ui *ebitenui.UI) []WidgetInfo {
+	if ui == nil || ui.Container == nil {
+		return nil
+	}
+
+	// Acquire read lock if user provided one for thread safety
+	if treeRWLock != nil {
+		treeRWLock.RLock()
+		defer treeRWLock.RUnlock()
+	}
+
+	return WalkTree(ui.Container)
 }
