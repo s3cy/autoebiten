@@ -296,3 +296,197 @@ func TestMarshalXML_NestedContainers(t *testing.T) {
 		t.Error("Child container should appear before button")
 	}
 }
+
+// TestMarshalXML_DeepChain tests XML generation for a deep chain structure.
+// Structure: Container -> Container -> Container (parent, child, grandchild).
+// Expected XML: <Container id="root"><Container id="child"><Container id="grandchild"/></Container></Container>
+func TestMarshalXML_DeepChain(t *testing.T) {
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+	root.GetWidget().CustomData = map[string]string{"id": "root"}
+
+	// Create child container (nested inside root)
+	child := widget.NewContainer()
+	child.GetWidget().Rect = image.Rect(0, 50, 800, 550)
+	child.GetWidget().CustomData = map[string]string{"id": "child"}
+	root.AddChild(child)
+
+	// Create grandchild container (nested inside child)
+	grandchild := widget.NewContainer()
+	grandchild.GetWidget().Rect = image.Rect(0, 100, 800, 500)
+	grandchild.GetWidget().CustomData = map[string]string{"id": "grandchild"}
+	child.AddChild(grandchild)
+
+	infoList := autoui.WalkTree(root)
+	xmlData, err := autoui.MarshalWidgetTreeXML(infoList)
+	if err != nil {
+		t.Fatalf("MarshalWidgetTreeXML failed: %v", err)
+	}
+
+	xmlStr := string(xmlData)
+
+	// Parse the XML to verify structure
+	var node autoui.WidgetNode
+	if err := xml.Unmarshal(xmlData, &node); err != nil {
+		t.Fatalf("Failed to unmarshal XML: %v", err)
+	}
+
+	// Verify root has one child (child container)
+	if len(node.Children) != 1 {
+		t.Fatalf("Expected UI to have 1 child (root), got %d", len(node.Children))
+	}
+	rootNode := node.Children[0]
+	if rootNode.Attrs["id"] != "root" {
+		t.Errorf("Expected root id='root', got '%s'", rootNode.Attrs["id"])
+	}
+
+	// Verify root contains child container
+	if len(rootNode.Children) != 1 {
+		t.Fatalf("Expected root to have 1 child, got %d: %s", len(rootNode.Children), xmlStr)
+	}
+	childNode := rootNode.Children[0]
+	if childNode.Attrs["id"] != "child" {
+		t.Errorf("Expected child id='child', got '%s'", childNode.Attrs["id"])
+	}
+
+	// Verify child contains grandchild container
+	if len(childNode.Children) != 1 {
+		t.Fatalf("Expected child to have 1 child (grandchild), got %d: %s", len(childNode.Children), xmlStr)
+	}
+	grandchildNode := childNode.Children[0]
+	if grandchildNode.Attrs["id"] != "grandchild" {
+		t.Errorf("Expected grandchild id='grandchild', got '%s'", grandchildNode.Attrs["id"])
+	}
+
+	// Grandchild should have no children
+	if len(grandchildNode.Children) != 0 {
+		t.Errorf("Expected grandchild to have 0 children, got %d", len(grandchildNode.Children))
+	}
+}
+
+// TestMarshalXML_WideTree tests XML generation for a wide tree structure.
+// Structure: Container -> [Container, Container] (parent with two sibling children).
+// Expected XML: <Container id="root"><Container id="child1"/><Container id="child2"/></Container>
+// BUG: Currently this produces nested output instead of siblings due to buildNodeTree's stack approach.
+func TestMarshalXML_WideTree(t *testing.T) {
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+	root.GetWidget().CustomData = map[string]string{"id": "root"}
+
+	// Create first child container
+	child1 := widget.NewContainer()
+	child1.GetWidget().Rect = image.Rect(0, 0, 400, 600)
+	child1.GetWidget().CustomData = map[string]string{"id": "child1"}
+	root.AddChild(child1)
+
+	// Create second child container (sibling of child1, NOT nested)
+	child2 := widget.NewContainer()
+	child2.GetWidget().Rect = image.Rect(400, 0, 800, 600)
+	child2.GetWidget().CustomData = map[string]string{"id": "child2"}
+	root.AddChild(child2)
+
+	infoList := autoui.WalkTree(root)
+	xmlData, err := autoui.MarshalWidgetTreeXML(infoList)
+	if err != nil {
+		t.Fatalf("MarshalWidgetTreeXML failed: %v", err)
+	}
+
+	xmlStr := string(xmlData)
+
+	// Parse the XML to verify structure
+	var node autoui.WidgetNode
+	if err := xml.Unmarshal(xmlData, &node); err != nil {
+		t.Fatalf("Failed to unmarshal XML: %v", err)
+	}
+
+	// Verify root has one child (root container)
+	if len(node.Children) != 1 {
+		t.Fatalf("Expected UI to have 1 child (root), got %d", len(node.Children))
+	}
+	rootNode := node.Children[0]
+	if rootNode.Attrs["id"] != "root" {
+		t.Errorf("Expected root id='root', got '%s'", rootNode.Attrs["id"])
+	}
+
+	// CRITICAL: Verify root contains BOTH child1 AND child2 as SIBLINGS
+	// Current implementation BUG: child2 becomes nested inside child1 instead
+	if len(rootNode.Children) != 2 {
+		t.Errorf("Expected root to have 2 children (child1 and child2 as siblings), got %d\nXML:\n%s",
+			len(rootNode.Children), xmlStr)
+	}
+
+	// If we have 2 children, verify they are the correct siblings
+	if len(rootNode.Children) == 2 {
+		if rootNode.Children[0].Attrs["id"] != "child1" {
+			t.Errorf("Expected first child id='child1', got '%s'", rootNode.Children[0].Attrs["id"])
+		}
+		if rootNode.Children[1].Attrs["id"] != "child2" {
+			t.Errorf("Expected second child id='child2', got '%s'", rootNode.Children[1].Attrs["id"])
+		}
+		// Both siblings should have no children (they're leaf containers)
+		if len(rootNode.Children[0].Children) != 0 {
+			t.Errorf("Expected child1 to have 0 children, got %d", len(rootNode.Children[0].Children))
+		}
+		if len(rootNode.Children[1].Children) != 0 {
+			t.Errorf("Expected child2 to have 0 children, got %d", len(rootNode.Children[1].Children))
+		}
+	}
+}
+
+// TestMarshalXML_DistinguishesTreeStructures demonstrates that DeepChain and WideTree
+// produce DIFFERENT XML structures. If they produce the same XML, there's a bug.
+func TestMarshalXML_DistinguishesTreeStructures(t *testing.T) {
+	// Build deep chain: root -> child -> grandchild
+	deepRoot := widget.NewContainer()
+	deepRoot.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+	deepRoot.GetWidget().CustomData = map[string]string{"id": "root"}
+
+	deepChild := widget.NewContainer()
+	deepChild.GetWidget().Rect = image.Rect(0, 50, 800, 550)
+	deepChild.GetWidget().CustomData = map[string]string{"id": "child"}
+	deepRoot.AddChild(deepChild)
+
+	deepGrandchild := widget.NewContainer()
+	deepGrandchild.GetWidget().Rect = image.Rect(0, 100, 800, 500)
+	deepGrandchild.GetWidget().CustomData = map[string]string{"id": "grandchild"}
+	deepChild.AddChild(deepGrandchild)
+
+	// Build wide tree: root -> [child1, child2]
+	wideRoot := widget.NewContainer()
+	wideRoot.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+	wideRoot.GetWidget().CustomData = map[string]string{"id": "root"}
+
+	wideChild1 := widget.NewContainer()
+	wideChild1.GetWidget().Rect = image.Rect(0, 0, 400, 600)
+	wideChild1.GetWidget().CustomData = map[string]string{"id": "child1"}
+	wideRoot.AddChild(wideChild1)
+
+	wideChild2 := widget.NewContainer()
+	wideChild2.GetWidget().Rect = image.Rect(400, 0, 800, 600)
+	wideChild2.GetWidget().CustomData = map[string]string{"id": "child2"}
+	wideRoot.AddChild(wideChild2)
+
+	// Generate XML for both
+	deepXML, err := autoui.MarshalWidgetTreeXML(autoui.WalkTree(deepRoot))
+	if err != nil {
+		t.Fatalf("Deep chain marshal failed: %v", err)
+	}
+
+	wideXML, err := autoui.MarshalWidgetTreeXML(autoui.WalkTree(wideRoot))
+	if err != nil {
+		t.Fatalf("Wide tree marshal failed: %v", err)
+	}
+
+	deepStr := string(deepXML)
+	wideStr := string(wideXML)
+
+	// The two structures should produce DIFFERENT XML
+	// Deep chain: nested 3 levels
+	// Wide tree: nested 2 levels with 2 siblings
+	if deepStr == wideStr {
+		t.Errorf("BUG: Deep chain and wide tree produce identical XML!\nDeep:\n%s\nWide:\n%s",
+			deepStr, wideStr)
+	}
+}

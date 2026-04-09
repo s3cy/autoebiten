@@ -327,3 +327,75 @@ func TestWalkTree_NilWidget(t *testing.T) {
 		t.Errorf("Expected 0 widgets for nil root, got %d", len(infoList))
 	}
 }
+
+// TestWalkTree_DeepChain tests a deep chain: Container -> Container -> Container.
+// Structure: root (parent) -> child -> grandchild (3 levels deep).
+func TestWalkTree_DeepChain(t *testing.T) {
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+	root.GetWidget().CustomData = map[string]string{"id": "root"}
+
+	// Create child container (nested inside root)
+	child := widget.NewContainer()
+	child.GetWidget().Rect = image.Rect(0, 50, 800, 550)
+	child.GetWidget().CustomData = map[string]string{"id": "child"}
+	root.AddChild(child)
+
+	// Create grandchild container (nested inside child)
+	grandchild := widget.NewContainer()
+	grandchild.GetWidget().Rect = image.Rect(0, 100, 800, 500)
+	grandchild.GetWidget().CustomData = map[string]string{"id": "grandchild"}
+	child.AddChild(grandchild)
+
+	infoList := autoui.WalkTree(root)
+
+	// Should have 3 widgets in DFS order
+	if len(infoList) != 3 {
+		t.Fatalf("Expected 3 widgets, got %d", len(infoList))
+	}
+
+	// Verify DFS order: root -> child -> grandchild
+	expectedIDs := []string{"root", "child", "grandchild"}
+	for i, expected := range expectedIDs {
+		if infoList[i].CustomData["id"] != expected {
+			t.Errorf("Position %d: expected id='%s', got '%s'", i, expected, infoList[i].CustomData["id"])
+		}
+	}
+}
+
+// TestWalkTree_WideTree tests a wide tree: Container -> [Container, Container].
+// Structure: root (parent) with two children (child1 and child2).
+func TestWalkTree_WideTree(t *testing.T) {
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+	root.GetWidget().CustomData = map[string]string{"id": "root"}
+
+	// Create first child container
+	child1 := widget.NewContainer()
+	child1.GetWidget().Rect = image.Rect(0, 0, 400, 600)
+	child1.GetWidget().CustomData = map[string]string{"id": "child1"}
+	root.AddChild(child1)
+
+	// Create second child container (sibling of child1, not nested)
+	child2 := widget.NewContainer()
+	child2.GetWidget().Rect = image.Rect(400, 0, 800, 600)
+	child2.GetWidget().CustomData = map[string]string{"id": "child2"}
+	root.AddChild(child2)
+
+	infoList := autoui.WalkTree(root)
+
+	// Should have 3 widgets in DFS order
+	if len(infoList) != 3 {
+		t.Fatalf("Expected 3 widgets, got %d", len(infoList))
+	}
+
+	// Verify DFS order: root -> child1 -> child2
+	expectedIDs := []string{"root", "child1", "child2"}
+	for i, expected := range expectedIDs {
+		if infoList[i].CustomData["id"] != expected {
+			t.Errorf("Position %d: expected id='%s', got '%s'", i, expected, infoList[i].CustomData["id"])
+		}
+	}
+}

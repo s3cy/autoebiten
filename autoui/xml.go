@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"maps"
 	"sort"
+
+	"github.com/ebitenui/ebitenui/widget"
 )
 
 // WidgetNode represents a widget as an XML node with dynamic element names.
@@ -37,7 +39,7 @@ func MarshalWidgetTreeXML(widgets []WidgetInfo) ([]byte, error) {
 
 	// Build tree from flat list
 	root := widgetInfoToNode(widgets[0])
-	buildNodeTree(root, widgets[1:])
+	buildNodeTree(root, widgets)
 
 	// Wrap in UI root element
 	uiNode := &WidgetNode{
@@ -113,37 +115,33 @@ func (n *WidgetNode) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 }
 
 // buildNodeTree reconstructs the tree structure from a flat list of widgets.
-// It uses the Container type to determine parent-child relationships.
-func buildNodeTree(root *WidgetNode, remaining []WidgetInfo) {
-	if len(remaining) == 0 {
+// It uses Widget.Parent() to determine actual parent-child relationships.
+// For filtered results where parent containers may not be in the list, orphan widgets are
+// added to the root node as siblings.
+func buildNodeTree(root *WidgetNode, widgets []WidgetInfo) {
+	if len(widgets) <= 1 {
 		return
 	}
 
-	// Track container contexts - first element is the root
-	containerStack := []*WidgetNode{root}
+	// Map base widgets to their corresponding nodes for parent lookup
+	// Key is the Widget pointer (from GetWidget()), value is the XML node
+	widgetToNode := map[*widget.Widget]*WidgetNode{}
+	widgetToNode[widgets[0].Widget.GetWidget()] = root
 
-	for _, info := range remaining {
+	// Process remaining widgets (skip widgets[0] which is already the root)
+	for _, info := range widgets[1:] {
 		node := widgetInfoToNode(info)
+		baseWidget := info.Widget.GetWidget()
+		widgetToNode[baseWidget] = node
 
-		// If this is a Container, add to current context and push to stack
-		if info.Type == "Container" {
-			// Add to current container's children
-			if len(containerStack) > 0 {
-				containerStack[len(containerStack)-1].Children = append(
-					containerStack[len(containerStack)-1].Children,
-					node,
-				)
-			}
-			// Push to stack (it becomes the new context)
-			containerStack = append(containerStack, node)
+		// Find parent using Widget.Parent()
+		parentWidget := baseWidget.Parent()
+		if parentNode, ok := widgetToNode[parentWidget]; ok {
+			parentNode.Children = append(parentNode.Children, node)
 		} else {
-			// Non-container: add to current container context
-			if len(containerStack) > 0 {
-				containerStack[len(containerStack)-1].Children = append(
-					containerStack[len(containerStack)-1].Children,
-					node,
-				)
-			}
+			// Fallback: no parent found (filtered result without parent container)
+			// Add to root node as a sibling
+			root.Children = append(root.Children, node)
 		}
 	}
 }
