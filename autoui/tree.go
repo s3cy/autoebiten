@@ -1,6 +1,7 @@
 package autoui
 
 import (
+	"fmt"
 	"image"
 	"reflect"
 
@@ -33,6 +34,10 @@ type WidgetInfo struct {
 	// CustomData contains extracted custom data attributes.
 	// Flattened from the widget's CustomData field.
 	CustomData map[string]string
+
+	// Addr is the widget pointer address for unique identification.
+	// Format: "0x14000abc0" (hex string).
+	Addr string
 }
 
 // ExtractWidgetInfo extracts widget information from a widget instance.
@@ -51,6 +56,7 @@ func ExtractWidgetInfo(w widget.PreferredSizeLocateableWidget) WidgetInfo {
 		Rect:     baseWidget.Rect,
 		Visible:  baseWidget.IsVisible(),
 		Disabled: baseWidget.Disabled,
+		Addr:     fmt.Sprintf("0x%x", reflect.ValueOf(w).Pointer()),
 	}
 
 	// Extract widget-specific state

@@ -3,6 +3,7 @@ package autoui_test
 import (
 	"image"
 	"image/color"
+	"strings"
 	"testing"
 
 	ebitenuiImage "github.com/ebitenui/ebitenui/image"
@@ -397,5 +398,31 @@ func TestWalkTree_WideTree(t *testing.T) {
 		if infoList[i].CustomData["id"] != expected {
 			t.Errorf("Position %d: expected id='%s', got '%s'", i, expected, infoList[i].CustomData["id"])
 		}
+	}
+}
+
+// TestWidgetInfo_Addr tests that Addr field is populated with pointer address.
+func TestWidgetInfo_Addr(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+
+	info := autoui.ExtractWidgetInfo(container)
+
+	if info.Addr == "" {
+		t.Error("Expected Addr to be populated")
+	}
+
+	// Addr should be hex format like "0x14000abc0"
+	if !strings.HasPrefix(info.Addr, "0x") {
+		t.Errorf("Expected Addr to start with '0x', got '%s'", info.Addr)
+	}
+
+	// Addr should be unique per widget
+	btn := widget.NewButton()
+	btn.GetWidget().Rect = image.Rect(0, 0, 50, 30)
+	btnInfo := autoui.ExtractWidgetInfo(btn)
+
+	if info.Addr == btnInfo.Addr {
+		t.Error("Expected different widgets to have different Addr values")
 	}
 }
