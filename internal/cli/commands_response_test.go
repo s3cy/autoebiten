@@ -104,7 +104,7 @@ func TestHandleResponseWithProxyError(t *testing.T) {
 	}
 }
 
-// TestHandleResponseEmptyDiff verifies empty diff still shows tags.
+// TestHandleResponseEmptyDiff verifies empty diff produces no output.
 func TestHandleResponseEmptyDiff(t *testing.T) {
 	executor := NewCommandExecutor()
 

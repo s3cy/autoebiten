@@ -3,6 +3,7 @@ package autoui
 import (
 	"encoding/xml"
 	"fmt"
+	"maps"
 	"sort"
 )
 
@@ -66,20 +67,10 @@ func widgetInfoToNode(info WidgetInfo) *WidgetNode {
 	node.Attrs["disabled"] = formatBool(info.Disabled)
 
 	// Add widget-specific state
-	for key, value := range info.State {
-		// Don't override position/state attributes
-		if !isReservedAttr(key) {
-			node.Attrs[key] = value
-		}
-	}
+	maps.Copy(node.Attrs, info.State)
 
 	// Add custom data
-	for key, value := range info.CustomData {
-		// Don't override position/state attributes
-		if !isReservedAttr(key) {
-			node.Attrs[key] = value
-		}
-	}
+	maps.Copy(node.Attrs, info.CustomData)
 
 	return node
 }
@@ -173,17 +164,6 @@ func sortedMap(m map[string]string) []stringKeyValue {
 	})
 
 	return result
-}
-
-// isReservedAttr checks if an attribute name is reserved for position/state attributes.
-func isReservedAttr(key string) bool {
-	reserved := []string{"x", "y", "width", "height", "visible", "disabled"}
-	for _, r := range reserved {
-		if key == r {
-			return true
-		}
-	}
-	return false
 }
 
 // formatInt converts an int to its string representation.

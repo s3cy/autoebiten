@@ -7,7 +7,7 @@ import "github.com/s3cy/autoebiten/internal/custom"
 type CommandContext = custom.Context
 
 // Register registers a custom command handler.
-// The name must be unique; registering a duplicate name will panic.
+// The name must be unique; registering a duplicate name will override.
 // The handler receives a CommandContext containing the request and a Respond method.
 //
 // Example:

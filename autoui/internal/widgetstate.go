@@ -11,9 +11,6 @@ import (
 func ExtractWidgetState(w widget.PreferredSizeLocateableWidget) map[string]string {
 	result := make(map[string]string)
 
-	// Get the underlying widget for common properties
-	baseWidget := w.GetWidget()
-
 	// Type switch for widget-specific extraction
 	switch v := w.(type) {
 	case *widget.Button:
@@ -28,15 +25,6 @@ func ExtractWidgetState(w widget.PreferredSizeLocateableWidget) map[string]strin
 		extractLabelState(v, result)
 	case *widget.ProgressBar:
 		extractProgressBarState(v, result)
-	}
-
-	// Add base widget state if applicable
-	if baseWidget.Disabled {
-		result["disabled"] = "true"
-	}
-
-	if len(result) == 0 {
-		return nil
 	}
 
 	return result
