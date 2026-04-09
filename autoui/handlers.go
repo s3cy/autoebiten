@@ -183,6 +183,16 @@ type CallResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
+// ExistsResponse represents the response from the exists command.
+// Returns JSON format for use with wait-for command.
+type ExistsResponse struct {
+	// Found indicates if any widgets matched the query.
+	Found bool `json:"found"`
+
+	// Count is the number of matching widgets.
+	Count int `json:"count"`
+}
+
 // handleCallCommand handles the "call" command which invokes a method on a widget.
 // Request format: `{"target":"query","method":"name","args":[...]}`.
 func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
