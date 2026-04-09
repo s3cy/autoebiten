@@ -72,6 +72,9 @@ func registerCommands(prefix string) {
 
 	// Register highlight command
 	autoebiten.Register(prefix+".highlight", handleHighlightCommand(ui))
+
+	// Register exists command
+	autoebiten.Register(prefix+".exists", handleExistsCommand(ui))
 }
 
 // GetUI returns the registered UI instance.

@@ -50,6 +50,7 @@ func TestRegister_RegistersAllCommands(t *testing.T) {
 		"autoui.xpath",
 		"autoui.call",
 		"autoui.highlight",
+		"autoui.exists",
 	}
 
 	registeredCommands := autoebiten.ListCustomCommands()
@@ -92,6 +93,7 @@ func TestRegisterWithPrefix_CustomPrefix(t *testing.T) {
 		"custom.prefix.xpath",
 		"custom.prefix.call",
 		"custom.prefix.highlight",
+		"custom.prefix.exists",
 	}
 
 	registeredCommands := autoebiten.ListCustomCommands()
@@ -411,6 +413,35 @@ func TestParseCoordinates_InvalidJSON(t *testing.T) {
 	_, _, err := parseCoordinates("{invalid}")
 	if err == nil {
 		t.Error("Expected error for invalid JSON")
+	}
+}
+
+func TestExistsCommandRegistered(t *testing.T) {
+	// Clean up any existing commands
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Create a simple UI and register commands
+	ui := createTestUI()
+	Register(ui)
+
+	// Verify autoui.exists is in the command list
+	commands := autoebiten.ListCustomCommands()
+	found := false
+	for _, cmd := range commands {
+		if cmd == "autoui.exists" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("autoui.exists command not registered")
+	}
+
+	// Clean up
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
 	}
 }
 
