@@ -27,6 +27,8 @@ func ExtractWidgetState(w widget.PreferredSizeLocateableWidget) map[string]strin
 		extractProgressBarState(v, result)
 	case *widget.List:
 		extractListState(v, result)
+	case *widget.TextArea:
+		extractTextAreaState(v, result)
 	}
 
 	return result
@@ -132,6 +134,12 @@ func extractListState(list *widget.List, result map[string]string) {
 	if list.IsFocused() {
 		result["focused"] = "true"
 	}
+}
+
+// extractTextAreaState extracts state from a TextArea widget.
+// Attributes: text
+func extractTextAreaState(ta *widget.TextArea, result map[string]string) {
+	result["text"] = ta.GetText()
 }
 
 // widgetStateToString converts a WidgetState enum to string.

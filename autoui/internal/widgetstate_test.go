@@ -108,3 +108,30 @@ func TestExtractWidgetState_List(t *testing.T) {
 		t.Errorf("Expected entries='3', got '%s'", state["entries"])
 	}
 }
+
+// TestExtractWidgetState_TextArea tests text area state extraction.
+func TestExtractWidgetState_TextArea(t *testing.T) {
+	scrollImage := &widget.ScrollContainerImage{
+		Idle: createTestNineSlice(100, 100, color.RGBA{50, 50, 50, 255}),
+		Mask: createTestNineSlice(100, 100, color.RGBA{255, 255, 255, 255}),
+	}
+
+	ta := widget.NewTextArea(
+		widget.TextAreaOpts.Text("Hello World"),
+		widget.TextAreaOpts.FontColor(color.White),
+		widget.TextAreaOpts.ScrollContainerImage(scrollImage),
+		widget.TextAreaOpts.ShowVerticalScrollbar(),
+	)
+	// Note: TextArea.Validate() requires FontFace which needs font loading
+	// Testing extraction on unvalidated widget - GetText() should still work
+	ta.SetLocation(image.Rect(0, 0, 100, 100))
+
+	state := internal.ExtractWidgetState(ta)
+	if state == nil {
+		t.Fatal("Expected non-nil state")
+	}
+
+	if state["text"] != "Hello World" {
+		t.Errorf("Expected text='Hello World', got '%s'", state["text"])
+	}
+}
