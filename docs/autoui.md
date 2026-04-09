@@ -288,6 +288,12 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 **SetText Example:**
 
 ```bash
+cd examples/autoui
+go build -o autoui_demo
+autoebiten launch -- ./autoui_demo &
+```
+
+```bash
 # Set text in a TextInput widget
 autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
 ```
@@ -425,8 +431,6 @@ func TestDialogAppears(t *testing.T) {
     game.RunCustom("autoui.call", `{"target":"type=Dialog","method":"Close"}`)
 }
 ```
-
-**Why autoui.exists returns JSON:** The `wait-for` command compares JSON values. Other autoui commands return XML, which can't be parsed as JSON.
 
 ---
 
