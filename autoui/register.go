@@ -5,6 +5,7 @@ import (
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/s3cy/autoebiten"
+	"github.com/s3cy/autoebiten/integrate"
 )
 
 // uiReference holds the registered UI instance.
@@ -39,6 +40,9 @@ func RegisterWithPrefix(ui *ebitenui.UI, prefix string) {
 	uiMu.Lock()
 	uiReference = ui
 	uiMu.Unlock()
+
+	// Register highlight callback for patch method
+	integrate.RegisterDrawHighlights(drawHighlightsCallback)
 
 	// Register all command handlers
 	registerCommands(prefix)
