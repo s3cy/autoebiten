@@ -397,18 +397,31 @@ autoebiten wait-for --condition "<Condition>" --timeout <Duration>
 
 **Condition format:**
 ```
-<type>:<name>:<path> <operator> <value>
+<type>:<name>:<path>[.<responsePath>] <operator> <value>
 ```
 
 - type: `state` or `custom`
 - name: exporter name or custom command name
 - path: dot-notation path or request string
+- responsePath: (optional) dot-notation path to extract from JSON response
 - operator: ==, !=, <, >, <=, >=
-- value: JSON value
+- value: JSON value (number, string, boolean)
+
+**Response path extraction:**
+
+For custom commands returning JSON, append `.<field>` to extract a specific value. This is required when comparing against primitive values since wait-for cannot compare entire objects.
 
 **Examples:**
 ```bash
+# State exporter with nested path
 autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout 10s
+
+# Custom command with response path extraction
+# Extracts "found" field from {"found":true,"count":2}
+autoebiten wait-for --condition "custom:autoui.exists:type=Dialog.found == true" --timeout 5s
+
+# Custom command with JSON request and response path
+autoebiten wait-for --condition 'custom:autoui.exists:{"type":"Button"}.count > 0' --timeout 5s
 ```
 
 ---
