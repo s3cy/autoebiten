@@ -29,6 +29,8 @@ func ExtractWidgetState(w widget.PreferredSizeLocateableWidget) map[string]strin
 		extractListState(v, result)
 	case *widget.TextArea:
 		extractTextAreaState(v, result)
+	case *widget.ComboButton:
+		extractComboButtonState(v, result)
 	}
 
 	return result
@@ -140,6 +142,26 @@ func extractListState(list *widget.List, result map[string]string) {
 // Attributes: text
 func extractTextAreaState(ta *widget.TextArea, result map[string]string) {
 	result["text"] = ta.GetText()
+}
+
+// extractComboButtonState extracts state from a ComboButton widget.
+// Attributes: label, open
+func extractComboButtonState(cb *widget.ComboButton, result map[string]string) {
+	// Set open state first (public field, won't panic)
+	if cb.ContentVisible {
+		result["open"] = "true"
+	} else {
+		result["open"] = "false"
+	}
+
+	// Label() may panic if widget not fully initialized
+	defer func() {
+		if r := recover(); r != nil {
+			// Widget not fully initialized, skip label extraction
+		}
+	}()
+
+	result["label"] = cb.Label()
 }
 
 // widgetStateToString converts a WidgetState enum to string.

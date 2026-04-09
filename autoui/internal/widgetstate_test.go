@@ -135,3 +135,38 @@ func TestExtractWidgetState_TextArea(t *testing.T) {
 		t.Errorf("Expected text='Hello World', got '%s'", state["text"])
 	}
 }
+
+// TestExtractWidgetState_ComboButton tests combo button state extraction.
+func TestExtractWidgetState_ComboButton(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:    createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed: createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+	}
+
+	buttonColor := &widget.ButtonTextColor{
+		Idle: color.White,
+	}
+
+	content := widget.NewContainer()
+
+	cb := widget.NewComboButton(
+		widget.ComboButtonOpts.ButtonOpts(
+			widget.ButtonOpts.Image(buttonImage),
+			widget.ButtonOpts.Text("Select", nil, buttonColor),
+		),
+		widget.ComboButtonOpts.Content(content),
+	)
+	// Note: ComboButton.Validate() requires Button.TextFace which needs font loading
+	// Testing extraction on unvalidated widget - ContentVisible should still work
+	cb.SetLocation(image.Rect(0, 0, 100, 30))
+
+	state := internal.ExtractWidgetState(cb)
+	if state == nil {
+		t.Fatal("Expected non-nil state")
+	}
+
+	// ContentVisible is a public field, should work even without validation
+	if state["open"] != "false" {
+		t.Errorf("Expected open='false', got '%s'", state["open"])
+	}
+}
