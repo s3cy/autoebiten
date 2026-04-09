@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 // OutputFunc returns a template function that reads a file and wraps it in a code fence.
@@ -27,4 +28,26 @@ func readFile(path string) (string, error) {
 		return "", fmt.Errorf("failed to read output file %s: %w", path, err)
 	}
 	return string(data), nil
+}
+
+// ProcessTemplate reads a template file, processes it with the output function, and returns the result.
+func ProcessTemplate(templatePath, baseDir string) (string, error) {
+	content, err := readFile(templatePath)
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New(filepath.Base(templatePath)).Funcs(template.FuncMap{
+		"output": OutputFunc(baseDir),
+	}).Parse(content)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var result strings.Builder
+	if err := tmpl.Execute(&result, nil); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return result.String(), nil
 }

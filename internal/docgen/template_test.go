@@ -36,3 +36,25 @@ func TestOutputFuncNotFound(t *testing.T) {
 	_, err := outputFn("missing.txt", "text")
 	assert.Error(t, err)
 }
+
+func TestProcessTemplate(t *testing.T) {
+	// Create temp files
+	tmpDir := t.TempDir()
+	outputPath := filepath.Join(tmpDir, "example_out.txt")
+	templatePath := filepath.Join(tmpDir, "test.md.tmpl")
+
+	outputContent := `<Button id="btn"/>`
+	err := os.WriteFile(outputPath, []byte(outputContent), 0644)
+	require.NoError(t, err)
+
+	templateContent := "# Test\n**Output:**\n{{output \"example_out.txt\" \"xml\"}}\n"
+	err = os.WriteFile(templatePath, []byte(templateContent), 0644)
+	require.NoError(t, err)
+
+	// Process template
+	result, err := ProcessTemplate(templatePath, tmpDir)
+	require.NoError(t, err)
+
+	expected := "# Test\n**Output:**\n```xml\n<Button id=\"btn\"/>\n```\n"
+	assert.Equal(t, expected, result)
+}
