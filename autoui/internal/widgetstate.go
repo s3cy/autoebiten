@@ -25,6 +25,20 @@ func ExtractWidgetState(w widget.PreferredSizeLocateableWidget) map[string]strin
 		extractLabelState(v, result)
 	case *widget.ProgressBar:
 		extractProgressBarState(v, result)
+	case *widget.List:
+		extractListState(v, result)
+	case *widget.TextArea:
+		extractTextAreaState(v, result)
+	case *widget.ComboButton:
+		extractComboButtonState(v, result)
+	case *widget.ListComboButton:
+		extractListComboButtonState(v, result)
+	case *widget.TabBook:
+		extractTabBookState(v, result)
+	case *widget.ScrollContainer:
+		extractScrollContainerState(v, result)
+	case *widget.Text:
+		extractTextState(v, result)
 	}
 
 	return result
@@ -116,6 +130,104 @@ func extractProgressBarState(pb *widget.ProgressBar, result map[string]string) {
 	result["value"] = fmt.Sprintf("%d", pb.GetCurrent())
 	result["min"] = fmt.Sprintf("%d", pb.Min)
 	result["max"] = fmt.Sprintf("%d", pb.Max)
+}
+
+// extractListState extracts state from a List widget.
+// Attributes: entries, selected, focused
+func extractListState(list *widget.List, result map[string]string) {
+	result["entries"] = fmt.Sprintf("%d", len(list.Entries()))
+
+	if selected := list.SelectedEntry(); selected != nil {
+		result["selected"] = fmt.Sprintf("%v", selected)
+	}
+
+	if list.IsFocused() {
+		result["focused"] = "true"
+	}
+}
+
+// extractTextAreaState extracts state from a TextArea widget.
+// Attributes: text
+func extractTextAreaState(ta *widget.TextArea, result map[string]string) {
+	result["text"] = ta.GetText()
+}
+
+// extractComboButtonState extracts state from a ComboButton widget.
+// Attributes: label, open
+func extractComboButtonState(cb *widget.ComboButton, result map[string]string) {
+	// Set open state first (public field, won't panic)
+	if cb.ContentVisible {
+		result["open"] = "true"
+	} else {
+		result["open"] = "false"
+	}
+
+	// Label() may panic if widget not fully initialized
+	defer func() {
+		if r := recover(); r != nil {
+			// Widget not fully initialized, skip label extraction
+		}
+	}()
+
+	result["label"] = cb.Label()
+}
+
+// extractListComboButtonState extracts state from a ListComboButton widget.
+// Attributes: label, selected, open, focused
+func extractListComboButtonState(lcb *widget.ListComboButton, result map[string]string) {
+	// Set open state first
+	if lcb.ContentVisible() {
+		result["open"] = "true"
+	} else {
+		result["open"] = "false"
+	}
+
+	// Label() may panic if widget not fully initialized
+	defer func() {
+		if r := recover(); r != nil {
+			// Widget not fully initialized, skip label extraction
+		}
+	}()
+
+	result["label"] = lcb.Label()
+
+	if selected := lcb.SelectedEntry(); selected != nil {
+		result["selected"] = fmt.Sprintf("%v", selected)
+	}
+
+	if lcb.IsFocused() {
+		result["focused"] = "true"
+	}
+}
+
+// extractTabBookState extracts state from a TabBook widget.
+// Attributes: active_tab
+func extractTabBookState(tb *widget.TabBook, result map[string]string) {
+	if tab := tb.Tab(); tab != nil {
+		// Tab label is stored in a private field, use widget type
+		result["active_tab"] = fmt.Sprintf("%T", tab)
+	}
+}
+
+// extractScrollContainerState extracts state from a ScrollContainer widget.
+// Attributes: scroll_x, scroll_y, content_width, content_height
+func extractScrollContainerState(sc *widget.ScrollContainer, result map[string]string) {
+	result["scroll_x"] = fmt.Sprintf("%.2f", sc.ScrollLeft)
+	result["scroll_y"] = fmt.Sprintf("%.2f", sc.ScrollTop)
+
+	contentRect := sc.ContentRect()
+	result["content_width"] = fmt.Sprintf("%d", contentRect.Dx())
+	result["content_height"] = fmt.Sprintf("%d", contentRect.Dy())
+}
+
+// extractTextState extracts state from a Text widget.
+// Attributes: text, max_width
+func extractTextState(txt *widget.Text, result map[string]string) {
+	result["text"] = txt.Label
+
+	if txt.MaxWidth > 0 {
+		result["max_width"] = fmt.Sprintf("%.0f", txt.MaxWidth)
+	}
 }
 
 // widgetStateToString converts a WidgetState enum to string.
