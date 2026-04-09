@@ -224,9 +224,10 @@ func TestHandleFindCommand_EmptyQuery(t *testing.T) {
 	// Execute handler
 	handler(ctx)
 
-	// Should return XML tree
-	if !strings.Contains(response, "<UI>") {
-		t.Errorf("Empty query should return full tree, got: %s", response)
+	// Should return widgets (flat output, no <UI> wrapper)
+	// Empty query returns all widgets
+	if !strings.Contains(response, "<Container") {
+		t.Errorf("Empty query should return widgets, got: %s", response)
 	}
 }
 
