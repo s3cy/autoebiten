@@ -16,7 +16,7 @@ import (
 func TestExtractWidgetInfo_Button(t *testing.T) {
 	// Create a button with custom data
 	customData := struct {
-		ID string `xml:"id,attr"`
+		ID string `ae:"id"`
 	}{
 		ID: "test-button-1",
 	}

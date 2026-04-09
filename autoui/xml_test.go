@@ -15,7 +15,7 @@ import (
 func TestMarshalXML_Button(t *testing.T) {
 	// Create a button with custom data
 	customData := struct {
-		ID string `xml:"id,attr"`
+		ID string `ae:"id"`
 	}{
 		ID: "btn-submit",
 	}
@@ -128,7 +128,7 @@ func TestMarshalXML_ContainerWithChildren(t *testing.T) {
 		widget.ButtonOpts.Text("Submit", nil, buttonColor),
 		widget.ButtonOpts.WidgetOpts(
 			widget.WidgetOpts.CustomData(struct {
-				ID string `xml:"id,attr"`
+				ID string `ae:"id"`
 			}{ID: "btn-submit"}),
 		),
 	)

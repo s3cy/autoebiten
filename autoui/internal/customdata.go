@@ -88,6 +88,11 @@ func extractStructFields(v reflect.Value, result map[string]string, prefix strin
 		// Determine attribute name
 		name := getXMLAttributeName(field)
 
+		// Skip ignored fields (ae:"-")
+		if name == "" {
+			continue
+		}
+
 		// Handle nested structs
 		if fieldValue.Kind() == reflect.Struct {
 			nestedPrefix := name
@@ -120,33 +125,24 @@ func extractStructFields(v reflect.Value, result map[string]string, prefix strin
 }
 
 // getXMLAttributeName extracts the attribute name from struct field.
-// If an xml tag is present with an "attr" option, it uses the tag name.
-// Otherwise, it uses the field name as-is (preserving case).
+// - ae:"name" uses the specified name
+// - ae:"-" skips the field (returns "")
+// - Otherwise uses field name as-is (preserving case).
 func getXMLAttributeName(field reflect.StructField) string {
-	tag := field.Tag.Get("xml")
-	if tag != "" {
-		// Parse xml tag: "name,attr" or just "name"
-		// We only care about the name part
-		name := parseXMLTagName(tag)
-		if name != "" {
-			return name
+	// Check ae tag
+	aeTag := field.Tag.Get("ae")
+	if aeTag != "" {
+		// ae:"-" means skip this field
+		if aeTag == "-" {
+			return ""
 		}
+		return aeTag
 	}
 
 	// Use field name as-is (preserving case per spec)
 	return field.Name
 }
 
-// parseXMLTagName extracts the name from an xml tag.
-// Handles formats like "id,attr", "name", ",attr", etc.
-func parseXMLTagName(tag string) string {
-	for i := 0; i < len(tag); i++ {
-		if tag[i] == ',' {
-			return tag[:i]
-		}
-	}
-	return tag
-}
 
 // valueToString converts a reflect.Value to its string representation.
 func valueToString(v reflect.Value) string {

@@ -83,12 +83,12 @@ func TestExtractCustomData_Bool(t *testing.T) {
 	}
 }
 
-// TestExtractCustomData_StructWithTags tests struct with xml tags.
+// TestExtractCustomData_StructWithTags tests struct with ae tags.
 func TestExtractCustomData_StructWithTags(t *testing.T) {
 	type WidgetMeta struct {
-		ID      string `xml:"id,attr"`
-		Name    string `xml:"name,attr"`
-		Section string `xml:"section,attr"`
+		ID      string `ae:"id"`
+		Name    string `ae:"name"`
+		Section string `ae:"section"`
 	}
 
 	input := WidgetMeta{
@@ -142,12 +142,12 @@ func TestExtractCustomData_StructWithoutTags(t *testing.T) {
 // TestExtractCustomData_NestedStruct tests nested struct flattening.
 func TestExtractCustomData_NestedStruct(t *testing.T) {
 	type Inner struct {
-		Value string `xml:"value,attr"`
+		Value string `ae:"value"`
 	}
 
 	type Outer struct {
-		ID    string `xml:"id,attr"`
-		Inner Inner
+		ID    string `ae:"id"`
+		Inner Inner  `ae:"inner"`
 	}
 
 	input := Outer{
@@ -163,15 +163,15 @@ func TestExtractCustomData_NestedStruct(t *testing.T) {
 	if result["id"] != "widget-1" {
 		t.Errorf("Expected id='widget-1', got '%s'", result["id"])
 	}
-	if result["Inner.value"] != "nested-value" {
-		t.Errorf("Expected Inner.value='nested-value', got '%s'", result["Inner.value"])
+	if result["inner.value"] != "nested-value" {
+		t.Errorf("Expected inner.value='nested-value', got '%s'", result["inner.value"])
 	}
 }
 
 // TestExtractCustomData_Pointer tests pointer input.
 func TestExtractCustomData_Pointer(t *testing.T) {
 	type Meta struct {
-		ID string `xml:"id,attr"`
+		ID string `ae:"id"`
 	}
 
 	input := &Meta{ID: "ptr-test"}
@@ -193,5 +193,103 @@ func TestExtractCustomData_NilPointer(t *testing.T) {
 	result := internal.ExtractCustomData(input)
 	if result != nil {
 		t.Errorf("Expected nil for nil pointer, got %v", result)
+	}
+}
+
+// TestExtractCustomData_AETag tests struct with ae tags for custom attribute names.
+func TestExtractCustomData_AETag(t *testing.T) {
+	type WidgetMeta struct {
+		ID      string `ae:"widget_id"`
+		Name    string `ae:"display_name"`
+		Section string // No tag, uses field name
+	}
+
+	input := WidgetMeta{
+		ID:      "btn-1",
+		Name:    "Start Button",
+		Section: "main",
+	}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["widget_id"] != "btn-1" {
+		t.Errorf("Expected widget_id='btn-1', got '%s'", result["widget_id"])
+	}
+	if result["display_name"] != "Start Button" {
+		t.Errorf("Expected display_name='Start Button', got '%s'", result["display_name"])
+	}
+	if result["Section"] != "main" {
+		t.Errorf("Expected Section='main', got '%s'", result["Section"])
+	}
+}
+
+// TestExtractCustomData_AETagIgnore tests ae:"-" to skip fields.
+func TestExtractCustomData_AETagIgnore(t *testing.T) {
+	type WidgetMeta struct {
+		ID       string `ae:"widget_id"`
+		Internal string `ae:"-"` // Should be ignored
+		Name     string `ae:"display_name"`
+	}
+
+	input := WidgetMeta{
+		ID:       "btn-1",
+		Internal: "secret-data",
+		Name:     "Start Button",
+	}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["widget_id"] != "btn-1" {
+		t.Errorf("Expected widget_id='btn-1', got '%s'", result["widget_id"])
+	}
+	if result["display_name"] != "Start Button" {
+		t.Errorf("Expected display_name='Start Button', got '%s'", result["display_name"])
+	}
+
+	// Internal field should be ignored (not in result)
+	if _, exists := result["Internal"]; exists {
+		t.Errorf("Expected 'Internal' to be ignored, but found '%s'", result["Internal"])
+	}
+	if _, exists := result["-"]; exists {
+		t.Errorf("Expected '-' to be ignored, but found '%s'", result["-"])
+	}
+	if len(result) != 2 {
+		t.Errorf("Expected 2 fields, got %d: %v", len(result), result)
+	}
+}
+
+
+// TestExtractCustomData_NestedAETag tests nested struct with ae tags.
+func TestExtractCustomData_NestedAETag(t *testing.T) {
+	type Inner struct {
+		Value string `ae:"inner_value"`
+	}
+
+	type Outer struct {
+		ID    string `ae:"outer_id"`
+		Inner Inner  `ae:"nested"`
+	}
+
+	input := Outer{
+		ID:    "widget-1",
+		Inner: Inner{Value: "nested-value"},
+	}
+
+	result := internal.ExtractCustomData(input)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	if result["outer_id"] != "widget-1" {
+		t.Errorf("Expected outer_id='widget-1', got '%s'", result["outer_id"])
+	}
+	if result["nested.inner_value"] != "nested-value" {
+		t.Errorf("Expected nested.inner_value='nested-value', got '%s'", result["nested.inner_value"])
 	}
 }

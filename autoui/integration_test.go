@@ -44,8 +44,8 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 		widget.ButtonOpts.Text("Button One", nil, buttonColor),
 		widget.ButtonOpts.WidgetOpts(
 			widget.WidgetOpts.CustomData(struct {
-				ID   string `xml:"id,attr"`
-				Role string `xml:"role,attr"`
+				ID   string `ae:"id"`
+				Role string `ae:"role"`
 			}{
 				ID:   "btn-1",
 				Role: "primary",
@@ -61,8 +61,8 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 		widget.ButtonOpts.Text("Button Two", nil, buttonColor),
 		widget.ButtonOpts.WidgetOpts(
 			widget.WidgetOpts.CustomData(struct {
-				ID   string `xml:"id,attr"`
-				Role string `xml:"role,attr"`
+				ID   string `ae:"id"`
+				Role string `ae:"role"`
 			}{
 				ID:   "btn-2",
 				Role: "secondary",
@@ -77,7 +77,7 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 		widget.TextInputOpts.WidgetOpts(
 			widget.WidgetOpts.MinSize(200, 30),
 			widget.WidgetOpts.CustomData(struct {
-				ID string `xml:"id,attr"`
+				ID string `ae:"id"`
 			}{
 				ID: "input-1",
 			}),
