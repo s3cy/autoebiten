@@ -25,7 +25,7 @@ func handleTreeCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 
 		// Walk the widget tree
-		widgets := WalkTree(ui.Container)
+		widgets := SnapshotTree(ui)
 
 		// Marshal to XML
 		xmlData, err := MarshalWidgetTreeXML(widgets)
@@ -61,7 +61,7 @@ func handleAtCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 
 		// Walk the widget tree
-		widgets := WalkTree(ui.Container)
+		widgets := SnapshotTree(ui)
 
 		// Find widget at coordinates
 		widget := FindAt(widgets, x, y)
@@ -93,7 +93,7 @@ func handleFindCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		request := ctx.Request()
 
 		// Walk the widget tree
-		widgets := WalkTree(ui.Container)
+		widgets := SnapshotTree(ui)
 
 		// Determine query format and find widgets
 		var matching []WidgetInfo
@@ -111,7 +111,7 @@ func handleFindCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 
 		// Marshal to XML
-		xmlData, err := MarshalWidgetTreeXML(matching)
+		xmlData, err := MarshalWidgetsXML(matching)
 		if err != nil {
 			ctx.Respond("error: failed to marshal widgets: " + err.Error())
 			return
@@ -136,7 +136,7 @@ func handleXPathCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 
 		// Walk the widget tree
-		widgets := WalkTree(ui.Container)
+		widgets := SnapshotTree(ui)
 
 		// Execute XPath query
 		matching, err := QueryXPath(widgets, xpathExpr)
@@ -151,7 +151,7 @@ func handleXPathCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 
 		// Marshal to XML
-		xmlData, err := MarshalWidgetTreeXML(matching)
+		xmlData, err := MarshalWidgetsXML(matching)
 		if err != nil {
 			ctx.Respond("error: failed to marshal widgets: " + err.Error())
 			return
@@ -216,7 +216,7 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 
 		// Walk the widget tree
-		widgets := WalkTree(ui.Container)
+		widgets := SnapshotTree(ui)
 
 		// Find the target widget
 		var targetWidget *WidgetInfo
@@ -288,7 +288,7 @@ func handleHighlightCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext)
 		}
 
 		// Walk the widget tree for coordinate/query modes
-		widgets := WalkTree(ui.Container)
+		widgets := SnapshotTree(ui)
 
 		// Handle coordinate mode (x,y format)
 		if len(request) > 0 && request[0] != '{' {
