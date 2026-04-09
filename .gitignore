@@ -34,3 +34,12 @@ go.work.sum
 # Worktrees
 .worktrees/
 .claude/worktrees
+
+# Generated binaries (root directory)
+/autoebiten
+/docgen
+/docverify
+
+# Example binaries
+examples/*/autoui_demo
+examples/*/**/autoui_demo
