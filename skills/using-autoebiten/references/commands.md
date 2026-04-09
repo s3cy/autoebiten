@@ -204,7 +204,7 @@ autoebiten screenshot [--output <Path>] [--base64]
 **Flags:**
 | Flag | Description |
 |------|-------------|
-| --output, -o | Output file path (auto-generated if not set) |
+| --output, -o | Output file path relative to game's working directory (auto-generated if not set) |
 | --base64 | Output as base64 string instead of file |
 | --async, -a | Return immediately |
 | --no-record | Skip recording |

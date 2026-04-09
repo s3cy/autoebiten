@@ -27,14 +27,13 @@ func RegisterDrawHighlights(fn func(screen image.Image)) {
 // Currently handles: screenshots (ProcessScreenshots) and highlight overlays.
 // Called by patched ebiten in DrawOffscreen().
 func AfterDraw(screen image.Image) {
-	server.ProcessScreenshots(screen)
+	Capture(screen)
 	if drawHighlightsFunc != nil {
 		drawHighlightsFunc(screen)
 	}
 }
 
 // Capture processes screenshots for injection.
-// Deprecated: Use AfterDraw instead. Kept for backward compatibility with library method.
 func Capture(screen image.Image) {
 	server.ProcessScreenshots(screen)
 }
