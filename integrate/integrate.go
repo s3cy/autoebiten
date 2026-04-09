@@ -13,7 +13,28 @@ type MouseButton = input.MouseButton
 // IsPatched indicates whether the game uses a patched version of Ebiten.
 var IsPatched = false
 
+// drawHighlightsFunc is the registered callback for drawing highlight overlays.
+var drawHighlightsFunc func(screen image.Image)
+
+// RegisterDrawHighlights registers a callback for drawing highlight overlays.
+// The callback receives screen as image.Image; caller must type assert to *ebiten.Image.
+// Called by autoui during Register() to enable highlights in patch method.
+func RegisterDrawHighlights(fn func(screen image.Image)) {
+	drawHighlightsFunc = fn
+}
+
+// AfterDraw handles all post-draw operations after game.Draw() completes.
+// Currently handles: screenshots (ProcessScreenshots) and highlight overlays.
+// Called by patched ebiten in DrawOffscreen().
+func AfterDraw(screen image.Image) {
+	server.ProcessScreenshots(screen)
+	if drawHighlightsFunc != nil {
+		drawHighlightsFunc(screen)
+	}
+}
+
 // Capture processes screenshots for injection.
+// Deprecated: Use AfterDraw instead. Kept for backward compatibility with library method.
 func Capture(screen image.Image) {
 	server.ProcessScreenshots(screen)
 }
