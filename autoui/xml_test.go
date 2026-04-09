@@ -435,6 +435,30 @@ func TestMarshalXML_WideTree(t *testing.T) {
 	}
 }
 
+// TestWidgetXML_Addr tests that _addr appears in XML output.
+func TestWidgetXML_Addr(t *testing.T) {
+	container := widget.NewContainer()
+	container.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+	container.GetWidget().CustomData = map[string]string{"id": "test"}
+
+	info := autoui.ExtractWidgetInfo(container)
+
+	xmlData, err := autoui.MarshalWidgetXML(info)
+	if err != nil {
+		t.Fatalf("MarshalWidgetXML failed: %v", err)
+	}
+
+	// Check _addr appears in output
+	if !strings.Contains(string(xmlData), "_addr=") {
+		t.Errorf("Expected _addr attribute in XML, got: %s", xmlData)
+	}
+
+	// Check _addr format (hex string with 0x prefix)
+	if !strings.Contains(string(xmlData), "_addr=\"0x") {
+		t.Errorf("Expected _addr to be hex format (0x...), got: %s", xmlData)
+	}
+}
+
 // TestMarshalXML_DistinguishesTreeStructures demonstrates that DeepChain and WideTree
 // produce DIFFERENT XML structures. If they produce the same XML, there's a bug.
 func TestMarshalXML_DistinguishesTreeStructures(t *testing.T) {

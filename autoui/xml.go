@@ -68,6 +68,9 @@ func widgetInfoToNode(info WidgetInfo) *WidgetNode {
 	node.Attrs["visible"] = formatBool(info.Visible)
 	node.Attrs["disabled"] = formatBool(info.Disabled)
 
+	// Add unique address for identification
+	node.Attrs["_addr"] = info.Addr
+
 	// Add widget-specific state
 	maps.Copy(node.Attrs, info.State)
 
