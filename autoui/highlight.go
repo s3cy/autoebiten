@@ -114,6 +114,14 @@ func (m *highlightManager) draw(screen *ebiten.Image) {
 // Global highlight manager instance
 var globalHighlightManager = newHighlightManager()
 
+// drawHighlightsCallback is the callback registered with integrate for patch method.
+// It type asserts image.Image to *ebiten.Image for vector drawing.
+func drawHighlightsCallback(screen image.Image) {
+	if ebiScreen, ok := screen.(*ebiten.Image); ok {
+		globalHighlightManager.draw(ebiScreen)
+	}
+}
+
 // DrawHighlights draws all active highlights onto the screen.
 // This is the public API to be called in the game's Draw method after ui.Draw(screen).
 func DrawHighlights(screen *ebiten.Image) {
