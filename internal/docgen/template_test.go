@@ -360,6 +360,29 @@ func TestConfigFuncWithMapBasedNormalizeRules(t *testing.T) {
 	assert.Equal(t, "PID=<PID>", globalContext.Config.Normalize[1].Replace)
 }
 
+func TestConfigFuncWithSliceAnyNormalizeRules(t *testing.T) {
+	// Reset context
+	globalContext = NewContext()
+
+	fm := FuncMap()
+	configFunc := fm["config"].(func(string, ...map[string]any) (string, error))
+
+	// Call with []any normalize rules (from template list function)
+	rules := map[string]any{
+		"rules": []any{
+			map[string]any{"Pattern": "_addr=\"0x[0-9a-f]+\"", "Replace": "_addr=\"<ADDR>\""},
+			map[string]any{"Pattern": "PID=\\d+", "Replace": "PID=<PID>"},
+		},
+	}
+	result, err := configFunc("/tmp/game", rules)
+	require.NoError(t, err)
+	assert.Equal(t, "", result)
+	assert.NotNil(t, globalContext.Config)
+	assert.Len(t, globalContext.Config.Normalize, 2)
+	assert.Equal(t, "_addr=\"0x[0-9a-f]+\"", globalContext.Config.Normalize[0].Pattern)
+	assert.Equal(t, "_addr=\"<ADDR>\"", globalContext.Config.Normalize[0].Replace)
+}
+
 func TestEndGameFuncClearsSession(t *testing.T) {
 	// Reset context
 	globalContext = NewContext()

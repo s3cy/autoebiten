@@ -64,7 +64,7 @@ func configFunc(gameDir string, normalizeRules ...map[string]any) (string, error
 		if rulesList, ok := rules["rules"].([]NormalizeRule); ok {
 			cfg.Normalize = rulesList
 		}
-		// Handle []map[string]any (from template dict/list)
+		// Handle []map[string]any (from Go code)
 		if rulesList, ok := rules["rules"].([]map[string]any); ok {
 			for _, r := range rulesList {
 				pattern, _ := r["Pattern"].(string)
@@ -74,6 +74,21 @@ func configFunc(gameDir string, normalizeRules ...map[string]any) (string, error
 						Pattern: pattern,
 						Replace: replace,
 					})
+				}
+			}
+		}
+		// Handle []any (from template list function)
+		if rulesList, ok := rules["rules"].([]any); ok {
+			for _, item := range rulesList {
+				if r, ok := item.(map[string]any); ok {
+					pattern, _ := r["Pattern"].(string)
+					replace, _ := r["Replace"].(string)
+					if pattern != "" {
+						cfg.Normalize = append(cfg.Normalize, NormalizeRule{
+							Pattern: pattern,
+							Replace: replace,
+						})
+					}
 				}
 			}
 		}

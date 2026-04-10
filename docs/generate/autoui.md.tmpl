@@ -54,7 +54,7 @@ autoui.Register(&ui)  // Registers autoui.* commands
 
 Export full widget tree as XML.
 
-{{ config "examples/autoui" }}
+{{ config "examples/autoui" (dict "rules" (list (dict "Pattern" "_addr=\"0x[0-9a-f]+\"" "Replace" "_addr=\"<ADDR>\""))) }}
 **Usage:**
 {{ launch_game }}
 ```bash
