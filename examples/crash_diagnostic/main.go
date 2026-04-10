@@ -7,9 +7,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/s3cy/autoebiten"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/s3cy/autoebiten"
 )
 
 const (
@@ -98,7 +98,7 @@ func main() {
 		crashAfterRPC: *crashAfterRPC,
 	}
 
-	if err := ebiten.RunGame(g); err != nil {
+	if err := ebiten.RunGameWithOptions(g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		log.Fatal("Failed to run game:", err)
 	}
 }

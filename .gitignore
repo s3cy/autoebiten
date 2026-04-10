@@ -38,4 +38,3 @@ go.work.sum
 # Generated binaries (root directory)
 /autoebiten
 /docgen
-/docverify

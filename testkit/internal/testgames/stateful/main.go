@@ -101,7 +101,7 @@ func main() {
 	g := NewStatefulGame()
 	autoebiten.RegisterStateExporter("testkit.state", g)
 
-	if err := ebiten.RunGame(g); err != nil {
+	if err := ebiten.RunGameWithOptions(g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		log.Fatal(err)
 	}
 }

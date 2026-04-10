@@ -11,7 +11,8 @@ func main() {
 	ebiten.SetWindowSize(state_exporter.ScreenWidth, state_exporter.ScreenHeight)
 	ebiten.SetWindowTitle("State Exporter Demo")
 
-	if err := ebiten.RunGame(state_exporter.NewGame()); err != nil {
+	g := state_exporter.NewGame()
+	if err := ebiten.RunGameWithOptions(g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		log.Fatal(err)
 	}
 }

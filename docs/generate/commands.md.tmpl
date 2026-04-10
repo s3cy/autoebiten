@@ -5,7 +5,7 @@
 
 ---
 
-{{ config "examples/custom_commands" (dict "rules" (list (dict "Pattern" "screenshot_\\d+\\.png" "Replace" "screenshot_<TIMESTAMP>.png"))) }}
+{{ config "examples/custom_commands" (dict "rules" (list (dict "Pattern" ".*/screenshot_\\d+\\.png" "Replace" "/path/to/project/screenshot_<TIMESTAMP>.png"))) }}
 
 ## Global Flags
 

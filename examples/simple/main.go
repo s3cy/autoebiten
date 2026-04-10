@@ -54,13 +54,12 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	panic("panic")
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("autoebiten Demo")
 
 	g := &Game{}
 
-	if err := ebiten.RunGame(g); err != nil {
+	if err := ebiten.RunGameWithOptions(g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		log.Fatal("Failed to run game:", err)
 	}
 }

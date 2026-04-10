@@ -35,6 +35,8 @@ type PlayerCard struct {
 	PlayerID   string `ae:"player_id"`
 	PlayerName string `ae:"player_name"`
 	Level      int    `ae:"level"`
+	ID         string `ae:"id"`
+	Role       string `ae:"role"`
 }
 
 type Game struct {
@@ -61,6 +63,8 @@ func main() {
 				PlayerID:   "p001",
 				PlayerName: "Alice",
 				Level:      42,
+				ID:         "submit-btn",
+				Role:       "primary",
 			}),
 		),
 		widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
@@ -68,7 +72,6 @@ func main() {
 		}),
 	)
 	submitBtn.GetWidget().Rect = image.Rect(100, 50, 300, 90)
-	submitBtn.GetWidget().CustomData = map[string]string{"id": "submit-btn", "role": "primary"}
 
 	// Cancel button - matches doc example
 	cancelBtn := widget.NewButton(
@@ -90,12 +93,12 @@ func main() {
 	// Enables: autoui.tree, autoui.find, autoui.at, autoui.xpath, autoui.call, autoui.highlight
 	autoui.Register(ui)
 
-	game := &Game{ui: ui}
+	g := &Game{ui: ui}
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("autoui Demo")
 
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGameWithOptions(g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		log.Fatal(err)
 	}
 }

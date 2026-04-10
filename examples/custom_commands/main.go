@@ -129,7 +129,7 @@ func main() {
 
 	g := NewGame()
 
-	if err := ebiten.RunGame(g); err != nil {
+	if err := ebiten.RunGameWithOptions(g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		log.Fatal("Failed to run game:", err)
 	}
 }

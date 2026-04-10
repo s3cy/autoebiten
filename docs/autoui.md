@@ -79,7 +79,7 @@ autoebiten custom autoui.tree
 
 OK: <UI>
   <Container _addr="<ADDR>" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
     <Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
   </Container>
 </UI>
@@ -115,7 +115,7 @@ autoebiten custom autoui.at --request "150,70"
 **Output:**
 ```xml
 
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 
 ```
 
@@ -150,7 +150,7 @@ autoebiten custom autoui.find --request "type=Button"
 **Output:**
 ```xml
 
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 
 ```
 
@@ -162,7 +162,7 @@ autoebiten custom autoui.find --request "id=submit-btn"
 **Output:**
 ```xml
 
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 
 ```
 
@@ -199,7 +199,7 @@ autoebiten custom autoui.xpath --request "//Button"
 **Output:**
 ```xml
 
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 
 ```
 
@@ -514,6 +514,8 @@ type PlayerCard struct {
 	PlayerID   string `ae:"player_id"`
 	PlayerName string `ae:"player_name"`
 	Level      int    `ae:"level"`
+	ID         string `ae:"id"`
+	Role       string `ae:"role"`
 }
 
 
@@ -627,7 +629,7 @@ autoebiten custom autoui.xpath --request "//Button"
 **Output:**
 ```xml
 
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 
 ```
 
@@ -775,7 +777,7 @@ autoebiten custom autoui.tree
 
 OK: <UI>
   <Container _addr="<ADDR>" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
     <Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
   </Container>
 </UI>
@@ -827,7 +829,7 @@ autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
 **Output:**
 ```xml
 
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 
 ```
 
@@ -864,7 +866,7 @@ autoebiten custom autoui.find --request "player_id=p001"
 **Output:**
 ```xml
 
-OK: error: no widgets found matching query
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 
 ```
 
@@ -876,7 +878,7 @@ autoebiten custom autoui.xpath --request "//*[number(@level) > 40]"
 **Output:**
 ```xml
 
-OK: error: no widgets found matching XPath
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" level="42" player_id="p001" player_name="Alice" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 
 ```
 
