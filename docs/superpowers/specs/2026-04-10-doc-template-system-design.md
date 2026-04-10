@@ -93,84 +93,112 @@ Replace `config.yaml` with inline config block:
 
 ### Command Execution
 
-Direct autoebiten invocation:
+Hand-write bash instructions for formatting control, auto-capture output:
 
 ```gotmpl
 ## ping
 
-{{ launch_game }}
-{{ command "ping" }}
-{{ end_game }}
-```
-
-**Generated output:**
-```text
-OK: game is running
-```
-
-**Multiple commands:**
-```gotmpl
-{{ launch_game }}
-{{ command "input" key="KeySpace" action="press" }}
-{{ command "screenshot" output="test.png" }}
-{{ end_game }}
-```
-
-**Command with flags:**
-```gotmpl
-{{ command "mouse" x=100 y=200 }}
-{{ command "mouse" x=100 y=200 button="MouseButtonLeft" }}
-{{ command "input" key="KeyW" action="hold" durationTicks=60 }}
-```
-
----
-
-### Variation Verification
-
-Show all variations, verify identical output:
-
-```gotmpl
-## ping
-
-{{ launch_game }}
-{{ $variations := list
-    (tuple "ping" dict)
-    (tuple "ping" dict "pid" "<PID>")
-    (tuple "ping" dict "timeout" "30s")
-}}
-
-**Examples:**
 ```bash
-{{ range $variations }}
-{{ $cmd := index . 0 }}
-{{ $args := index . 1 }}
-autoebiten {{ $cmd }}{{ range $k, $v := $args }} --{{ $k }} {{ $v }}{{ end }}
-{{ end }}
+autoebiten ping
 ```
 
-{{ verify $variations }}
-
-Output (same for all variations):
-{{ lastOutput }}
+{{ launch_game }}
+Output:
+{{ command "ping" }}
 {{ end_game }}
 ```
 
 **Generated output:**
 ```bash
 autoebiten ping
+```
+
+Output:
+```text
+OK: game is running
+```
+
+**Why hand-write bash?**
+- Full control over formatting, comments, and examples
+- Can add context like `# Multiple ways to ping`
+- Bash instructions serve as documentation, not just commands
+
+**Multiple commands:**
+```gotmpl
+```bash
+autoebiten input --key KeySpace --action press
+autoebiten screenshot --output test.png
+```
+
+{{ launch_game }}
+{{ command "input" key="KeySpace" action="press" }}
+Output:
+{{ command "input" key="KeySpace" action="press" }}
+
+{{ command "screenshot" output="test.png" }}
+Output:
+{{ command "screenshot" output="test.png" }}
+{{ end_game }}
+```
+
+**Command function signature:**
+```gotmpl
+{{ command "cmdName" flag1="value1" flag2="value2" }}
+```
+
+The `command` function:
+- Executes autoebiten CLI with specified command and flags
+- Captures output
+- Applies normalization from config
+- Returns normalized output string
+
+**Note:** No `bash` function needed - `command` is for execution/output only. Bash instruction blocks are written by hand in the template.
+
+---
+
+### Variation Verification
+
+Hand-write bash showing all variations, verify outputs are identical:
+
+```gotmpl
+## ping
+
+```bash
+# Multiple ways to ping (all produce identical output)
+autoebiten ping
 autoebiten ping --pid <PID>
 autoebiten ping --timeout 30s
 ```
 
-Output (same for all variations):
+{{ launch_game }}
+{{ $v1 := command "ping" }}
+{{ $v2 := command "ping" pid="<PID>" }}
+{{ $v3 := command "ping" timeout="30s" }}
+{{ verifyOutputs $v1 $v2 $v3 }}
+
+Output (same for all):
+{{ $v1 }}
+{{ end_game }}
+```
+
+**Generated output:**
+```bash
+# Multiple ways to ping (all produce identical output)
+autoebiten ping
+autoebiten ping --pid <PID>
+autoebiten ping --timeout 30s
+```
+
+Output (same for all):
 ```text
 OK: game is running
 ```
 
 **Behavior:**
-- `verify` runs all commands, applies normalization
-- Fails generation if normalized outputs differ
-- `lastOutput` contains verified result
+- Bash instructions hand-written for documentation clarity
+- `command` executes each variation, captures output
+- `verifyOutputs` compares normalized outputs, fails if they differ
+- Single output shown since all are verified identical
 
 ---
 
@@ -295,8 +323,7 @@ Error: game not connected
 
 | Function | Purpose |
 |----------|---------|
-| `verify` | Run command variations, check identical output |
-| `lastOutput` | Return last captured normalized output |
+| `verifyOutputs` | Compare multiple outputs, fail if normalized versions differ |
 
 ### Code Extraction Functions
 
@@ -380,17 +407,16 @@ func ProcessTemplate(tmplPath string) (string, error) {
 
 func FuncMap() template.FuncMap {
     return template.FuncMap{
-        "config":      ConfigFunc,
-        "launch_game": LaunchGameFunc,
-        "end_game":    EndGameFunc,
-        "command":     CommandFunc,
-        "delay":       DelayFunc,
-        "verify":      VerifyFunc,
-        "lastOutput":  LastOutputFunc,
-        "gocode":      GocodeFunc,
-        "list":        ListFunc,
-        "tuple":       TupleFunc,
-        "dict":        DictFunc,
+        "config":        ConfigFunc,
+        "launch_game":   LaunchGameFunc,
+        "end_game":      EndGameFunc,
+        "command":       CommandFunc,
+        "delay":         DelayFunc,
+        "verifyOutputs": VerifyOutputsFunc,
+        "gocode":        GocodeFunc,
+        "list":          ListFunc,
+        "tuple":         TupleFunc,
+        "dict":          DictFunc,
     }
 }
 ```
@@ -557,7 +583,9 @@ Makefile
 |---------|---------------|
 | Config removal | `{{ config }}` inline |
 | Shell scripts removal | `{{ command }}` direct invocation via testkit |
-| Variations | `{{ verify }}` with template loop display |
+| Bash instructions | Hand-written in template for formatting control |
+| Output capture | `{{ command }}` executes and returns normalized output |
+| Variations | `{{ verifyOutputs }}` compares multiple outputs |
 | Go code extraction | `{{ gocode }}` with native AST parser |
 | Crash output | `{{ launch_game args="--crash-before-rpc" }}` direct run |
 | Normalization | Inline regex rules in config block |
