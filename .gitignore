@@ -38,3 +38,5 @@ go.work.sum
 # Generated binaries (root directory)
 /autoebiten
 /docgen
+
+*screenshot_*.png

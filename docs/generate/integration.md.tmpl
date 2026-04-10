@@ -316,7 +316,7 @@ autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
 
 **CLI Usage:**
 
-{{ config "examples/custom_commands" }}
+{{ config "examples/custom_commands" (dict "rules" (list (dict "Pattern" "/[^\\s]+screenshot_\\d+\\.png" "Replace" "/path/to/project/screenshot_<TIMESTAMP>.png"))) }}
 
 **Runnable Example:**
 

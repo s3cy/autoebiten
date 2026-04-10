@@ -44,28 +44,33 @@ func processTemplate(tmplPath string) {
 		os.Exit(1)
 	}
 
-	// Output path: docs/generate/X.md.gotmpl -> docs/X.md
-	outPath := outputPath(tmplPath)
+	// Output paths: docs/generate/X.md.tmpl -> docs/X.md and skills/using-autoebiten/references/X.md
+	outPaths := outputPaths(tmplPath)
 
-	// Ensure output directory exists
-	outDir := filepath.Dir(outPath)
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating output directory: %v\n", err)
-		os.Exit(1)
+	for _, outPath := range outPaths {
+		// Ensure output directory exists
+		outDir := filepath.Dir(outPath)
+		if err := os.MkdirAll(outDir, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating output directory: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Write output
+		if err := os.WriteFile(outPath, []byte(result), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", outPath, err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Generated: %s -> %s\n", tmplPath, outPath)
 	}
-
-	// Write output
-	if err := os.WriteFile(outPath, []byte(result), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", outPath, err)
-		os.Exit(1)
-	}
-
-	fmt.Printf("Generated: %s -> %s\n", tmplPath, outPath)
 }
 
-func outputPath(tmplPath string) string {
-	// docs/generate/commands.md.tmpl -> docs/commands.md
+func outputPaths(tmplPath string) []string {
+	// docs/generate/commands.md.tmpl -> docs/commands.md and skills/using-autoebiten/references/commands.md
 	base := filepath.Base(tmplPath)
 	name := strings.TrimSuffix(base, ".md.tmpl")
-	return filepath.Join("docs", name+".md")
+	return []string{
+		filepath.Join("docs", name+".md"),
+		filepath.Join("skills/using-autoebiten/references", name+".md"),
+	}
 }

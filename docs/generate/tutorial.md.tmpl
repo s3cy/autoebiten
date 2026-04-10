@@ -5,10 +5,6 @@
 
 ---
 
-{{ config "examples/custom_commands" (dict "rules" (list (dict "Pattern" ".*/screenshot_\\d+\\.png" "Replace" "/path/to/project/screenshot_<TIMESTAMP>.png"))) }}
-
-## Tutorial
-
 **Decision tree:**
 1. Check your game's go.mod for `replace github.com/hajimehoshi/ebiten/v2`
 2. If found → Patch method already applied
@@ -134,7 +130,7 @@ go build -tags release ./cmd/mygame
 
 **Goal:** Confirm CLI can communicate with game.
 
-{{ config "examples/custom_commands" }}
+{{ config "examples/custom_commands" (dict "rules" (list (dict "Pattern" "/[^\\s]+screenshot_\\d+\\.png" "Replace" "/path/to/project/screenshot_<TIMESTAMP>.png"))) }}
 
 **Option A: Using launch (recommended)**
 ```bash
@@ -443,7 +439,7 @@ func NewGame() *Game {
 }
 ```
 
-{{ config "examples/custom_commands" }}
+{{ config "examples/custom_commands" (dict "rules" (list (dict "Pattern" "/[^\\s]+screenshot_\\d+\\.png" "Replace" "/path/to/project/screenshot_<TIMESTAMP>.png"))) }}
 **CLI usage:**
 {{ launch_game }}
 ```bash

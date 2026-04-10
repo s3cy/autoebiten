@@ -314,6 +314,43 @@ autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
 })
 ```
 
+**CLI Usage:**
+
+
+
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/custom_commands
+go build -o custom_demo
+autoebiten launch -- ./custom_demo &
+```
+
+Check if custom commands are available:
+```bash
+autoebiten list_custom
+```
+
+**Output:**
+```
+
+["getPlayerInfo","heal","damage","echo","deferred"]
+
+```
+
+Execute a custom command:
+```bash
+autoebiten custom --name heal
+```
+
+**Output:**
+```
+
+OK: Healed from 100 to 100
+
+```
+
 ---
 
 #### Unregister
@@ -388,4 +425,66 @@ type Player struct {
 - `Entity` - Interface field itself (returns the stored value)
 - `Entity.Field` - NOT supported (cannot traverse into interfaces)
 
+**CLI Usage:**
+
+Use the `state` command to query exported state:
+
+
+
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/state_exporter/cmd
+go build -o state_demo
+autoebiten launch -- ./state_demo &
+```
+
+Query player health:
+```bash
+autoebiten state --name gamestate --path Player.Health
+```
+
+**Output:**
+```
+
+OK: 100
+
+```
+
+Query enemy name:
+```bash
+autoebiten state --name gamestate --path Enemies.0.Name
+```
+
+**Output:**
+```
+
+OK: "Goblin"
+
+```
+
 ---
+
+## CLI Connection Verification
+
+After integrating autoebiten into your game, verify the connection:
+
+**Runnable Example:**
+
+```bash
+# Build and run your game
+go build -o ./mygame
+autoebiten launch -- ./mygame &
+```
+
+```bash
+autoebiten ping
+```
+
+**Output:**
+```
+
+OK: game is running
+
+```

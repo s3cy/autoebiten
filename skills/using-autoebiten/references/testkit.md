@@ -224,11 +224,7 @@ require.NoError(t, err)
 assert.Equal(t, 100, health)
 ```
 
-**Notes:**
-- Requires `RegisterStateExporter` in game code
-- Only **exported fields** (capitalized) are accessible - State Exporter uses reflection internally
-- Use **Go field names**, not JSON tag names (e.g., use `Player.Name` even if tagged `json:"player_name"`)
-- Interface fields can be queried directly (`Entity`), but nested access (`Entity.Field`) is not supported
+**Notes:** Requires `RegisterStateExporter` in game code.
 
 ---
 
@@ -405,6 +401,8 @@ Games must implement at least `Update() error` for white-box testing.
 go build -o ./mygame ./cmd/mygame
 ```
 
+
+
 ```go
 func TestGame(t *testing.T) {
     game := testkit.Launch(t, "./mygame")
@@ -446,42 +444,21 @@ func TestPlayerMovement(t *testing.T) {
 
 **Goal:** Enable StateQuery for black-box tests.
 
-**Important:** State Exporter uses reflection internally. Only **exported fields** (capitalized names like `X`, `Y`, `Health`) are accessible. Unexported fields (lowercase) cannot be queried.
-
-**Path Navigation Rules:**
-- Use **Go field names**
-- Interface fields return the stored value, but you cannot traverse into them
-
 **In game:**
-```go
+package state_exporter
+
+// GameState holds all game data for state queries.
 type GameState struct {
-    Player struct {
-        X, Y float64  // Exported fields work
-        health int     // Unexported - NOT accessible
-    }
+	Player struct {
+		X      float64
+		Y      float64
+		Health int
+		Mana   int
+	}
+	Enemies []Enemy
+	Score   int
 }
 
-func main() {
-    state := &GameState{}
-    autoebiten.RegisterStateExporter("gamestate", state)
-    // ...
-}
-```
-
-**Query examples:**
-```go
-// Works: Go field names
-x, _ := game.StateQuery("gamestate", "Player.X")
-
-// Works: Interface field itself (returns the value)
-entity, _ := game.StateQuery("gamestate", "Entity")
-
-// Fails: JSON tag names don't work
-name, err := game.StateQuery("gamestate", "player_name") // path not found
-
-// Fails: Cannot traverse into interface fields
-field, err := game.StateQuery("gamestate", "Entity.Field") // path not found
-```
 
 **In test:**
 ```go

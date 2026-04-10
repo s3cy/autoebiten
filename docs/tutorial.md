@@ -5,8 +5,6 @@
 
 ---
 
-## Tutorial
-
 **Decision tree:**
 1. Check your game's go.mod for `replace github.com/hajimehoshi/ebiten/v2`
 2. If found → Patch method already applied

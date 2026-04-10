@@ -5,8 +5,6 @@
 
 ---
 
-## Tutorial
-
 **Decision tree:**
 1. Check your game's go.mod for `replace github.com/hajimehoshi/ebiten/v2`
 2. If found → Patch method already applied
@@ -132,6 +130,8 @@ go build -tags release ./cmd/mygame
 
 **Goal:** Confirm CLI can communicate with game.
 
+
+
 **Option A: Using launch (recommended)**
 ```bash
 # Start game with output capture and crash diagnostics
@@ -147,7 +147,12 @@ autoebiten launch -- ./mygame &
 autoebiten ping
 ```
 
-**Expected:** Output `game is running`
+
+**Expected output:**
+```
+OK: game is running
+```
+
 
 **Troubleshooting:**
 - "connection failed": Game not started or socket not created
@@ -163,19 +168,34 @@ autoebiten ping
 
 **Actions:**
 
+
 ```bash
-# Press a key
-autoebiten input --key KeySpace --action press
-
-# Move mouse
-autoebiten mouse -x 100 -y 200
-
-# Click
-autoebiten mouse --button MouseButtonLeft
-
-# Take screenshot
-autoebiten screenshot --output test.png
+autoebiten input --key KeyH --action press
 ```
+
+**Output:**
+```
+OK: input press KeyH
+```
+
+```bash
+autoebiten mouse --action position -x 100 -y 200
+```
+
+**Output:**
+```
+OK: mouse position at (100, 200)
+```
+
+```bash
+autoebiten screenshot
+```
+
+**Output:**
+```
+OK: screenshot saved to /path/to/project/screenshot_<TIMESTAMP>.png
+```
+
 
 ---
 
@@ -192,10 +212,11 @@ autoebiten screenshot --output test.png
 
 **Example:**
 
+
 ```bash
-# Hold key for 1 second
-autoebiten input --key KeyW --action hold --duration_ticks 60
+autoebiten input --key KeySpace --action hold --duration_ticks 30
 ```
+
 
 **Note:** TPS ≠ FPS. Game can render at 120 FPS while running at 60 TPS.
 
@@ -215,11 +236,16 @@ autoebiten.Register("getPlayerInfo", func(ctx autoebiten.CommandContext) {
 
 **From CLI:**
 
+
 ```bash
-autoebiten custom getPlayerInfo
+autoebiten custom --name getPlayerInfo
 ```
 
-**Expected:** Output: `Health: 100`
+**Expected output:**
+```
+OK: Health: 100, Mana: 50
+```
+
 
 ---
 
@@ -227,124 +253,98 @@ autoebiten custom getPlayerInfo
 
 ### Library Integration
 
-**Scenario:** New game with direct autoebiten integration.
+**Goal:** Full integration for testing and automation.
 
-**Code:**
+**Complete example:**
+
 ```go
 package main
 
 import (
     "fmt"
-    "image/color"
-    "log"
 
-    "github.com/s3cy/autoebiten"
     "github.com/hajimehoshi/ebiten/v2"
-    "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+    "github.com/s3cy/autoebiten"
 )
 
-const (
-    screenWidth  = 640
-    screenHeight = 480
-)
-
-type Game struct{}
+type Game struct {
+    PlayerX, PlayerY float64
+    Health           int
+}
 
 func (g *Game) Update() error {
-    // Process CLI commands
+    // Handle automation exit
     if !autoebiten.Update() {
         return fmt.Errorf("exit requested")
     }
 
-    // Check injected or real input
-    if autoebiten.IsKeyPressed(ebiten.KeySpace) {
-        fmt.Println("Space pressed!")
+    // Use wrapped input functions
+    if autoebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+        g.PlayerX += 2
+    }
+    if autoebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+        g.PlayerX -= 2
     }
 
     return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-    screen.Fill(color.RGBA{0x00, 0x00, 0x66, 0xff})
-    ebitenutil.DebugPrint(screen, "autoebiten demo")
-    autoebiten.Capture(screen) // Enable screenshots
+    // Your rendering code
+    // ...
+
+    // Capture for screenshots (call at end)
+    autoebiten.Capture(screen)
 }
 
-func (g *Game) Layout(_, _ int) (int, int) {
-    return screenWidth, screenHeight
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+    return 640, 480
 }
 
 func main() {
-    ebiten.SetWindowSize(screenWidth, screenHeight)
-    ebiten.SetWindowTitle("Demo")
-    if err := ebiten.RunGame(&Game{}); err != nil {
-        log.Fatal(err)
-    }
+    game := &Game{Health: 100}
+
+    // Register custom commands
+    autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
+        game.Health = min(game.Health+20, 100)
+        ctx.Respond(fmt.Sprintf("Healed to %d", game.Health))
+    })
+
+    // Register state exporter
+    autoebiten.RegisterStateExporter("gamestate", game)
+
+    ebiten.RunGame(game)
 }
-```
-
-**How to run:**
-```bash
-# Build the demo
-go build -o demo
-
-# Option 1: Use launch for automation with output capture
-autoebiten launch -- ./demo &
-# In another terminal (or the same after launch starts):
-autoebiten input --key KeySpace --action press
-
-# Option 2: Run game directly
-./demo &
-autoebiten input --key KeySpace --action press
 ```
 
 ---
 
 ### Launch and Output Capture
 
-**Scenario:** Automate game with visibility into game responses and crash detection.
+**Scenario:** Capture game output between commands.
 
 **Using launch:**
+
 ```bash
-# Start game with launch proxy
+# Start with output capture
 autoebiten launch -- ./mygame
 
-# In another terminal, CLI commands connect through the proxy:
+# Commands show output changes
 autoebiten ping
-# Output shows unified diff of game output since last command:
-# <log_diff>
-# --- snapshot (empty)
-# +++ current 2026-04-07 23:42:11.844
-# @@ -0,0 +1,7 @@
-# +2026-04-07 23:42:11.743 simple[37214:10490862] [CAMetalLayer nextDrawable] ...
-# </log_diff>
 # OK: game is running
 
-autoebiten input --key KeySpace --action hold
-# Shows diff of new output since ping command
+# Output is captured between commands
+autoebiten input --key KeySpace
+# Shows any new output from game
+
+# Exit cleans up
+autoebiten exit
 ```
 
-**Crash Diagnostics:**
-When the game crashes, commands show error context:
-```bash
-autoebiten ping
-# <log_diff>
-# --- snapshot ...
-# +++ current ...
-# @@ ... @@
-# +panic: runtime error: index out of range [3] with length 3
-# +main.(*Game).Update(0x14000112060)
-# +    /path/to/game/main.go:42
-# </log_diff>
-# <proxy_error>
-# game exited: exit status 2
-# </proxy_error>
-# Error: game not connected
-```
-
-**Key files:**
-- Log: `/tmp/autoebiten/autoebiten-{PID}-output.log` - raw game output
-- Launch socket: `/tmp/autoebiten/autoebiten-{PID}-launch.sock` - proxy connection
+**Benefits:**
+- Captures stdout/stderr between commands
+- Shows crash diagnostics automatically
+- Maintains connection state
 
 ---
 
@@ -360,51 +360,55 @@ This demo game can be configured to crash at different points:
 # Build the example
 cd examples/crash_diagnostic
 go build -o crash_demo
-
-# Test 1: Normal operation (no crash)
-autoebiten launch -- ./crash_demo
-autoebiten ping
-# OK: game is running
-autoebiten exit
-
-# Test 2: Crash BEFORE RPC connection
-autoebiten launch -- ./crash_demo --crash-before-rpc
-autoebiten ping
-# <log_diff>
-# --- snapshot ...
-# +++ current ...
-# @@ ... @@
-# +Starting crash diagnostic demo...
-# +Flags: crash-before-rpc=true, crash-after-rpc=false
-# +Initialization complete
-# +About to crash before RPC connection!
-# +panic: intentional crash before RPC connection
-# </log_diff>
-# <proxy_error>
-# game exited: exit status 2
-# </proxy_error>
-# Error: game not connected
-
-# Test 3: Crash AFTER RPC connection
-autoebiten launch -- ./crash_demo --crash-after-rpc
-autoebiten ping
-# OK: game is running
-sleep 4  # Wait for game to crash (~3 seconds)
-autoebiten ping
-# <log_diff>
-# --- snapshot ...
-# +++ current ...
-# @@ ... @@
-# +Game running... tick 60
-# +Game running... tick 120
-# +Game running... tick 180
-# +panic: intentional crash after RPC connection
-# </log_diff>
-# <proxy_error>
-# game exited: exit status 2
-# </proxy_error>
-# Error: game not connected
 ```
+
+**Test 1: Normal operation (no crash)**
+
+
+```
+OK: game is running
+```
+
+
+**Test 2: Crash BEFORE RPC connection**
+
+When the game crashes before RPC connection, the launch command captures the error:
+
+```text
+Starting crash diagnostic demo...
+Flags: crash-before-rpc=true, crash-after-rpc=false
+Initialization complete
+About to crash before RPC connection!
+panic: intentional crash before RPC connection
+Error: game failed to start
+```
+
+**Test 3: Crash AFTER RPC connection**
+
+```bash
+autoebiten ping
+```
+```
+OK: game is running
+```
+Wait for crash (~3 seconds), then:
+```bash
+sleep 4
+autoebiten ping
+```
+```text
+<log_diff>
+--- snapshot ...
++++ current ...
+@@ ... @@
++panic: runtime error: index out of range
+</log_diff>
+<proxy_error>
+game exited: exit status 2
+</proxy_error>
+Error: game not connected
+```
+
 
 ---
 
@@ -435,11 +439,27 @@ func NewGame() *Game {
 }
 ```
 
+
 **CLI usage:**
+
 ```bash
-autoebiten custom heal
-autoebiten custom damage
+autoebiten custom --name heal
 ```
+
+**Output:**
+```
+OK: Healed from 100 to 100
+```
+
+```bash
+autoebiten custom --name damage
+```
+
+**Output:**
+```
+OK: Damaged from 100 to 90
+```
+
 
 ---
 
