@@ -1,11 +1,5 @@
 package docgen
 
-// GameSession represents a running game instance for command execution.
-// This type will be fully implemented in a later task.
-type GameSession struct {
-	// Placeholder - will be expanded in Task 4
-}
-
 // Context holds template execution state.
 type Context struct {
 	GameSession *GameSession
