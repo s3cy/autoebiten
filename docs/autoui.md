@@ -64,9 +64,9 @@ autoebiten custom autoui.tree
 **Output:**
 ```xml
 OK: <UI>
-  <Container _addr="0x814b2018a80" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="0x814b1f68a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
-    <Button _addr="0x814b1f68b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+  <Container _addr="0x6f9ee5598460" disabled="false" height="480" visible="true" width="640" x="0" y="0">
+    <Button _addr="0x6f9ee5922a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+    <Button _addr="0x6f9ee5922b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
   </Container>
 </UI>
 ```
@@ -86,7 +86,7 @@ autoebiten custom autoui.at --request "100,50"
 
 **Output:**
 ```xml
-OK: <Button _addr="0x214b28336a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="0x449a3304a8c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 ```
 
 
@@ -106,7 +106,7 @@ autoebiten custom autoui.find --request "type=Button"
 
 **Output (all buttons):**
 ```xml
-OK: <Button _addr="0x240ff62ac8c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x240ff62aca00" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="0x318cf40ab40" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x318cf40ac80" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 ```
 
 ```bash
@@ -115,7 +115,7 @@ autoebiten custom autoui.find --request '{"type":"Button","id":"submit-btn"}'
 
 **Output (specific button):**
 ```xml
-OK: <Button _addr="0x240ff62ac8c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="0x318cf40ab40" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 ```
 
 
@@ -137,7 +137,7 @@ autoebiten custom autoui.xpath --request "//Button"
 
 **Output:**
 ```xml
-OK: <Button _addr="0x325829d32a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x325829d32b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="0x60894551ca00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x60894551cb40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 ```
 
 
@@ -486,7 +486,7 @@ XPath 1.0 syntax for widget tree queries.
 **Output:**
 
 ```xml
-OK: <Button _addr="0x56857fa40a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x56857fa40b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="0x2f2a3dd20b40" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x2f2a3dd20c80" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 ```
 
 
@@ -626,9 +626,9 @@ autoebiten custom autoui.tree
 **Output:**
 ```xml
 OK: <UI>
-  <Container _addr="0x465b8ad184d0" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="0x465b8b26aa00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
-    <Button _addr="0x465b8b26ab40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+  <Container _addr="0x4dc4c19e69a0" disabled="false" height="480" visible="true" width="640" x="0" y="0">
+    <Button _addr="0x4dc4c1740a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+    <Button _addr="0x4dc4c1740b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
   </Container>
 </UI>
 ```
@@ -668,7 +668,7 @@ autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
 
 **Output:**
 ```xml
-OK: <Button _addr="0x1495f22a48c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="0x460531fac8c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 ```
 
 ```bash

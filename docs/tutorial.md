@@ -195,7 +195,7 @@ autoebiten screenshot
 
 **Output:**
 ```
-OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/.worktrees/doc-template-system/screenshot_20260410172304.png
+OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/.worktrees/doc-template-system/screenshot_20260410174313.png
 ```
 
 
