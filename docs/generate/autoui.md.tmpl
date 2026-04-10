@@ -54,13 +54,18 @@ autoui.Register(&ui)  // Registers autoui.* commands
 
 Export full widget tree as XML.
 
+{{ config "examples/autoui" }}
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_tree.sh"}}
+autoebiten custom autoui.tree
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_tree_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.tree") }}
+```
+{{ end_game }}
 
 ---
 
@@ -69,12 +74,16 @@ Export full widget tree as XML.
 Find widget at coordinates.
 
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_at.sh"}}
+autoebiten custom autoui.at --request "100,50"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_at_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.at" "request" "100,50") }}
+```
+{{ end_game }}
 
 **Error:** `no widget found at coordinates`
 
@@ -85,16 +94,25 @@ Find widget at coordinates.
 Find widgets by attribute (AND logic for multiple criteria).
 
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_find_buttons.sh"}}
-{{command "autoui_examples/autoui_find_submit.sh"}}
+autoebiten custom autoui.find --request "type=Button"
 ```
 
 **Output (all buttons):**
-{{output "autoui_examples/autoui_find_buttons_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.find" "request" "type=Button") }}
+```
+
+```bash
+autoebiten custom autoui.find --request '{"type":"Button","id":"submit-btn"}'
+```
 
 **Output (specific button):**
-{{output "autoui_examples/autoui_find_submit_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.find" "request" "{\"type\":\"Button\",\"id\":\"submit-btn\"}") }}
+```
+{{ end_game }}
 
 **Note:** `autoui.find` returns matched widgets directly without `<UI>` wrapper or hierarchy reconstruction. For full hierarchy, use `autoui.tree`.
 
@@ -107,12 +125,16 @@ Find widgets by attribute (AND logic for multiple criteria).
 XPath 1.0 query on widget tree.
 
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_xpath_buttons.sh"}}
+autoebiten custom autoui.xpath --request "//Button"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_xpath_buttons_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.xpath" "request" "//Button") }}
+```
+{{ end_game }}
 
 **Note:** `autoui.xpath` returns matched widgets directly without `<UI>` wrapper. For full hierarchy, use `autoui.tree`.
 
@@ -133,12 +155,16 @@ XPath 1.0 query on widget tree.
 Check if widgets matching a query exist. Returns JSON for use with `wait-for`.
 
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_exists_button.sh"}}
+autoebiten custom autoui.exists --request "type=Button"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_exists_button_out.txt" "json"}}
+```json
+{{ command "custom" (dict "name" "autoui.exists" "request" "type=Button") }}
+```
+{{ end_game }}
 
 **Key difference from autoui.find:** Returns JSON instead of XML. Never errors on empty results - useful with `wait-for`.
 
@@ -149,12 +175,16 @@ Check if widgets matching a query exist. Returns JSON for use with `wait-for`.
 Invoke method on widget.
 
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_call_click.sh"}}
+autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_call_click_out.txt" "json"}}
+```json
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"id=submit-btn\",\"method\":\"Click\"}") }}
+```
+{{ end_game }}
 
 **Request format:**
 ```json
@@ -172,9 +202,11 @@ Invoke method on widget.
 
 **SetText Example:**
 
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_settext.sh"}}
+autoebiten custom autoui.call --request '{"target":"type=TextInput","method":"SetText","args":["Hello"]}'
 ```
+{{ end_game }}
 
 **Why use SetText:** TextInput's `SetText(string)` method fires `ChangedEvent` for game logic. Setting the field directly would bypass events.
 
@@ -187,18 +219,34 @@ Invoke method on widget.
 Add visual highlight rectangles (red, 3-second duration).
 
 **Usage:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_highlight_clear.sh"}}
-{{command "autoui_examples/autoui_highlight_coords.sh"}}
-{{command "autoui_examples/autoui_highlight_buttons.sh"}}
-{{command "autoui_examples/autoui_highlight_json.sh"}}
+autoebiten custom autoui.highlight --request "clear"
+```
+
+**Output:**
+```
+{{ command "custom" (dict "name" "autoui.highlight" "request" "clear") }}
+```
+
+```bash
+autoebiten custom autoui.highlight --request "100,50,200,100"
+```
+
+```bash
+autoebiten custom autoui.highlight --request "type=Button"
 ```
 
 **Highlight widgets:**
-{{output "autoui_examples/autoui_highlight_buttons_out.txt" "text"}}
+```
+{{ command "custom" (dict "name" "autoui.highlight" "request" "type=Button") }}
+```
 
 **Clear highlights:**
-{{output "autoui_examples/autoui_highlight_clear_out.txt" "text"}}
+```
+{{ command "custom" (dict "name" "autoui.highlight" "request" "clear") }}
+```
+{{ end_game }}
 
 ---
 
@@ -213,13 +261,17 @@ autoebiten mouse -x 150 -y 70 --button MouseButtonLeft
 
 Use autoui to find and click by widget identity:
 
+{{ launch_game }}
 ```bash
 # NEW: Click by widget identity (resilient to layout changes)
-{{command "autoui_examples/autoui_call_click.sh"}}
+autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_call_click_out.txt" "json"}}
+```json
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"id=submit-btn\",\"method\":\"Click\"}") }}
+```
+{{ end_game }}
 
 **Why this matters:**
 
@@ -240,9 +292,11 @@ Use autoui to find and click by widget identity:
 Use `autoui.exists` with `wait-for` to block until a widget appears.
 
 **CLI:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_waitfor.sh"}}
+autoebiten wait-for --condition "custom:autoui.exists:type=Dialog.found == true" --timeout 5s
 ```
+{{ end_game }}
 
 **testkit:**
 ```go
@@ -321,15 +375,10 @@ Every widget includes a `_addr` attribute containing its pointer address:
 
 Add custom attributes via struct field tags:
 
-```go
-type PlayerCard struct {
-    PlayerID   string `ae:"player_id"`
-    PlayerName string `ae:"player_name"`
-    Level      int    `ae:"level"`
-    Hidden     string `ae:"-"`  // Skip this field
-}
+{{ gocode "examples/autoui/main.go" "PlayerCard" (list "stripImports") }}
 
-// In widget creation:
+**In widget creation:**
+```go
 btn := widget.NewButton(
     widget.ButtonOpts.Image(buttonImage),
     widget.ButtonOpts.WidgetOpts(
@@ -384,9 +433,11 @@ widget.WidgetOpts.CustomData(&PlayerData{
 ```
 
 **XPath query:**
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_xpath_tags.sh"}}
+autoebiten custom autoui.xpath --request "//Button[contains(@player_id,'p001')]"
 ```
+{{ end_game }}
 
 Nested slices use multi-level indexing:
 ```xml
@@ -420,7 +471,11 @@ All attributes are strings. Use XPath for numeric comparison:
 XPath 1.0 syntax for widget tree queries.
 
 **Output:**
-{{output "autoui_examples/autoui_xpath_buttons_out.txt" "xml"}}
+{{ launch_game }}
+```xml
+{{ command "custom" (dict "name" "autoui.xpath" "request" "//Button") }}
+```
+{{ end_game }}
 
 ---
 
@@ -549,21 +604,27 @@ game.RunCustom("autoui.highlight", "clear")
 
 **Scenario:** Find a button and click it.
 
+{{ launch_game }}
 ```bash
 # Step 1: See what widgets exist
-{{command "autoui_examples/autoui_tree.sh"}}
+autoebiten custom autoui.tree
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_tree_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.tree") }}
+```
 
 ```bash
 # Step 2: Click Submit button
-{{command "autoui_examples/autoui_call_click.sh"}}
+autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_call_click_out.txt" "json"}}
+```json
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"id=submit-btn\",\"method\":\"Click\"}") }}
+```
+{{ end_game }}
 
 ---
 
@@ -571,29 +632,37 @@ game.RunCustom("autoui.highlight", "clear")
 
 **Scenario:** Check why a button isn't responding.
 
+{{ launch_game }}
 ```bash
 # Highlight all buttons to see positions
-{{command "autoui_examples/autoui_highlight_buttons.sh"}}
+autoebiten custom autoui.highlight --request "type=Button"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_highlight_buttons_out.txt" "text"}}
+```
+{{ command "custom" (dict "name" "autoui.highlight" "request" "type=Button") }}
+```
 
 ```bash
 # Check if submit button is disabled
-{{command "autoui_examples/autoui_xpath_buttons.sh"}}
+autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_find_submit_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.find" "request" "{\"type\":\"Button\",\"id\":\"submit-btn\"}") }}
+```
 
 ```bash
 # Clear highlights
-{{command "autoui_examples/autoui_highlight_clear.sh"}}
+autoebiten custom autoui.highlight --request "clear"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_highlight_clear_out.txt" "text"}}
+```
+{{ command "custom" (dict "name" "autoui.highlight" "request" "clear") }}
+```
+{{ end_game }}
 
 ---
 
@@ -601,19 +670,25 @@ game.RunCustom("autoui.highlight", "clear")
 
 **Scenario:** Locate widgets by game-specific attributes.
 
+{{ launch_game }}
 ```bash
-{{command "autoui_examples/autoui_find_player.sh"}}
+autoebiten custom autoui.find --request "player_id=p001"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_find_player_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.find" "request" "player_id=p001") }}
+```
 
 ```bash
-{{command "autoui_examples/autoui_xpath_level.sh"}}
+autoebiten custom autoui.xpath --request "//*[number(@level) > 40]"
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_xpath_level_out.txt" "xml"}}
+```xml
+{{ command "custom" (dict "name" "autoui.xpath" "request" "//*[number(@level) > 40]") }}
+```
+{{ end_game }}
 
 ---
 

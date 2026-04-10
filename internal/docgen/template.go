@@ -127,10 +127,19 @@ func verifyOutputsFunc(outputs ...string) (string, error) {
 }
 
 // gocodeFunc extracts Go code from a file.
-func gocodeFunc(filePath, target string, transforms ...[]string) (string, error) {
+func gocodeFunc(filePath, target string, transforms ...any) (string, error) {
 	var t []string
 	if len(transforms) > 0 {
-		t = transforms[0]
+		switch v := transforms[0].(type) {
+		case []string:
+			t = v
+		case []any:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					t = append(t, s)
+				}
+			}
+		}
 	}
 	return ExtractGoCode(filePath, target, t)
 }

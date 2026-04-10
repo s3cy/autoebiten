@@ -132,6 +132,8 @@ go build -tags release ./cmd/mygame
 
 **Goal:** Confirm CLI can communicate with game.
 
+
+
 **Option A: Using launch (recommended)**
 ```bash
 # Start game with output capture and crash diagnostics
@@ -147,10 +149,12 @@ autoebiten launch -- ./mygame &
 autoebiten ping
 ```
 
+
 **Expected output:**
-```text
+```
 OK: game is running
 ```
+
 
 **Troubleshooting:**
 - "connection failed": Game not started or socket not created
@@ -166,31 +170,34 @@ OK: game is running
 
 **Actions:**
 
+
 ```bash
 autoebiten input --key KeyH --action press
 ```
 
 **Output:**
-```text
+```
 OK: input press KeyH
 ```
 
 ```bash
-autoebiten mouse --x 100 --y 200
+autoebiten mouse --action position -x 100 -y 200
 ```
 
 **Output:**
-```text
+```
 OK: mouse position at (100, 200)
 ```
 
 ```bash
-autoebiten mouse --button MouseButtonLeft
+autoebiten screenshot
 ```
 
-```bash
-autoebiten screenshot --output test.png
+**Output:**
 ```
+OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/.worktrees/doc-template-system/screenshot_20260410172304.png
+```
+
 
 ---
 
@@ -207,9 +214,11 @@ autoebiten screenshot --output test.png
 
 **Example:**
 
+
 ```bash
-autoebiten input --key KeyW --action hold --duration_ticks 60
+autoebiten input --key KeySpace --action hold --duration_ticks 30
 ```
+
 
 **Note:** TPS ≠ FPS. Game can render at 120 FPS while running at 60 TPS.
 
@@ -229,14 +238,16 @@ autoebiten.Register("getPlayerInfo", func(ctx autoebiten.CommandContext) {
 
 **From CLI:**
 
+
 ```bash
-autoebiten custom getPlayerInfo
+autoebiten custom --name getPlayerInfo
 ```
 
 **Expected output:**
-```text
-OK: Health: 90, Mana: 50
 ```
+OK: Health: 100, Mana: 50
+```
+
 
 ---
 
@@ -354,74 +365,52 @@ go build -o crash_demo
 ```
 
 **Test 1: Normal operation (no crash)**
-```bash
-autoebiten launch -- ./crash_demo
-autoebiten ping
-autoebiten exit
-```
 
-Output:
-```text
+
+```
 OK: game is running
 ```
 
-**Test 2: Crash BEFORE RPC connection**
-```bash
-autoebiten launch -- ./crash_demo --crash-before-rpc
-autoebiten ping
-```
 
-Output:
+**Test 2: Crash BEFORE RPC connection**
+
+When the game crashes before RPC connection, the launch command captures the error:
+
 ```text
-<log_diff>
---- snapshot ...
-+++ current ...
-@@ ... @@
-+Starting crash diagnostic demo...
-+Flags: crash-before-rpc=true, crash-after-rpc=false
-+Initialization complete
-+About to crash before RPC connection!
-+panic: intentional crash before RPC connection
-</log_diff>
-<proxy_error>
-game exited: exit status 2
-</proxy_error>
-Error: game not connected
+Starting crash diagnostic demo...
+Flags: crash-before-rpc=true, crash-after-rpc=false
+Initialization complete
+About to crash before RPC connection!
+panic: intentional crash before RPC connection
+Error: game failed to start
 ```
 
 **Test 3: Crash AFTER RPC connection**
+
 ```bash
-autoebiten launch -- ./crash_demo --crash-after-rpc
 autoebiten ping
 ```
-
-Output:
-```text
+```
 OK: game is running
 ```
-
 Wait for crash (~3 seconds), then:
 ```bash
 sleep 4
 autoebiten ping
 ```
-
-Output:
 ```text
 <log_diff>
 --- snapshot ...
 +++ current ...
 @@ ... @@
-+Game running... tick 60
-+Game running... tick 120
-+Game running... tick 180
-+panic: intentional crash after RPC connection
++panic: runtime error: index out of range
 </log_diff>
 <proxy_error>
 game exited: exit status 2
 </proxy_error>
 Error: game not connected
 ```
+
 
 ---
 
@@ -452,24 +441,27 @@ func NewGame() *Game {
 }
 ```
 
+
 **CLI usage:**
+
 ```bash
-autoebiten custom heal
+autoebiten custom --name heal
 ```
 
 **Output:**
-```text
-OK: Healed from 90 to 100
+```
+OK: Healed from 100 to 100
 ```
 
 ```bash
-autoebiten custom damage
+autoebiten custom --name damage
 ```
 
 **Output:**
-```text
+```
 OK: Damaged from 100 to 90
 ```
+
 
 ---
 

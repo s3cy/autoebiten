@@ -266,7 +266,7 @@ type MyStruct struct {
 	require.NoError(t, err)
 
 	fm := FuncMap()
-	gocodeFunc := fm["gocode"].(func(string, string, ...[]string) (string, error))
+	gocodeFunc := fm["gocode"].(func(string, string, ...any) (string, error))
 
 	// Extract function
 	result, err := gocodeFunc(goFilePath, "Example")
@@ -294,10 +294,10 @@ func OldName() int {
 	require.NoError(t, err)
 
 	fm := FuncMap()
-	gocodeFunc := fm["gocode"].(func(string, string, ...[]string) (string, error))
+	gocodeFunc := fm["gocode"].(func(string, string, ...any) (string, error))
 
 	// Extract with rename transform
-	result, err := gocodeFunc(goFilePath, "OldName", []string{"rename:OldName->NewName"})
+	result, err := gocodeFunc(goFilePath, "OldName", []any{"rename:OldName->NewName"})
 	require.NoError(t, err)
 	assert.Contains(t, result, "NewName")
 	assert.NotContains(t, result, "OldName")
@@ -313,7 +313,7 @@ func TestGocodeFuncNotFound(t *testing.T) {
 	require.NoError(t, err)
 
 	fm := FuncMap()
-	gocodeFunc := fm["gocode"].(func(string, string, ...[]string) (string, error))
+	gocodeFunc := fm["gocode"].(func(string, string, ...any) (string, error))
 
 	// Extract nonexistent function
 	_, err = gocodeFunc(goFilePath, "NonExistent")

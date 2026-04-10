@@ -54,7 +54,9 @@ autoui.Register(&ui)  // Registers autoui.* commands
 
 Export full widget tree as XML.
 
+
 **Usage:**
+
 ```bash
 autoebiten custom autoui.tree
 ```
@@ -62,12 +64,13 @@ autoebiten custom autoui.tree
 **Output:**
 ```xml
 OK: <UI>
-  <Container _addr="<ADDR>" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
-    <Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+  <Container _addr="0x814b2018a80" disabled="false" height="480" visible="true" width="640" x="0" y="0">
+    <Button _addr="0x814b1f68a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+    <Button _addr="0x814b1f68b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
   </Container>
 </UI>
 ```
+
 
 ---
 
@@ -76,14 +79,16 @@ OK: <UI>
 Find widget at coordinates.
 
 **Usage:**
+
 ```bash
-autoebiten custom autoui.at --request "150,70"
+autoebiten custom autoui.at --request "100,50"
 ```
 
 **Output:**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="0x214b28336a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 ```
+
 
 **Error:** `no widget found at coordinates`
 
@@ -94,20 +99,25 @@ OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="pr
 Find widgets by attribute (AND logic for multiple criteria).
 
 **Usage:**
+
 ```bash
 autoebiten custom autoui.find --request "type=Button"
-autoebiten custom autoui.find --request "id=submit-btn"
 ```
 
 **Output (all buttons):**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="0x240ff62ac8c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x240ff62aca00" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+```
+
+```bash
+autoebiten custom autoui.find --request '{"type":"Button","id":"submit-btn"}'
 ```
 
 **Output (specific button):**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="0x240ff62ac8c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 ```
+
 
 **Note:** `autoui.find` returns matched widgets directly without `<UI>` wrapper or hierarchy reconstruction. For full hierarchy, use `autoui.tree`.
 
@@ -120,14 +130,16 @@ OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="pr
 XPath 1.0 query on widget tree.
 
 **Usage:**
+
 ```bash
 autoebiten custom autoui.xpath --request "//Button"
 ```
 
 **Output:**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="0x325829d32a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x325829d32b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 ```
+
 
 **Note:** `autoui.xpath` returns matched widgets directly without `<UI>` wrapper. For full hierarchy, use `autoui.tree`.
 
@@ -148,6 +160,7 @@ OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="pr
 Check if widgets matching a query exist. Returns JSON for use with `wait-for`.
 
 **Usage:**
+
 ```bash
 autoebiten custom autoui.exists --request "type=Button"
 ```
@@ -156,6 +169,7 @@ autoebiten custom autoui.exists --request "type=Button"
 ```json
 OK: {"found":true,"count":2}
 ```
+
 
 **Key difference from autoui.find:** Returns JSON instead of XML. Never errors on empty results - useful with `wait-for`.
 
@@ -166,14 +180,16 @@ OK: {"found":true,"count":2}
 Invoke method on widget.
 
 **Usage:**
+
 ```bash
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click","args":[]}'
+autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
 ```
 
 **Output:**
 ```json
 OK: {"success":true}
 ```
+
 
 **Request format:**
 ```json
@@ -191,9 +207,11 @@ OK: {"success":true}
 
 **SetText Example:**
 
+
 ```bash
-autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
+autoebiten custom autoui.call --request '{"target":"type=TextInput","method":"SetText","args":["Hello"]}'
 ```
+
 
 **Why use SetText:** TextInput's `SetText(string)` method fires `ChangedEvent` for game logic. Setting the field directly would bypass events.
 
@@ -206,22 +224,34 @@ autoebiten custom autoui.call --request '{"target":"id=name-input","method":"Set
 Add visual highlight rectangles (red, 3-second duration).
 
 **Usage:**
+
 ```bash
 autoebiten custom autoui.highlight --request "clear"
-autoebiten custom autoui.highlight --request "100,200"
+```
+
+**Output:**
+```
+OK: ok: highlights cleared
+```
+
+```bash
+autoebiten custom autoui.highlight --request "100,50,200,100"
+```
+
+```bash
 autoebiten custom autoui.highlight --request "type=Button"
-autoebiten custom autoui.highlight --request '{"query":"type=Button"}'
 ```
 
 **Highlight widgets:**
-```text
+```
 OK: ok: highlighted 2 widgets
 ```
 
 **Clear highlights:**
-```text
+```
 OK: ok: highlights cleared
 ```
+
 
 ---
 
@@ -236,15 +266,17 @@ autoebiten mouse -x 150 -y 70 --button MouseButtonLeft
 
 Use autoui to find and click by widget identity:
 
+
 ```bash
 # NEW: Click by widget identity (resilient to layout changes)
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click","args":[]}'
+autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
 ```
 
 **Output:**
 ```json
 OK: {"success":true}
 ```
+
 
 **Why this matters:**
 
@@ -265,9 +297,11 @@ OK: {"success":true}
 Use `autoui.exists` with `wait-for` to block until a widget appears.
 
 **CLI:**
+
 ```bash
-autoebiten wait-for --condition 'custom:autoui.exists:type=Dialog.found == true' --timeout 5s
+autoebiten wait-for --condition "custom:autoui.exists:type=Dialog.found == true" --timeout 5s
 ```
+
 
 **testkit:**
 ```go
@@ -346,15 +380,18 @@ Every widget includes a `_addr` attribute containing its pointer address:
 
 Add custom attributes via struct field tags:
 
-```go
+package main
+
+// PlayerCard demonstrates ae tag usage for custom XML attributes.
 type PlayerCard struct {
-    PlayerID   string `ae:"player_id"`
-    PlayerName string `ae:"player_name"`
-    Level      int    `ae:"level"`
-    Hidden     string `ae:"-"`  // Skip this field
+	PlayerID   string `ae:"player_id"`
+	PlayerName string `ae:"player_name"`
+	Level      int    `ae:"level"`
 }
 
-// In widget creation:
+
+**In widget creation:**
+```go
 btn := widget.NewButton(
     widget.ButtonOpts.Image(buttonImage),
     widget.ButtonOpts.WidgetOpts(
@@ -409,9 +446,11 @@ widget.WidgetOpts.CustomData(&PlayerData{
 ```
 
 **XPath query:**
+
 ```bash
-autoebiten custom autoui.xpath --request "//Button[@tags.0='fire']"
+autoebiten custom autoui.xpath --request "//Button[contains(@player_id,'p001')]"
 ```
+
 
 Nested slices use multi-level indexing:
 ```xml
@@ -445,9 +484,11 @@ All attributes are strings. Use XPath for numeric comparison:
 XPath 1.0 syntax for widget tree queries.
 
 **Output:**
+
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+OK: <Button _addr="0x56857fa40a00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="0x56857fa40b40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
 ```
+
 
 ---
 
@@ -576,6 +617,7 @@ game.RunCustom("autoui.highlight", "clear")
 
 **Scenario:** Find a button and click it.
 
+
 ```bash
 # Step 1: See what widgets exist
 autoebiten custom autoui.tree
@@ -584,16 +626,16 @@ autoebiten custom autoui.tree
 **Output:**
 ```xml
 OK: <UI>
-  <Container _addr="<ADDR>" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
-    <Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
+  <Container _addr="0x465b8ad184d0" disabled="false" height="480" visible="true" width="640" x="0" y="0">
+    <Button _addr="0x465b8b26aa00" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+    <Button _addr="0x465b8b26ab40" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
   </Container>
 </UI>
 ```
 
 ```bash
 # Step 2: Click Submit button
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click","args":[]}'
+autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
 ```
 
 **Output:**
@@ -601,11 +643,13 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 OK: {"success":true}
 ```
 
+
 ---
 
 ### Example 2: Debug Widget State
 
 **Scenario:** Check why a button isn't responding.
+
 
 ```bash
 # Highlight all buttons to see positions
@@ -613,18 +657,18 @@ autoebiten custom autoui.highlight --request "type=Button"
 ```
 
 **Output:**
-```text
+```
 OK: ok: highlighted 2 widgets
 ```
 
 ```bash
 # Check if submit button is disabled
-autoebiten custom autoui.xpath --request "//Button"
+autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
 ```
 
 **Output:**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: <Button _addr="0x1495f22a48c0" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
 ```
 
 ```bash
@@ -633,15 +677,17 @@ autoebiten custom autoui.highlight --request "clear"
 ```
 
 **Output:**
-```text
+```
 OK: ok: highlights cleared
 ```
+
 
 ---
 
 ### Example 3: Find by Custom Data
 
 **Scenario:** Locate widgets by game-specific attributes.
+
 
 ```bash
 autoebiten custom autoui.find --request "player_id=p001"
@@ -660,6 +706,7 @@ autoebiten custom autoui.xpath --request "//*[number(@level) > 40]"
 ```xml
 OK: error: no widgets found matching XPath
 ```
+
 
 ---
 

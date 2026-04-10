@@ -223,7 +223,7 @@ autoebiten screenshot
 
 Output:
 ```
-OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/.worktrees/doc-template-system/screenshot_20260410165345.png
+OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/.worktrees/doc-template-system/screenshot_20260410172230.png
 ```
 
 
@@ -726,7 +726,7 @@ autoebiten list_custom
 
 Output:
 ```
-["deferred","getPlayerInfo","heal","damage","echo"]
+["getPlayerInfo","heal","damage","echo","deferred"]
 ```
 
 

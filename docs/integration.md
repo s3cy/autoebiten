@@ -316,15 +316,18 @@ autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
 
 **CLI Usage:**
 
+
 Check if custom commands are available:
-```json
+
+```
 ["getPlayerInfo","heal","damage","echo","deferred"]
 ```
 
 Execute a custom command:
-```text
+```
 OK: Healed from 100 to 100
 ```
+
 
 ---
 
@@ -404,10 +407,24 @@ type Player struct {
 
 Use the `state` command to query exported state:
 
+
+
 ```bash
 autoebiten state --name gamestate --path Player.Health
+```
+
+```
+OK: 100
+```
+
+```bash
 autoebiten state --name gamestate --path Enemies.0.Name
 ```
+
+```
+OK: "Goblin"
+```
+
 
 ---
 
@@ -415,11 +432,12 @@ autoebiten state --name gamestate --path Enemies.0.Name
 
 After integrating autoebiten into your game, verify the connection:
 
+
 ```bash
 autoebiten ping
 ```
 
 Output:
-```text
+```
 OK: game is running
 ```

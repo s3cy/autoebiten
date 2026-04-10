@@ -272,14 +272,6 @@ func TestLogic(t *testing.T) {
 }
 ```
 
-**Output:**
-```text
-=== RUN   TestPlayerMovesRight
---- PASS: TestPlayerMovesRight (<TIME>)
-PASS
-ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>
-```
-
 ---
 
 #### InjectKeyPress
@@ -409,6 +401,8 @@ Games must implement at least `Update() error` for white-box testing.
 go build -o ./mygame ./cmd/mygame
 ```
 
+
+
 ```go
 func TestGame(t *testing.T) {
     game := testkit.Launch(t, "./mygame")
@@ -420,22 +414,6 @@ func TestGame(t *testing.T) {
     }, 5*time.Second)
     require.True(t, ready)
 }
-```
-
-**Output:**
-```text
-=== RUN   TestPlayerMovement
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
---- PASS: TestPlayerMovement (<TIME>)
-PASS
-ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>
 ```
 
 ---
@@ -467,19 +445,20 @@ func TestPlayerMovement(t *testing.T) {
 **Goal:** Enable StateQuery for black-box tests.
 
 **In game:**
-```go
+package state_exporter
+
+// GameState holds all game data for state queries.
 type GameState struct {
-    Player struct {
-        X, Y float64
-    }
+	Player struct {
+		X      float64
+		Y      float64
+		Health int
+		Mana   int
+	}
+	Enemies []Enemy
+	Score   int
 }
 
-func main() {
-    state := &GameState{}
-    autoebiten.RegisterStateExporter("gamestate", state)
-    // ...
-}
-```
 
 **In test:**
 ```go
@@ -493,6 +472,7 @@ assert.Equal(t, 10.0, x)
 ### Step 5: Writing Assertions
 
 **Goal:** Verify game behavior.
+
 
 ```go
 // Using testify
@@ -516,13 +496,6 @@ func TestPlayerHealth(t *testing.T) {
 }
 ```
 
-**Output:**
-```text
-=== RUN   TestPlayerTakesDamage
---- PASS: TestPlayerTakesDamage (<TIME>)
-PASS
-ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>
-```
 
 ---
 

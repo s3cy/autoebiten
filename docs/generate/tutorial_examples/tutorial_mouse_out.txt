@@ -1,1 +1,0 @@
-OK: mouse position at (100, 200)
