@@ -1,6 +1,7 @@
 package docgen
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -102,4 +103,43 @@ func Delay(duration string) {
 		d = 1 * time.Second // default fallback
 	}
 	time.Sleep(d)
+}
+
+// ExecuteCommand runs an autoebiten command and returns normalized output.
+func ExecuteCommand(session *GameSession, cmdName string, flags map[string]any) (string, error) {
+	if session == nil || session.game == nil {
+		return "", fmt.Errorf("no active game session")
+	}
+
+	// Build command arguments
+	args := []string{cmdName}
+	for k, v := range flags {
+		args = append(args, fmt.Sprintf("--%s", k), fmt.Sprintf("%v", v))
+	}
+
+	// Execute autoebiten CLI
+	cmd := exec.Command("autoebiten", args...)
+	cmd.Env = append(os.Environ(), "AUTOEBITEN_SOCKET="+session.socketPath)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	// Run command (don't fail on non-zero exit - capture output)
+	cmd.Run()
+
+	// Combine stdout and stderr
+	output := stdout.String() + stderr.String()
+
+	// Apply normalization
+	if session.ctx != nil && session.ctx.Config != nil {
+		output = Normalize(output, session.ctx.Config.Normalize)
+	}
+
+	// Store in context
+	if session.ctx != nil {
+		session.ctx.AddOutput(output)
+	}
+
+	return output, nil
 }

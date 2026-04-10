@@ -119,3 +119,29 @@ func TestEndGameCleanup(t *testing.T) {
 	// Verify binary was removed
 	assert.NoFileExists(t, binaryPath)
 }
+
+func TestExecuteCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	testgameDir := filepath.Join("..", "..", "testkit", "internal", "testgames", "simple")
+	ctx := NewContext()
+	ctx.SetConfig(&Config{
+		GameDir: testgameDir,
+		Normalize: []NormalizeRule{
+			{Pattern: `PID=\d+`, Replace: "PID=<PID>"},
+		},
+	})
+
+	session, err := LaunchGame(ctx)
+	require.NoError(t, err)
+	defer EndGame(session)
+
+	// Execute ping command
+	output, err := ExecuteCommand(session, "ping", nil)
+	require.NoError(t, err)
+
+	// Should contain "OK"
+	assert.Contains(t, output, "OK")
+}
