@@ -1,1 +1,1 @@
-["damage","echo","deferred","getPlayerInfo","heal"]
+["getPlayerInfo","heal","damage","echo","deferred"]

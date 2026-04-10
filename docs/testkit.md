@@ -425,14 +425,14 @@ func TestGame(t *testing.T) {
 **Output:**
 ```text
 === RUN   TestPlayerMovement
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66905:13162969] [CAMetalLayer nextDrawable] returning nil because allocation failed.
 --- PASS: TestPlayerMovement (<TIME>)
 PASS
 ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>

@@ -173,8 +173,7 @@ Invoke method on widget.
 **SetText Example:**
 
 ```bash
-# Set text in a TextInput widget
-autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
+{{command "autoui_examples/autoui_settext.sh"}}
 ```
 
 **Why use SetText:** TextInput's `SetText(string)` method fires `ChangedEvent` for game logic. Setting the field directly would bypass events.
@@ -189,8 +188,10 @@ Add visual highlight rectangles (red, 3-second duration).
 
 **Usage:**
 ```bash
-{{command "autoui_examples/autoui_highlight_buttons.sh"}}
 {{command "autoui_examples/autoui_highlight_clear.sh"}}
+{{command "autoui_examples/autoui_highlight_coords.sh"}}
+{{command "autoui_examples/autoui_highlight_buttons.sh"}}
+{{command "autoui_examples/autoui_highlight_json.sh"}}
 ```
 
 **Highlight widgets:**
@@ -240,9 +241,7 @@ Use `autoui.exists` with `wait-for` to block until a widget appears.
 
 **CLI:**
 ```bash
-# Wait up to 5 seconds for a Dialog widget
-# Use .found to extract the boolean from the JSON response
-autoebiten wait-for --condition 'custom:autoui.exists:type=Dialog.found == true' --timeout 5s
+{{command "autoui_examples/autoui_waitfor.sh"}}
 ```
 
 **testkit:**
@@ -386,7 +385,7 @@ widget.WidgetOpts.CustomData(&PlayerData{
 
 **XPath query:**
 ```bash
-autoebiten custom autoui.xpath --request "//Button[@tags.0='fire']"
+{{command "autoui_examples/autoui_xpath_tags.sh"}}
 ```
 
 Nested slices use multi-level indexing:
@@ -603,20 +602,18 @@ game.RunCustom("autoui.highlight", "clear")
 **Scenario:** Locate widgets by game-specific attributes.
 
 ```bash
-# Find by custom player_id attribute
-autoebiten custom autoui.find --request "player_id=p001"
+{{command "autoui_examples/autoui_find_player.sh"}}
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_find_submit_out.txt" "xml"}}
+{{output "autoui_examples/autoui_find_player_out.txt" "xml"}}
 
 ```bash
-# XPath with custom attribute
-autoebiten custom autoui.xpath --request "//*[number(@level) > 40]"
+{{command "autoui_examples/autoui_xpath_level.sh"}}
 ```
 
 **Output:**
-{{output "autoui_examples/autoui_find_submit_out.txt" "xml"}}
+{{output "autoui_examples/autoui_xpath_level_out.txt" "xml"}}
 
 ---
 

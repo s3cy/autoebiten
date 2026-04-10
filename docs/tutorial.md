@@ -185,10 +185,10 @@ OK: mouse position at (100, 200)
 ```
 
 ```bash
-# Click
 autoebiten mouse --button MouseButtonLeft
+```
 
-# Take screenshot
+```bash
 autoebiten screenshot --output test.png
 ```
 
@@ -208,7 +208,6 @@ autoebiten screenshot --output test.png
 **Example:**
 
 ```bash
-# Hold key for 1 second
 autoebiten input --key KeyW --action hold --duration_ticks 60
 ```
 
@@ -242,6 +241,189 @@ OK: Health: 90, Mana: 50
 ---
 
 ## Examples
+
+### Library Integration
+
+**Goal:** Full integration for testing and automation.
+
+**Complete example:**
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/hajimehoshi/ebiten/v2"
+    "github.com/s3cy/autoebiten"
+)
+
+type Game struct {
+    PlayerX, PlayerY float64
+    Health           int
+}
+
+func (g *Game) Update() error {
+    // Handle automation exit
+    if !autoebiten.Update() {
+        return fmt.Errorf("exit requested")
+    }
+
+    // Use wrapped input functions
+    if autoebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+        g.PlayerX += 2
+    }
+    if autoebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+        g.PlayerX -= 2
+    }
+
+    return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+    // Your rendering code
+    // ...
+
+    // Capture for screenshots (call at end)
+    autoebiten.Capture(screen)
+}
+
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+    return 640, 480
+}
+
+func main() {
+    game := &Game{Health: 100}
+
+    // Register custom commands
+    autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
+        game.Health = min(game.Health+20, 100)
+        ctx.Respond(fmt.Sprintf("Healed to %d", game.Health))
+    })
+
+    // Register state exporter
+    autoebiten.RegisterStateExporter("gamestate", game)
+
+    ebiten.RunGame(game)
+}
+```
+
+---
+
+### Launch and Output Capture
+
+**Scenario:** Capture game output between commands.
+
+**Using launch:**
+
+```bash
+# Start with output capture
+autoebiten launch -- ./mygame
+
+# Commands show output changes
+autoebiten ping
+# OK: game is running
+
+# Output is captured between commands
+autoebiten input --key KeySpace
+# Shows any new output from game
+
+# Exit cleans up
+autoebiten exit
+```
+
+**Benefits:**
+- Captures stdout/stderr between commands
+- Shows crash diagnostics automatically
+- Maintains connection state
+
+---
+
+### Crash Diagnostic Testing
+
+**Scenario:** Test crash detection before and after RPC connection.
+
+**Example game:** `examples/crash_diagnostic/main.go`
+
+This demo game can be configured to crash at different points:
+
+```bash
+# Build the example
+cd examples/crash_diagnostic
+go build -o crash_demo
+```
+
+**Test 1: Normal operation (no crash)**
+```bash
+autoebiten launch -- ./crash_demo
+autoebiten ping
+autoebiten exit
+```
+
+Output:
+```text
+OK: game is running
+```
+
+**Test 2: Crash BEFORE RPC connection**
+```bash
+autoebiten launch -- ./crash_demo --crash-before-rpc
+autoebiten ping
+```
+
+Output:
+```text
+<log_diff>
+--- snapshot ...
++++ current ...
+@@ ... @@
++Starting crash diagnostic demo...
++Flags: crash-before-rpc=true, crash-after-rpc=false
++Initialization complete
++About to crash before RPC connection!
++panic: intentional crash before RPC connection
+</log_diff>
+<proxy_error>
+game exited: exit status 2
+</proxy_error>
+Error: game not connected
+```
+
+**Test 3: Crash AFTER RPC connection**
+```bash
+autoebiten launch -- ./crash_demo --crash-after-rpc
+autoebiten ping
+```
+
+Output:
+```text
+OK: game is running
+```
+
+Wait for crash (~3 seconds), then:
+```bash
+sleep 4
+autoebiten ping
+```
+
+Output:
+```text
+<log_diff>
+--- snapshot ...
++++ current ...
+@@ ... @@
++Game running... tick 60
++Game running... tick 120
++Game running... tick 180
++panic: intentional crash after RPC connection
+</log_diff>
+<proxy_error>
+game exited: exit status 2
+</proxy_error>
+Error: game not connected
+```
+
+---
 
 ### Custom Commands
 
@@ -363,138 +545,4 @@ autoebiten --pid 12345 input --key KeySpace
 
 # Or set socket path
 AUTOEBITEN_SOCKET=/tmp/autoebiten/autoebiten-custom.sock autoebiten ping
-```
-
----
-
-### Library Integration
-
-**Goal:** Full integration for testing and automation.
-
-**Complete example:**
-
-```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/hajimehoshi/ebiten/v2"
-    "github.com/s3cy/autoebiten"
-)
-
-type Game struct {
-    PlayerX, PlayerY float64
-    Health           int
-}
-
-func (g *Game) Update() error {
-    // Handle automation exit
-    if !autoebiten.Update() {
-        return fmt.Errorf("exit requested")
-    }
-
-    // Use wrapped input functions
-    if autoebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-        g.PlayerX += 2
-    }
-    if autoebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-        g.PlayerX -= 2
-    }
-
-    return nil
-}
-
-func (g *Game) Draw(screen *ebiten.Image) {
-    // Your rendering code
-    // ...
-
-    // Capture for screenshots (call at end)
-    autoebiten.Capture(screen)
-}
-
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-    return 640, 480
-}
-
-func main() {
-    game := &Game{Health: 100}
-
-    // Register custom commands
-    autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
-        game.Health = min(game.Health+20, 100)
-        ctx.Respond(fmt.Sprintf("Healed to %d", game.Health))
-    })
-
-    // Register state exporter
-    autoebiten.RegisterStateExporter("gamestate", game)
-
-    ebiten.RunGame(game)
-}
-```
-
----
-
-### Launch and Output Capture
-
-**Scenario:** Capture game output between commands.
-
-**Using launch:**
-
-```bash
-# Start with output capture
-autoebiten launch -- ./mygame
-
-# Commands show output changes
-autoebiten ping
-# OK: game is running
-
-# Output is captured between commands
-autoebiten input --key KeySpace
-# Shows any new output from game
-
-# Exit cleans up
-autoebiten exit
-```
-
-**Benefits:**
-- Captures stdout/stderr between commands
-- Shows crash diagnostics automatically
-- Maintains connection state
-
----
-
-### Crash Diagnostic Testing
-
-**Scenario:** Test crash detection before and after RPC connection.
-
-**Example game:** `examples/crash_diagnostic/main.go`
-
-This demo game can be configured to crash at different points:
-
-```bash
-# Build the example
-cd examples/crash_diagnostic
-go build -o crash_demo
-
-# Test 1: Normal operation (no crash)
-autoebiten launch -- ./crash_demo
-autoebiten ping
-# OK: game is running
-autoebiten exit
-
-# Test 2: Crash BEFORE RPC connection
-autoebiten launch -- ./crash_demo --crash-before-rpc
-autoebiten ping
-# Error: game not connected
-# Shows crash output and diagnostics
-
-# Test 3: Crash AFTER RPC connection
-autoebiten launch -- ./crash_demo --crash-after-rpc
-autoebiten ping
-# OK: game is running
-# Wait for crash (~3 seconds)
-autoebiten ping
-# Error: game not connected
-# Shows crash output and diagnostics
 ```

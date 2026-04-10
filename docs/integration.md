@@ -318,7 +318,7 @@ autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
 
 Check if custom commands are available:
 ```json
-["damage","echo","deferred","getPlayerInfo","heal"]
+["getPlayerInfo","heal","damage","echo","deferred"]
 ```
 
 Execute a custom command:

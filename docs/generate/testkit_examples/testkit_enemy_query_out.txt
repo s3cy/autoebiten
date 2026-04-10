@@ -1,12 +1,11 @@
 === RUN   TestEnemyStateQuery
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
-<TIMESTAMP> state_exporter[61698:13132275] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[66986:13163479] [CAMetalLayer nextDrawable] returning nil because allocation failed.
 --- PASS: TestEnemyStateQuery (<TIME>)
 PASS
 ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>

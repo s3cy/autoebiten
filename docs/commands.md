@@ -699,7 +699,7 @@ autoebiten list_custom
 
 Example output:
 ```text
-["heal","damage","echo","deferred","getPlayerInfo"]
+["getPlayerInfo","heal","damage","echo","deferred"]
 ```
 
 ---

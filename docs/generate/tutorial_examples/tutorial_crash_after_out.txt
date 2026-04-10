@@ -1,0 +1,13 @@
+<log_diff>
+--- snapshot ...
++++ current ...
+@@ ... @@
++Game running... tick 60
++Game running... tick 120
++Game running... tick 180
++panic: intentional crash after RPC connection
+</log_diff>
+<proxy_error>
+game exited: exit status 2
+</proxy_error>
+Error: game not connected

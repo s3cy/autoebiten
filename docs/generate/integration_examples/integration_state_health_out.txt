@@ -1,0 +1,14 @@
+Error: rpc error: unknown custom command: .state.gamestate
+Usage:
+  autoebiten state [flags]
+
+Flags:
+  -h, --help          help for state
+      --name string   State exporter name
+      --no-record     Skip recording this command
+      --path string   Dot-notation path to query
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: rpc error: unknown custom command: .state.gamestate

@@ -1,0 +1,16 @@
+Error: timeout exceeded after 5s waiting for condition
+Usage:
+  autoebiten wait-for [flags]
+
+Flags:
+      --condition string   Condition to wait for
+  -h, --help               help for wait-for
+      --interval string    Poll interval (default 100ms)
+      --no-record          Skip recording this command
+      --timeout string     Maximum wait duration (e.g., 10s, 5m)
+  -v, --verbose            Print errors during polling
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: timeout exceeded after 5s waiting for condition

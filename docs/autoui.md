@@ -192,7 +192,6 @@ OK: {"success":true}
 **SetText Example:**
 
 ```bash
-# Set text in a TextInput widget
 autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
 ```
 
@@ -208,8 +207,10 @@ Add visual highlight rectangles (red, 3-second duration).
 
 **Usage:**
 ```bash
-autoebiten custom autoui.highlight --request "type=Button"
 autoebiten custom autoui.highlight --request "clear"
+autoebiten custom autoui.highlight --request "100,200"
+autoebiten custom autoui.highlight --request "type=Button"
+autoebiten custom autoui.highlight --request '{"query":"type=Button"}'
 ```
 
 **Highlight widgets:**
@@ -265,8 +266,6 @@ Use `autoui.exists` with `wait-for` to block until a widget appears.
 
 **CLI:**
 ```bash
-# Wait up to 5 seconds for a Dialog widget
-# Use .found to extract the boolean from the JSON response
 autoebiten wait-for --condition 'custom:autoui.exists:type=Dialog.found == true' --timeout 5s
 ```
 
@@ -645,23 +644,21 @@ OK: ok: highlights cleared
 **Scenario:** Locate widgets by game-specific attributes.
 
 ```bash
-# Find by custom player_id attribute
 autoebiten custom autoui.find --request "player_id=p001"
 ```
 
 **Output:**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: error: no widgets found matching query
 ```
 
 ```bash
-# XPath with custom attribute
 autoebiten custom autoui.xpath --request "//*[number(@level) > 40]"
 ```
 
 **Output:**
 ```xml
-OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
+OK: error: no widgets found matching XPath
 ```
 
 ---
