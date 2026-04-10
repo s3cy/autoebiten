@@ -1,0 +1,623 @@
+# Testkit Reference
+
+> Purpose: Go testing framework for autoebiten games
+> Audience: Developers writing automated tests for Ebitengine games
+
+---
+
+## Quick Decision
+
+**Testing mode:**
+```
+├─ Need full integration (real game process, real socket)?
+│  └─→ Black-box: testkit.Launch()
+│
+└─ Need fast unit tests (game logic only)?
+   └─→ White-box: testkit.NewMock()
+```
+
+**State verification:**
+```
+├─ Need to query internal state?
+│  └─→ Add autoebiten.RegisterStateExporter() to game
+│      Then use game.StateQuery()
+│
+└─ Only need visual verification?
+   └─→ Use game.Screenshot() or ScreenshotToFile()
+```
+
+---
+
+## Overview
+
+The testkit package provides two testing modes:
+
+- **Black-box (Game):** Launches game in separate process, controls via RPC. Tests the full system.
+- **White-box (Mock):** Tests game logic in same process with mocked inputs. Fast unit testing.
+
+Both modes use similar APIs for input injection, making tests easy to write and maintain.
+
+---
+
+## API Reference
+
+### Black-Box Testing (Game)
+
+#### Launch
+
+**Signature:** `func Launch(t *testing.T, binaryPath string, opts ...Option) *Game`
+
+**Purpose:** Start game in separate process and return controller.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| t | *testing.T | Test context |
+| binaryPath | string | Path to compiled game binary |
+| opts | ...Option | Optional configuration |
+
+**Returns:**
+- `*Game` - Controller for the launched game
+
+**Options:**
+- `WithTimeout(d time.Duration)` - Set timeout (default 30s)
+- `WithArgs(args ...string)` - Add command-line arguments
+- `WithEnv(key, value string)` - Set environment variable
+
+**Example:**
+```go
+func TestGame(t *testing.T) {
+    game := testkit.Launch(t, "./mygame",
+        testkit.WithTimeout(30*time.Second))
+    defer game.Shutdown()
+}
+```
+
+**Notes:** Game binary must be built before testing.
+
+---
+
+#### Shutdown
+
+**Signature:** `func (g *Game) Shutdown() error`
+
+**Purpose:** Gracefully stop the game process.
+
+**Returns:**
+- error if shutdown fails
+
+**Notes:** Automatically called via t.Cleanup(). Call manually for early cleanup.
+
+---
+
+#### Ping
+
+**Signature:** `func (g *Game) Ping() error`
+
+**Purpose:** Check if game is responsive.
+
+**Returns:**
+- nil if responsive
+- error if not running or not responding
+
+---
+
+#### WaitFor
+
+**Signature:** `func (g *Game) WaitFor(fn func() bool, timeout time.Duration) bool`
+
+**Purpose:** Poll until condition is true or timeout.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| fn | func() bool | Condition function (called every 100ms) |
+| timeout | time.Duration | Maximum wait time |
+
+**Returns:**
+- `true` if condition met
+- `false` if timeout
+
+**Example:**
+```go
+ready := game.WaitFor(func() bool {
+    return game.Ping() == nil
+}, 5*time.Second)
+```
+
+---
+
+#### PressKey
+
+**Signature:** `func (g *Game) PressKey(key ebiten.Key) error`
+
+**Purpose:** Send key press (press and release).
+
+---
+
+#### HoldKey
+
+**Signature:** `func (g *Game) HoldKey(key ebiten.Key, ticks int64) error`
+
+**Purpose:** Hold key for specified ticks.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | ebiten.Key | Key to hold |
+| ticks | int64 | Duration in ticks |
+
+---
+
+#### MoveMouse
+
+**Signature:** `func (g *Game) MoveMouse(x, y int) error`
+
+**Purpose:** Move cursor to position.
+
+---
+
+#### PressMouseButton
+
+**Signature:** `func (g *Game) PressMouseButton(button ebiten.MouseButton) error`
+
+**Purpose:** Click mouse button.
+
+---
+
+#### ScrollWheel
+
+**Signature:** `func (g *Game) ScrollWheel(x, y float64) error`
+
+**Purpose:** Inject wheel scroll.
+
+---
+
+#### Screenshot
+
+**Signature:** `func (g *Game) Screenshot() (*image.RGBA, error)`
+
+**Purpose:** Capture screen as image.
+
+**Returns:**
+- Screen image
+- error if capture fails
+
+---
+
+#### ScreenshotToFile
+
+**Signature:** `func (g *Game) ScreenshotToFile(path string) error`
+
+**Purpose:** Save screenshot to file.
+
+---
+
+#### ScreenshotBase64
+
+**Signature:** `func (g *Game) ScreenshotBase64() (string, error)`
+
+**Purpose:** Get screenshot as base64 string.
+
+---
+
+#### StateQuery
+
+**Signature:** `func (g *Game) StateQuery(name string, path string) (any, error)`
+
+**Purpose:** Query game state via registered exporter.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | State exporter name |
+| path | string | Dot-notation path |
+
+**Returns:**
+- Value at path (type depends on state)
+- error if path not found
+
+**Example:**
+```go
+health, err := game.StateQuery("gamestate", "Player.Health")
+require.NoError(t, err)
+assert.Equal(t, 100, health)
+```
+
+**Notes:**
+- Requires `RegisterStateExporter` in game code
+- Only **exported fields** (capitalized) are accessible - State Exporter uses reflection internally
+- Use **Go field names**, not JSON tag names (e.g., use `Player.Name` even if tagged `json:"player_name"`)
+- Interface fields can be queried directly (`Entity`), but nested access (`Entity.Field`) is not supported
+
+---
+
+#### RunCustom
+
+**Signature:** `func (g *Game) RunCustom(name, request string) (string, error)`
+
+**Purpose:** Execute custom command.
+
+**Returns:**
+- Response string from command
+- error if command fails
+
+---
+
+### White-Box Testing (Mock)
+
+#### NewMock
+
+**Signature:** `func NewMock(t *testing.T, game GameUpdate) *Mock`
+
+**Purpose:** Create mock controller for in-process testing.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| t | *testing.T | Test context |
+| game | GameUpdate | Game instance (must have Update method) |
+
+**Returns:**
+- `*Mock` - Controller for mocked inputs
+
+**Example:**
+```go
+func TestLogic(t *testing.T) {
+    autoebiten.SetMode(autoebiten.InjectionOnly)
+
+    game := NewMyGame()
+    mock := testkit.NewMock(t, game)
+
+    mock.InjectKeyPress(ebiten.KeyD)
+    mock.Ticks(10)
+
+    assert.Equal(t, 10, game.Player.X)
+}
+```
+
+---
+
+#### InjectKeyPress
+
+**Signature:** `func (m *Mock) InjectKeyPress(key ebiten.Key)`
+
+**Purpose:** Buffer key press for next Tick.
+
+---
+
+#### InjectKeyRelease
+
+**Signature:** `func (m *Mock) InjectKeyRelease(key ebiten.Key)`
+
+**Purpose:** Buffer key release for next Tick.
+
+---
+
+#### InjectMousePosition
+
+**Signature:** `func (m *Mock) InjectMousePosition(x, y int)`
+
+**Purpose:** Set mouse position for next Tick.
+
+---
+
+#### InjectMouseButtonPress
+
+**Signature:** `func (m *Mock) InjectMouseButtonPress(button ebiten.MouseButton)`
+
+**Purpose:** Buffer mouse press for next Tick.
+
+---
+
+#### InjectMouseButtonRelease
+
+**Signature:** `func (m *Mock) InjectMouseButtonRelease(button ebiten.MouseButton)`
+
+**Purpose:** Buffer mouse release for next Tick.
+
+---
+
+#### InjectWheel
+
+**Signature:** `func (m *Mock) InjectWheel(x, y float64)`
+
+**Purpose:** Set wheel delta for next Tick.
+
+---
+
+#### Tick
+
+**Signature:** `func (m *Mock) Tick()`
+
+**Purpose:** Advance game by one tick, applying buffered inputs.
+
+**Notes:** Calls game's Update() once.
+
+---
+
+#### Ticks
+
+**Signature:** `func (m *Mock) Ticks(n int)`
+
+**Purpose:** Advance game by N ticks.
+
+---
+
+#### Game
+
+**Signature:** `func (m *Mock) Game() GameUpdate`
+
+**Purpose:** Get underlying game instance for assertions.
+
+---
+
+### GameUpdate Interface
+
+**Definition:**
+```go
+type GameUpdate interface {
+    Update() error
+}
+```
+
+Games must implement at least `Update() error` for white-box testing.
+
+---
+
+### Errors
+
+| Error | Description |
+|-------|-------------|
+| ErrGameNotRunning | Operation on non-running game |
+| ErrTimeout | Operation timed out |
+| ErrInvalidState | Invalid game state |
+
+---
+
+## Tutorial
+
+### Step 1: Choose Testing Mode
+
+**Black-box checklist:**
+- [ ] Need real game process
+- [ ] Need RPC communication
+- [ ] Need screenshot capture
+
+**White-box checklist:**
+- [ ] Fast unit tests
+- [ ] Direct state access
+- [ ] No external dependencies
+
+---
+
+### Step 2: Black-Box Setup
+
+**Goal:** Launch game in separate process.
+
+**Prerequisites:**
+- Built game binary
+
+**Actions:**
+
+```bash
+# Build game
+go build -o ./mygame ./cmd/mygame
+```
+
+```go
+func TestGame(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    // Wait for ready
+    ready := game.WaitFor(func() bool {
+        return game.Ping() == nil
+    }, 5*time.Second)
+    require.True(t, ready)
+}
+```
+
+---
+
+### Step 3: White-Box Setup
+
+**Goal:** Test game logic in-process.
+
+```go
+func TestPlayerMovement(t *testing.T) {
+    autoebiten.SetMode(autoebiten.InjectionOnly)
+
+    game := NewMyGame()
+    mock := testkit.NewMock(t, game)
+
+    // Inject input
+    mock.InjectKeyPress(ebiten.KeyArrowRight)
+    mock.Ticks(10)
+
+    // Check state directly
+    assert.Greater(t, game.Player.X, 0.0)
+}
+```
+
+---
+
+### Step 4: Adding State Exporter
+
+**Goal:** Enable StateQuery for black-box tests.
+
+**Important:** State Exporter uses reflection internally. Only **exported fields** (capitalized names like `X`, `Y`, `Health`) are accessible. Unexported fields (lowercase) cannot be queried.
+
+**Path Navigation Rules:**
+- Use **Go field names**
+- Interface fields return the stored value, but you cannot traverse into them
+
+**In game:**
+```go
+type GameState struct {
+    Player struct {
+        X, Y float64  // Exported fields work
+        health int     // Unexported - NOT accessible
+    }
+}
+
+func main() {
+    state := &GameState{}
+    autoebiten.RegisterStateExporter("gamestate", state)
+    // ...
+}
+```
+
+**Query examples:**
+```go
+// Works: Go field names
+x, _ := game.StateQuery("gamestate", "Player.X")
+
+// Works: Interface field itself (returns the value)
+entity, _ := game.StateQuery("gamestate", "Entity")
+
+// Fails: JSON tag names don't work
+name, err := game.StateQuery("gamestate", "player_name") // path not found
+
+// Fails: Cannot traverse into interface fields
+field, err := game.StateQuery("gamestate", "Entity.Field") // path not found
+```
+
+**In test:**
+```go
+x, err := game.StateQuery("gamestate", "Player.X")
+require.NoError(t, err)
+assert.Equal(t, 10.0, x)
+```
+
+---
+
+### Step 5: Writing Assertions
+
+**Goal:** Verify game behavior.
+
+```go
+// Using testify
+func TestPlayerHealth(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    // Get initial state
+    health, err := game.StateQuery("gamestate", "Player.Health")
+    require.NoError(t, err)
+    initial := health.(float64)
+
+    // Apply damage
+    _, err = game.RunCustom("damage", "")
+    require.NoError(t, err)
+
+    // Verify change
+    health, err = game.StateQuery("gamestate", "Player.Health")
+    require.NoError(t, err)
+    assert.Less(t, health.(float64), initial)
+}
+```
+
+---
+
+## Examples
+
+### Black-Box: Player Movement
+
+**Scenario:** Test movement via real game process.
+
+```go
+package mygame_test
+
+import (
+    "testing"
+    "time"
+
+    "github.com/hajimehoshi/ebiten/v2"
+    "github.com/s3cy/autoebiten/testkit"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+func TestPlayerMovesRight(t *testing.T) {
+    game := testkit.Launch(t, "./mygame",
+        testkit.WithTimeout(30*time.Second))
+    defer game.Shutdown()
+
+    // Wait for ready
+    require.True(t, game.WaitFor(func() bool {
+        return game.Ping() == nil
+    }, 5*time.Second))
+
+    // Get initial position
+    x, err := game.StateQuery("gamestate", "Player.X")
+    require.NoError(t, err)
+    initialX := x.(float64)
+
+    // Move right
+    err = game.HoldKey(ebiten.KeyArrowRight, 10)
+    require.NoError(t, err)
+
+    // Verify moved
+    x, err = game.StateQuery("gamestate", "Player.X")
+    require.NoError(t, err)
+    assert.Greater(t, x.(float64), initialX)
+}
+```
+
+---
+
+### White-Box: Game Logic
+
+**Scenario:** Fast unit test without RPC.
+
+```go
+package mygame
+
+import (
+    "testing"
+
+    "github.com/hajimehoshi/ebiten/v2"
+    "github.com/s3cy/autoebiten"
+    "github.com/s3cy/autoebiten/testkit"
+    "github.com/stretchr/testify/assert"
+)
+
+func TestPlayerTakesDamage(t *testing.T) {
+    autoebiten.SetMode(autoebiten.InjectionOnly)
+
+    game := NewGame()
+    mock := testkit.NewMock(t, game)
+
+    initialHealth := game.Player.Health
+
+    // Simulate damage key
+    mock.InjectKeyPress(ebiten.KeyD)
+    mock.Tick()
+
+    assert.Less(t, game.Player.Health, initialHealth)
+}
+```
+
+---
+
+### State Query: Health Verification
+
+**Scenario:** Query nested state via reflection.
+
+```go
+func TestInventoryAccess(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    // Query array index
+    name, err := game.StateQuery("gamestate", "Inventory.0.Name")
+    require.NoError(t, err)
+    assert.Equal(t, "Sword", name)
+
+    // Query nested field
+    count, err := game.StateQuery("gamestate", "Inventory.0.Count")
+    require.NoError(t, err)
+    assert.Equal(t, 5, count)
+}
+```
