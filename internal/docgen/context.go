@@ -28,7 +28,10 @@ func (c *Context) AddOutput(output string) {
 	c.outputs = append(c.outputs, output)
 }
 
-// GetOutputs returns all captured outputs.
+// GetOutputs returns a copy of all captured outputs.
 func (c *Context) GetOutputs() []string {
-	return c.outputs
+	// Return a copy to prevent callers from modifying internal state
+	result := make([]string, len(c.outputs))
+	copy(result, c.outputs)
+	return result
 }
