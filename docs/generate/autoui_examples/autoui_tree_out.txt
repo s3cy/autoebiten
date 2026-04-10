@@ -1,6 +1,0 @@
-OK: <UI>
-  <Container _addr="<ADDR>" disabled="false" height="480" visible="true" width="640" x="0" y="0">
-    <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button>
-    <Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>
-  </Container>
-</UI>

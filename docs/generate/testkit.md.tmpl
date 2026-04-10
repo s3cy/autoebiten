@@ -272,9 +272,6 @@ func TestLogic(t *testing.T) {
 }
 ```
 
-**Output:**
-{{output "testkit_examples/testkit_white_box_out.txt" "text"}}
-
 ---
 
 #### InjectKeyPress
@@ -404,6 +401,8 @@ Games must implement at least `Update() error` for white-box testing.
 go build -o ./mygame ./cmd/mygame
 ```
 
+{{ config "examples/state_exporter/cmd" }}
+
 ```go
 func TestGame(t *testing.T) {
     game := testkit.Launch(t, "./mygame")
@@ -416,9 +415,6 @@ func TestGame(t *testing.T) {
     require.True(t, ready)
 }
 ```
-
-**Output:**
-{{output "testkit_examples/testkit_black_box_out.txt" "text"}}
 
 ---
 
@@ -449,19 +445,7 @@ func TestPlayerMovement(t *testing.T) {
 **Goal:** Enable StateQuery for black-box tests.
 
 **In game:**
-```go
-type GameState struct {
-    Player struct {
-        X, Y float64
-    }
-}
-
-func main() {
-    state := &GameState{}
-    autoebiten.RegisterStateExporter("gamestate", state)
-    // ...
-}
-```
+{{ gocode "examples/state_exporter/game.go" "GameState" (list "stripImports") }}
 
 **In test:**
 ```go
@@ -497,9 +481,6 @@ func TestPlayerHealth(t *testing.T) {
     assert.Less(t, health.(float64), initial)
 }
 ```
-
-**Output:**
-{{output "testkit_examples/testkit_damage_test_out.txt" "text"}}
 
 ---
 

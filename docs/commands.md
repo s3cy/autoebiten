@@ -5,6 +5,8 @@
 
 ---
 
+
+
 ## Global Flags
 
 These flags apply to all commands:
@@ -112,15 +114,17 @@ autoebiten input --key <KeyName> --action <Action> [--duration_ticks N]
 - `release` - Release a held key
 - `hold` - Press and hold for duration_ticks, then auto-release
 
-**Examples:**
+**Example:**
+
 ```bash
 autoebiten input --key KeyH --action press
 ```
 
-Example output:
-```text
+Output:
+```
 OK: input press KeyH
 ```
+
 
 ---
 
@@ -150,14 +154,16 @@ autoebiten mouse --action <Action> [-x N] [-y N] [--button <ButtonName>]
 - `hold` - Press and hold for duration_ticks, then auto-release (default when --button is set)
 
 **Example:**
+
 ```bash
-autoebiten mouse -x 100 -y 200
+autoebiten mouse --action position -x 100 -y 200
 ```
 
-Example output:
-```text
+Output:
+```
 OK: mouse position at (100, 200)
 ```
+
 
 ---
 
@@ -178,14 +184,16 @@ autoebiten wheel -x <X> -y <Y>
 | --no-record | Skip recording |
 
 **Example:**
+
 ```bash
 autoebiten wheel -x 0 -y -3
 ```
 
-Example output:
-```text
+Output:
+```
 OK: wheel moved by (0.00, -3.00)
 ```
+
 
 ---
 
@@ -208,14 +216,16 @@ autoebiten screenshot [--output <Path>] [--base64]
 | --no-record | Skip recording |
 
 **Example:**
+
 ```bash
-autoebiten screenshot --output /tmp/commands_screenshot.png
+autoebiten screenshot
 ```
 
-Example output:
-```text
-OK: screenshot saved to <PATH>.png
+Output:
 ```
+OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/.worktrees/doc-template-system/screenshot_20260410184722.png
+```
+
 
 ---
 
@@ -237,15 +247,17 @@ autoebiten run --inline '<JSON>'
 | --inline | Inline JSON string |
 
 **Example:**
+
 ```bash
-autoebiten run --inline '{"version":"1.0","commands":[{"input":{"key":"KeyH","action":"press"}}]}'
+autoebiten run --inline '{"version":"1.0","commands":[{"input":{"action":"press","key":"KeySpace"}}]}'
 ```
 
-Example output:
-```text
-OK: input press KeyH
+Output:
+```
+OK: input press KeySpace
 OK: executed 1 commands
 ```
+
 
 ---
 
@@ -255,14 +267,16 @@ OK: executed 1 commands
 
 Check if game is running and responsive.
 
+
 ```bash
 autoebiten ping
 ```
 
-Example output:
-```text
+Output:
+```
 OK: game is running
 ```
+
 
 ---
 
@@ -270,15 +284,17 @@ OK: game is running
 
 Print CLI and game library versions.
 
+
 ```bash
 autoebiten version
 ```
 
-Example output:
-```text
+Output:
+```
 CLI version:    v0.7.1-0.20260410004918-9504a32a5cf4+dirty
 Game version:   unknown
 ```
+
 
 ---
 
@@ -286,14 +302,16 @@ Game version:   unknown
 
 List all available key names.
 
+
 ```bash
 autoebiten keys
 ```
 
-Example output:
-```text
+Output:
+```
 ["KeyA","KeyAlt","KeyAltLeft","KeyAltRight","KeyArrowDown","KeyArrowLeft","KeyArrowRight","KeyArrowUp","KeyB","KeyBackquote","KeyBackslash","KeyBackspace","KeyBracketLeft","KeyBracketRight","KeyC","KeyCapsLock","KeyComma","KeyContextMenu","KeyControl","KeyControlLeft","KeyControlRight","KeyD","KeyDelete","KeyDigit0","KeyDigit1","KeyDigit2","KeyDigit3","KeyDigit4","KeyDigit5","KeyDigit6","KeyDigit7","KeyDigit8","KeyDigit9","KeyE","KeyEnd","KeyEnter","KeyEqual","KeyEscape","KeyF","KeyF1","KeyF10","KeyF11","KeyF12","KeyF13","KeyF14","KeyF15","KeyF16","KeyF17","KeyF18","KeyF19","KeyF2","KeyF20","KeyF21","KeyF22","KeyF23","KeyF24","KeyF3","KeyF4","KeyF5","KeyF6","KeyF7","KeyF8","KeyF9","KeyG","KeyH","KeyHome","KeyI","KeyInsert","KeyIntlBackslash","KeyJ","KeyK","KeyL","KeyM","KeyMeta","KeyMetaLeft","KeyMetaRight","KeyMinus","KeyN","KeyNumLock","KeyNumpad0","KeyNumpad1","KeyNumpad2","KeyNumpad3","KeyNumpad4","KeyNumpad5","KeyNumpad6","KeyNumpad7","KeyNumpad8","KeyNumpad9","KeyNumpadAdd","KeyNumpadDecimal","KeyNumpadDivide","KeyNumpadEnter","KeyNumpadEqual","KeyNumpadMultiply","KeyNumpadSubtract","KeyO","KeyP","KeyPageDown","KeyPageUp","KeyPause","KeyPeriod","KeyPrintScreen","KeyQ","KeyQuote","KeyR","KeyS","KeyScrollLock","KeySemicolon","KeyShift","KeyShiftLeft","KeyShiftRight","KeySlash","KeySpace","KeyT","KeyTab","KeyU","KeyV","KeyW","KeyX","KeyY","KeyZ"]
 ```
+
 
 ---
 
@@ -301,14 +319,16 @@ Example output:
 
 List all available mouse button names.
 
+
 ```bash
 autoebiten mouse_buttons
 ```
 
-Example output:
-```text
+Output:
+```
 ["MouseButton0","MouseButton1","MouseButton2","MouseButton3","MouseButton4","MouseButtonLeft","MouseButtonMiddle","MouseButtonRight"]
 ```
+
 
 ---
 
@@ -316,14 +336,16 @@ Example output:
 
 Get injected mouse cursor position.
 
+
 ```bash
 autoebiten get_mouse_position
 ```
 
-Example output:
-```text
+Output:
+```
 OK: mouse position: (0, 0)
 ```
+
 
 ---
 
@@ -331,14 +353,16 @@ OK: mouse position: (0, 0)
 
 Get injected wheel position.
 
+
 ```bash
 autoebiten get_wheel_position
 ```
 
-Example output:
-```text
+Output:
+```
 OK: wheel position: (0.00, 0.00)
 ```
+
 
 ---
 
@@ -346,11 +370,12 @@ OK: wheel position: (0.00, 0.00)
 
 Output JSON Schema for script files.
 
+
 ```bash
 autoebiten schema
 ```
 
-Example output:
+Output:
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -685,6 +710,7 @@ Example output:
 }
 ```
 
+
 ---
 
 ## Custom Commands
@@ -693,14 +719,16 @@ Example output:
 
 List registered custom commands.
 
+
 ```bash
 autoebiten list_custom
 ```
 
-Example output:
-```text
+Output:
+```
 ["getPlayerInfo","heal","damage","echo","deferred"]
 ```
+
 
 ---
 
@@ -720,14 +748,16 @@ autoebiten custom <Name> [--request <Data>]
 | --no-record | Skip recording |
 
 **Example:**
+
 ```bash
-autoebiten custom getPlayerInfo
+autoebiten custom --name getPlayerInfo
 ```
 
-Example output:
-```text
+Output:
+```
 OK: Health: 100, Mana: 50
 ```
+
 
 ---
 
@@ -797,14 +827,16 @@ autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout
 
 Clear the recording file for current game.
 
+
 ```bash
 autoebiten clear_recording
 ```
 
-Example output:
-```text
+Output:
+```
 OK: recording cleared
 ```
+
 
 ---
 
@@ -823,11 +855,24 @@ autoebiten replay [--speed N] [--dump <Path>]
 | --dump, -d | Dump script to file instead of executing |
 
 **Example:**
+
 ```bash
-autoebiten replay --dump /tmp/replay_script.json
+autoebiten replay --dump /tmp/replay.json
 ```
 
-Example output:
+Output:
 ```json
-OK: script dumped to /tmp/replay_script.json
+Error: no recording found for game
+Usage:
+  autoebiten replay [flags]
+
+Flags:
+  -d, --dump string   Dump script to file instead of executing
+  -h, --help          help for replay
+  -s, --speed float   Speed multiplier (default 1.0) (default 1)
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no recording found for game
 ```

@@ -1,11 +1,5 @@
 package docgen
 
-// GameSession represents a running game instance for command execution.
-// This type will be fully implemented in a later task.
-type GameSession struct {
-	// Placeholder - will be expanded in Task 4
-}
-
 // Context holds template execution state.
 type Context struct {
 	GameSession *GameSession
@@ -28,7 +22,10 @@ func (c *Context) AddOutput(output string) {
 	c.outputs = append(c.outputs, output)
 }
 
-// GetOutputs returns all captured outputs.
+// GetOutputs returns a copy of all captured outputs.
 func (c *Context) GetOutputs() []string {
-	return c.outputs
+	// Return a copy to prevent callers from modifying internal state
+	result := make([]string, len(c.outputs))
+	copy(result, c.outputs)
+	return result
 }

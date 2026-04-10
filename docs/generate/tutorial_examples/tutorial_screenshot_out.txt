@@ -1,1 +1,0 @@
-OK: screenshot saved to /Users/s3cy/Desktop/go/autoebiten/test.png
