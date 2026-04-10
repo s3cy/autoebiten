@@ -5,6 +5,8 @@
 
 ---
 
+{{ config "examples/custom_commands" }}
+
 ## Global Flags
 
 These flags apply to all commands:
@@ -112,13 +114,17 @@ autoebiten input --key <KeyName> --action <Action> [--duration_ticks N]
 - `release` - Release a held key
 - `hold` - Press and hold for duration_ticks, then auto-release
 
-**Examples:**
+**Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_input_press.sh"}}
+autoebiten input --key KeyH --action press
 ```
 
-Example output:
-{{output "commands_examples/cmd_input_press_out.txt" "text"}}
+Output:
+```
+{{ command "input" (dict "key" "KeyH" "action" "press") }}
+```
+{{ end_game }}
 
 ---
 
@@ -148,12 +154,16 @@ autoebiten mouse --action <Action> [-x N] [-y N] [--button <ButtonName>]
 - `hold` - Press and hold for duration_ticks, then auto-release (default when --button is set)
 
 **Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_mouse_position.sh"}}
+autoebiten mouse --action position -x 100 -y 200
 ```
 
-Example output:
-{{output "commands_examples/cmd_mouse_position_out.txt" "text"}}
+Output:
+```
+{{ command "mouse" (dict "action" "position" "x" 100 "y" 200) }}
+```
+{{ end_game }}
 
 ---
 
@@ -174,12 +184,16 @@ autoebiten wheel -x <X> -y <Y>
 | --no-record | Skip recording |
 
 **Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_wheel.sh"}}
+autoebiten wheel -x 0 -y -3
 ```
 
-Example output:
-{{output "commands_examples/cmd_wheel_out.txt" "text"}}
+Output:
+```
+{{ command "wheel" (dict "x" 0 "y" -3) }}
+```
+{{ end_game }}
 
 ---
 
@@ -202,12 +216,16 @@ autoebiten screenshot [--output <Path>] [--base64]
 | --no-record | Skip recording |
 
 **Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_screenshot.sh"}}
+autoebiten screenshot
 ```
 
-Example output:
-{{output "commands_examples/cmd_screenshot_out.txt" "text"}}
+Output:
+```
+{{ command "screenshot" }}
+```
+{{ end_game }}
 
 ---
 
@@ -229,12 +247,16 @@ autoebiten run --inline '<JSON>'
 | --inline | Inline JSON string |
 
 **Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_run_inline.sh"}}
+autoebiten run --inline '{"version":"1.0","commands":[{"input":{"action":"press","key":"KeySpace"}}]}'
 ```
 
-Example output:
-{{output "commands_examples/cmd_run_inline_out.txt" "text"}}
+Output:
+```
+{{ command "run" (dict "inline" "{\"version\":\"1.0\",\"commands\":[{\"input\":{\"action\":\"press\",\"key\":\"KeySpace\"}}]}") }}
+```
+{{ end_game }}
 
 ---
 
@@ -244,12 +266,16 @@ Example output:
 
 Check if game is running and responsive.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_ping.sh"}}
+autoebiten ping
 ```
 
-Example output:
-{{output "commands_examples/cmd_ping_out.txt" "text"}}
+Output:
+```
+{{ command "ping" }}
+```
+{{ end_game }}
 
 ---
 
@@ -257,12 +283,16 @@ Example output:
 
 Print CLI and game library versions.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_version.sh"}}
+autoebiten version
 ```
 
-Example output:
-{{output "commands_examples/cmd_version_out.txt" "text"}}
+Output:
+```
+{{ command "version" }}
+```
+{{ end_game }}
 
 ---
 
@@ -270,12 +300,16 @@ Example output:
 
 List all available key names.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_keys.sh"}}
+autoebiten keys
 ```
 
-Example output:
-{{output "commands_examples/cmd_keys_out.txt" "text"}}
+Output:
+```
+{{ command "keys" }}
+```
+{{ end_game }}
 
 ---
 
@@ -283,12 +317,16 @@ Example output:
 
 List all available mouse button names.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_mouse_buttons.sh"}}
+autoebiten mouse_buttons
 ```
 
-Example output:
-{{output "commands_examples/cmd_mouse_buttons_out.txt" "text"}}
+Output:
+```
+{{ command "mouse_buttons" }}
+```
+{{ end_game }}
 
 ---
 
@@ -296,12 +334,16 @@ Example output:
 
 Get injected mouse cursor position.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_get_mouse_position.sh"}}
+autoebiten get_mouse_position
 ```
 
-Example output:
-{{output "commands_examples/cmd_get_mouse_position_out.txt" "text"}}
+Output:
+```
+{{ command "get_mouse_position" }}
+```
+{{ end_game }}
 
 ---
 
@@ -309,12 +351,16 @@ Example output:
 
 Get injected wheel position.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_get_wheel_position.sh"}}
+autoebiten get_wheel_position
 ```
 
-Example output:
-{{output "commands_examples/cmd_get_wheel_position_out.txt" "text"}}
+Output:
+```
+{{ command "get_wheel_position" }}
+```
+{{ end_game }}
 
 ---
 
@@ -322,12 +368,16 @@ Example output:
 
 Output JSON Schema for script files.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_schema.sh"}}
+autoebiten schema
 ```
 
-Example output:
-{{output "commands_examples/cmd_schema_out.txt" "json"}}
+Output:
+```json
+{{ command "schema" }}
+```
+{{ end_game }}
 
 ---
 
@@ -337,12 +387,16 @@ Example output:
 
 List registered custom commands.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_list_custom.sh"}}
+autoebiten list_custom
 ```
 
-Example output:
-{{output "commands_examples/cmd_list_custom_out.txt" "text"}}
+Output:
+```
+{{ command "list_custom" }}
+```
+{{ end_game }}
 
 ---
 
@@ -362,12 +416,16 @@ autoebiten custom <Name> [--request <Data>]
 | --no-record | Skip recording |
 
 **Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_custom_getplayerinfo.sh"}}
+autoebiten custom --name getPlayerInfo
 ```
 
-Example output:
-{{output "commands_examples/cmd_custom_getplayerinfo_out.txt" "text"}}
+Output:
+```
+{{ command "custom" (dict "name" "getPlayerInfo") }}
+```
+{{ end_game }}
 
 ---
 
@@ -437,12 +495,16 @@ autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout
 
 Clear the recording file for current game.
 
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_clear_recording.sh"}}
+autoebiten clear_recording
 ```
 
-Example output:
-{{output "commands_examples/cmd_clear_recording_out.txt" "text"}}
+Output:
+```
+{{ command "clear_recording" }}
+```
+{{ end_game }}
 
 ---
 
@@ -461,9 +523,13 @@ autoebiten replay [--speed N] [--dump <Path>]
 | --dump, -d | Dump script to file instead of executing |
 
 **Example:**
+{{ launch_game }}
 ```bash
-{{command "commands_examples/cmd_replay_dump.sh"}}
+autoebiten replay --dump /tmp/replay.json
 ```
 
-Example output:
-{{output "commands_examples/cmd_replay_dump_out.txt" "json"}}
+Output:
+```json
+{{ command "replay" (dict "dump" "/tmp/replay.json") }}
+```
+{{ end_game }}

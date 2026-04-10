@@ -335,6 +335,31 @@ func TestCommandFuncWithFlags(t *testing.T) {
 	assert.Contains(t, err.Error(), "no active game session")
 }
 
+func TestConfigFuncWithMapBasedNormalizeRules(t *testing.T) {
+	// Reset context
+	globalContext = NewContext()
+
+	fm := FuncMap()
+	configFunc := fm["config"].(func(string, ...map[string]any) (string, error))
+
+	// Call with map-based normalize rules (from template dict/list)
+	rules := map[string]any{
+		"rules": []map[string]any{
+			{"Pattern": "\\d+", "Replace": "N"},
+			{"Pattern": "PID=\\d+", "Replace": "PID=<PID>"},
+		},
+	}
+	result, err := configFunc("/tmp/game", rules)
+	require.NoError(t, err)
+	assert.Equal(t, "", result)
+	assert.NotNil(t, globalContext.Config)
+	assert.Len(t, globalContext.Config.Normalize, 2)
+	assert.Equal(t, "\\d+", globalContext.Config.Normalize[0].Pattern)
+	assert.Equal(t, "N", globalContext.Config.Normalize[0].Replace)
+	assert.Equal(t, "PID=\\d+", globalContext.Config.Normalize[1].Pattern)
+	assert.Equal(t, "PID=<PID>", globalContext.Config.Normalize[1].Replace)
+}
+
 func TestEndGameFuncClearsSession(t *testing.T) {
 	// Reset context
 	globalContext = NewContext()

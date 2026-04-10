@@ -1,1 +1,0 @@
-["MouseButton0","MouseButton1","MouseButton2","MouseButton3","MouseButton4","MouseButtonLeft","MouseButtonMiddle","MouseButtonRight"]

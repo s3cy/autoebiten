@@ -64,8 +64,8 @@ func processTemplate(tmplPath string) {
 }
 
 func outputPath(tmplPath string) string {
-	// docs/generate/commands.md.gotmpl -> docs/commands.md
+	// docs/generate/commands.md.tmpl -> docs/commands.md
 	base := filepath.Base(tmplPath)
-	name := strings.TrimSuffix(base, ".gotmpl")
-	return filepath.Join("docs", name)
+	name := strings.TrimSuffix(base, ".md.tmpl")
+	return filepath.Join("docs", name+".md")
 }

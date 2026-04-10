@@ -1,1 +1,0 @@
-OK: mouse hold at (320, 240)
