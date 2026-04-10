@@ -317,17 +317,39 @@ autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
 **CLI Usage:**
 
 
-Check if custom commands are available:
 
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/custom_commands
+go build -o custom_demo
+autoebiten launch -- ./custom_demo &
 ```
-["deferred","getPlayerInfo","heal","damage","echo"]
+
+Check if custom commands are available:
+```bash
+autoebiten list_custom
+```
+
+**Output:**
+```
+
+["heal","damage","echo","deferred","getPlayerInfo"]
+
 ```
 
 Execute a custom command:
-```
-OK: Healed from 100 to 100
+```bash
+autoebiten custom --name heal
 ```
 
+**Output:**
+```
+
+OK: Healed from 100 to 100
+
+```
 
 ---
 
@@ -409,22 +431,38 @@ Use the `state` command to query exported state:
 
 
 
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/state_exporter/cmd
+go build -o state_demo
+autoebiten launch -- ./state_demo &
+```
+
+Query player health:
 ```bash
 autoebiten state --name gamestate --path Player.Health
 ```
 
-```
-OK: 100
+**Output:**
 ```
 
+OK: 100
+
+```
+
+Query enemy name:
 ```bash
 autoebiten state --name gamestate --path Enemies.0.Name
 ```
 
-```
-OK: "Goblin"
+**Output:**
 ```
 
+OK: "Goblin"
+
+```
 
 ---
 
@@ -432,12 +470,21 @@ OK: "Goblin"
 
 After integrating autoebiten into your game, verify the connection:
 
+**Runnable Example:**
+
+```bash
+# Build and run your game
+go build -o ./mygame
+autoebiten launch -- ./mygame &
+```
 
 ```bash
 autoebiten ping
 ```
 
-Output:
+**Output:**
 ```
+
 OK: game is running
+
 ```

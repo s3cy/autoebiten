@@ -473,7 +473,6 @@ assert.Equal(t, 10.0, x)
 
 **Goal:** Verify game behavior.
 
-
 ```go
 // Using testify
 func TestPlayerHealth(t *testing.T) {
@@ -495,7 +494,6 @@ func TestPlayerHealth(t *testing.T) {
     assert.Less(t, health.(float64), initial)
 }
 ```
-
 
 ---
 
