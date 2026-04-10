@@ -354,6 +354,7 @@ func TestPlayerTakesDamage(t *testing.T) {
 - **CLI Commands** - Complete command reference → [docs/commands.md](docs/commands.md)
 - **Tutorial & Examples** - Step-by-step guide and examples → [docs/tutorial.md](docs/tutorial.md)
 - **Game Testing** - Write automated tests → [docs/testkit.md](docs/testkit.md)
+- **autoui Reference** - EbitenUI widget automation → [docs/autoui.md](docs/autoui.md)
 - **Technical Specs** - Architecture & protocol → [docs/SPEC.md](docs/SPEC.md)
 
 ## License

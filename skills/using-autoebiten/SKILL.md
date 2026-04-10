@@ -54,6 +54,12 @@ Run checks in order:
 - Looking for practical examples
 - Understanding crash diagnostics
 
+**READ references/autoui.md when:**
+- Automating EbitenUI widget trees
+- Querying widgets by coordinates, attributes, or XPath
+- Invoking widget methods (Click, SetText) without hard-coded coordinates
+- Writing tests that interact with UI widgets
+
 **READ references/testkit.md when:**
 - Choosing between Black-box (Launch) vs White-box (Mock)
 - Writing test assertions with StateQuery
@@ -109,6 +115,7 @@ For full documentation, **READ the appropriate reference file** based on your ta
 - **[Integration Guide](references/integration.md)** - Patch vs Library integration, API reference, custom commands, state exporter setup
 - **[CLI Commands](references/commands.md)** - Complete CLI command reference with all flags and options
 - **[Tutorial & Examples](references/tutorial.md)** - Step-by-step tutorial and practical examples
+- **[autoui Reference](references/autoui.md)** - EbitenUI widget automation, XPath queries, widget method invocation
 - **[Testkit Reference](references/testkit.md)** - Black-box vs White-box testing, test API, state queries, testing patterns
 
 ---
