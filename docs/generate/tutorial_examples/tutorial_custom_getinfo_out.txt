@@ -1,1 +1,1 @@
-OK: Health: 100, Mana: 50
+OK: Health: 90, Mana: 50

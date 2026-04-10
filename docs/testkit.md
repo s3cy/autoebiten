@@ -425,6 +425,14 @@ func TestGame(t *testing.T) {
 **Output:**
 ```text
 === RUN   TestPlayerMovement
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61616:13131753] [CAMetalLayer nextDrawable] returning nil because allocation failed.
 --- PASS: TestPlayerMovement (<TIME>)
 PASS
 ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>
@@ -599,14 +607,23 @@ func TestPlayerTakesDamage(t *testing.T) {
 
 ---
 
-### Combo Input Test
+### State Query: Health Verification
 
-**Scenario:** Test complex input combinations.
+**Scenario:** Query nested state via reflection.
 
-**Output:**
-```text
-=== RUN   TestComboInput
---- PASS: TestComboInput (<TIME>)
-PASS
-ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>
+```go
+func TestInventoryAccess(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    // Query array index
+    name, err := game.StateQuery("gamestate", "Inventory.0.Name")
+    require.NoError(t, err)
+    assert.Equal(t, "Sword", name)
+
+    // Query nested field
+    count, err := game.StateQuery("gamestate", "Inventory.0.Count")
+    require.NoError(t, err)
+    assert.Equal(t, 5, count)
+}
 ```

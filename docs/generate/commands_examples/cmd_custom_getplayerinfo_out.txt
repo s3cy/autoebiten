@@ -1,15 +1,1 @@
-Tip: Use 'autoebiten launch -- ./game' to capture game output between commands.
-Error: invalid response format: unexpected end of JSON input
-Usage:
-  autoebiten custom [name] [flags]
-
-Flags:
-  -h, --help             help for custom
-  -n, --name string      Custom command name
-      --no-record        Skip recording this command
-  -r, --request string   Request data to pass to the command
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: invalid response format: unexpected end of JSON input
+OK: Health: 100, Mana: 50

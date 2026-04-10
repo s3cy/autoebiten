@@ -1,0 +1,11 @@
+=== RUN   TestHealthModification
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+<TIMESTAMP> state_exporter[61752:13132549] [CAMetalLayer nextDrawable] returning nil because allocation failed.
+--- PASS: TestHealthModification (<TIME>)
+PASS
+ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>

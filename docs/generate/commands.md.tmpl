@@ -114,11 +114,7 @@ autoebiten input --key <KeyName> --action <Action> [--duration_ticks N]
 
 **Examples:**
 ```bash
-# Press space once
-autoebiten input --key KeySpace --action press
-
-# Hold W for 10 ticks (~167ms at 60 TPS)
-autoebiten input --key KeyW --action hold --duration_ticks 10
+{{command "commands_examples/cmd_input_press.sh"}}
 ```
 
 Example output:
@@ -151,19 +147,9 @@ autoebiten mouse --action <Action> [-x N] [-y N] [--button <ButtonName>]
 - `release` - Release button
 - `hold` - Press and hold for duration_ticks, then auto-release (default when --button is set)
 
-**Examples:**
+**Example:**
 ```bash
-# Move cursor
-autoebiten mouse -x 100 -y 200
-
-# Click
-autoebiten mouse --button MouseButtonLeft
-
-# Click at position
-autoebiten mouse -x 100 -y 200 --button MouseButtonLeft
-
-# Restore real mouse input
-autoebiten mouse -x 0 -y 0
+{{command "commands_examples/cmd_mouse_position.sh"}}
 ```
 
 Example output:
@@ -187,13 +173,9 @@ autoebiten wheel -x <X> -y <Y>
 | --async | Return immediately |
 | --no-record | Skip recording |
 
-**Examples:**
+**Example:**
 ```bash
-# Scroll up 3 units
-autoebiten wheel -y -3
-
-# Restore real wheel input
-autoebiten wheel -x 0 -y 0
+{{command "commands_examples/cmd_wheel.sh"}}
 ```
 
 Example output:
@@ -219,11 +201,9 @@ autoebiten screenshot [--output <Path>] [--base64]
 | --async, -a | Return immediately |
 | --no-record | Skip recording |
 
-**Examples:**
+**Example:**
 ```bash
-autoebiten screenshot
-autoebiten screenshot --output capture.png
-autoebiten screenshot --base64
+{{command "commands_examples/cmd_screenshot.sh"}}
 ```
 
 Example output:
@@ -248,13 +228,9 @@ autoebiten run --inline '<JSON>'
 | --script, -s | Path to script file |
 | --inline | Inline JSON string |
 
-**Examples:**
+**Example:**
 ```bash
-# From file
-autoebiten run --script automation.json
-
-# Inline
-autoebiten run --inline '{"version":"1.0","commands":[{"input":{"key":"KeySpace"}}]}'
+{{command "commands_examples/cmd_run_inline.sh"}}
 ```
 
 Example output:
@@ -269,7 +245,7 @@ Example output:
 Check if game is running and responsive.
 
 ```bash
-autoebiten ping
+{{command "commands_examples/cmd_ping.sh"}}
 ```
 
 Example output:
@@ -282,7 +258,7 @@ Example output:
 Print CLI and game library versions.
 
 ```bash
-autoebiten version
+{{command "commands_examples/cmd_version.sh"}}
 ```
 
 Example output:
@@ -295,7 +271,7 @@ Example output:
 List all available key names.
 
 ```bash
-autoebiten keys
+{{command "commands_examples/cmd_keys.sh"}}
 ```
 
 Example output:
@@ -308,7 +284,7 @@ Example output:
 List all available mouse button names.
 
 ```bash
-autoebiten mouse_buttons
+{{command "commands_examples/cmd_mouse_buttons.sh"}}
 ```
 
 Example output:
@@ -321,7 +297,7 @@ Example output:
 Get injected mouse cursor position.
 
 ```bash
-autoebiten get_mouse_position
+{{command "commands_examples/cmd_get_mouse_position.sh"}}
 ```
 
 Example output:
@@ -334,7 +310,7 @@ Example output:
 Get injected wheel position.
 
 ```bash
-autoebiten get_wheel_position
+{{command "commands_examples/cmd_get_wheel_position.sh"}}
 ```
 
 Example output:
@@ -347,7 +323,7 @@ Example output:
 Output JSON Schema for script files.
 
 ```bash
-autoebiten schema > autoebiten-schema.json
+{{command "commands_examples/cmd_schema.sh"}}
 ```
 
 Example output:
@@ -362,7 +338,7 @@ Example output:
 List registered custom commands.
 
 ```bash
-autoebiten list_custom
+{{command "commands_examples/cmd_list_custom.sh"}}
 ```
 
 Example output:
@@ -385,17 +361,13 @@ autoebiten custom <Name> [--request <Data>]
 | --request, -r | Request data to pass |
 | --no-record | Skip recording |
 
-**Examples:**
+**Example:**
 ```bash
-autoebiten custom getPlayerInfo
-autoebiten custom echo --request "hello"
+{{command "commands_examples/cmd_custom_getplayerinfo.sh"}}
 ```
 
-Example output for getPlayerInfo:
+Example output:
 {{output "commands_examples/cmd_custom_getplayerinfo_out.txt" "text"}}
-
-Example output for echo:
-{{output "commands_examples/cmd_custom_echo_out.txt" "text"}}
 
 ---
 
@@ -466,7 +438,7 @@ autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout
 Clear the recording file for current game.
 
 ```bash
-autoebiten clear_recording
+{{command "commands_examples/cmd_clear_recording.sh"}}
 ```
 
 Example output:
@@ -488,17 +460,10 @@ autoebiten replay [--speed N] [--dump <Path>]
 | --speed, -s | Speed multiplier (default 1.0) |
 | --dump, -d | Dump script to file instead of executing |
 
-**Examples:**
+**Example:**
 ```bash
-# Replay at normal speed
-autoebiten replay
-
-# Replay at 2x speed
-autoebiten replay --speed 2
-
-# Dump script without executing
-autoebiten replay --dump script.json
+{{command "commands_examples/cmd_replay_dump.sh"}}
 ```
 
-Example output for dump:
+Example output:
 {{output "commands_examples/cmd_replay_dump_out.txt" "json"}}

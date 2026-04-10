@@ -418,6 +418,10 @@ func persistentPreRunRootCommand(cmd *cobra.Command, args []string) error {
 	if cmd.Name() == "help" || (len(args) > 0 && args[0] == "--help") {
 		return nil
 	}
+	// If AUTOEBITEN_SOCKET is set, skip auto-detection and use that socket directly
+	if os.Getenv("AUTOEBITEN_SOCKET") != "" {
+		return nil
+	}
 	if pidFlag == 0 {
 		if err := cli.EnsureTargetPID(); err != nil {
 			return err

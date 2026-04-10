@@ -56,7 +56,7 @@ Export full widget tree as XML.
 
 **Usage:**
 ```bash
-autoebiten custom autoui.tree
+{{command "autoui_examples/autoui_tree.sh"}}
 ```
 
 **Output:**
@@ -70,8 +70,7 @@ Find widget at coordinates.
 
 **Usage:**
 ```bash
-autoebiten custom autoui.at --request "100,200"
-autoebiten custom autoui.at --request '{"x":100,"y":200}'
+{{command "autoui_examples/autoui_at.sh"}}
 ```
 
 **Output:**
@@ -87,8 +86,8 @@ Find widgets by attribute (AND logic for multiple criteria).
 
 **Usage:**
 ```bash
-autoebiten custom autoui.find --request "type=Button"
-autoebiten custom autoui.find --request '{"type":"Button","text":"Submit"}'
+{{command "autoui_examples/autoui_find_buttons.sh"}}
+{{command "autoui_examples/autoui_find_submit.sh"}}
 ```
 
 **Output (all buttons):**
@@ -109,8 +108,7 @@ XPath 1.0 query on widget tree.
 
 **Usage:**
 ```bash
-autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
-autoebiten custom autoui.xpath --request "//Button[contains(@id,'submit')]"
+{{command "autoui_examples/autoui_xpath_buttons.sh"}}
 ```
 
 **Output:**
@@ -136,8 +134,7 @@ Check if widgets matching a query exist. Returns JSON for use with `wait-for`.
 
 **Usage:**
 ```bash
-autoebiten custom autoui.exists --request "type=Button"
-autoebiten custom autoui.exists --request '{"type":"TextInput","id":"name-input"}'
+{{command "autoui_examples/autoui_exists_button.sh"}}
 ```
 
 **Output:**
@@ -153,7 +150,7 @@ Invoke method on widget.
 
 **Usage:**
 ```bash
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click","args":[]}'
+{{command "autoui_examples/autoui_call_click.sh"}}
 ```
 
 **Output:**
@@ -173,6 +170,15 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 - `func(bool)`, `func(int)`, `func(float64)`, `func(string)`
 - `func() error`, `func(bool) error`, etc.
 
+**SetText Example:**
+
+```bash
+# Set text in a TextInput widget
+autoebiten custom autoui.call --request '{"target":"id=name-input","method":"SetText","args":["Alice"]}'
+```
+
+**Why use SetText:** TextInput's `SetText(string)` method fires `ChangedEvent` for game logic. Setting the field directly would bypass events.
+
 **Error:** `{"success":false,"error":"method 'X' not found"}`
 
 ---
@@ -183,10 +189,8 @@ Add visual highlight rectangles (red, 3-second duration).
 
 **Usage:**
 ```bash
-autoebiten custom autoui.highlight --request "clear"
-autoebiten custom autoui.highlight --request "100,200"
-autoebiten custom autoui.highlight --request "type=Button"
-autoebiten custom autoui.highlight --request '{"query":"type=Button"}'
+{{command "autoui_examples/autoui_highlight_buttons.sh"}}
+{{command "autoui_examples/autoui_highlight_clear.sh"}}
 ```
 
 **Highlight widgets:**
@@ -210,7 +214,7 @@ Use autoui to find and click by widget identity:
 
 ```bash
 # NEW: Click by widget identity (resilient to layout changes)
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
+{{command "autoui_examples/autoui_call_click.sh"}}
 ```
 
 **Output:**
@@ -387,7 +391,7 @@ autoebiten custom autoui.xpath --request "//Button[@tags.0='fire']"
 
 Nested slices use multi-level indexing:
 ```xml
-<!-- [][]string{{"a","b"},{"c"}} -->
+<!-- [][]string: [["a","b"],["c"]] -->
 <Widget data.0.0="a" data.0.1="b" data.1.0="c"/>
 ```
 
@@ -548,7 +552,7 @@ game.RunCustom("autoui.highlight", "clear")
 
 ```bash
 # Step 1: See what widgets exist
-autoebiten custom autoui.tree
+{{command "autoui_examples/autoui_tree.sh"}}
 ```
 
 **Output:**
@@ -556,7 +560,7 @@ autoebiten custom autoui.tree
 
 ```bash
 # Step 2: Click Submit button
-autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Click"}'
+{{command "autoui_examples/autoui_call_click.sh"}}
 ```
 
 **Output:**
@@ -570,7 +574,7 @@ autoebiten custom autoui.call --request '{"target":"id=submit-btn","method":"Cli
 
 ```bash
 # Highlight all buttons to see positions
-autoebiten custom autoui.highlight --request "type=Button"
+{{command "autoui_examples/autoui_highlight_buttons.sh"}}
 ```
 
 **Output:**
@@ -578,7 +582,7 @@ autoebiten custom autoui.highlight --request "type=Button"
 
 ```bash
 # Check if submit button is disabled
-autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
+{{command "autoui_examples/autoui_xpath_buttons.sh"}}
 ```
 
 **Output:**
@@ -586,7 +590,7 @@ autoebiten custom autoui.xpath --request "//Button[@id='submit-btn']"
 
 ```bash
 # Clear highlights
-autoebiten custom autoui.highlight --request "clear"
+{{command "autoui_examples/autoui_highlight_clear.sh"}}
 ```
 
 **Output:**

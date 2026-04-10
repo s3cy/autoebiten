@@ -584,9 +584,23 @@ func TestPlayerTakesDamage(t *testing.T) {
 
 ---
 
-### Combo Input Test
+### State Query: Health Verification
 
-**Scenario:** Test complex input combinations.
+**Scenario:** Query nested state via reflection.
 
-**Output:**
-{{output "testkit_examples/testkit_combo_input_out.txt" "text"}}
+```go
+func TestInventoryAccess(t *testing.T) {
+    game := testkit.Launch(t, "./mygame")
+    defer game.Shutdown()
+
+    // Query array index
+    name, err := game.StateQuery("gamestate", "Inventory.0.Name")
+    require.NoError(t, err)
+    assert.Equal(t, "Sword", name)
+
+    // Query nested field
+    count, err := game.StateQuery("gamestate", "Inventory.0.Count")
+    require.NoError(t, err)
+    assert.Equal(t, 5, count)
+}
+```

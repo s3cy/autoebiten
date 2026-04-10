@@ -28,6 +28,106 @@
 
 ---
 
+### Step 2: Patch Method Setup
+
+**Goal:** Enable automation without modifying game code.
+
+**Prerequisites:**
+- Ebiten v2.9.9 compatible game
+- Git installed
+
+**Actions:**
+
+```bash
+# Clone Ebiten
+git clone https://github.com/hajimehoshi/ebiten.git /path/to/ebiten
+cd /path/to/ebiten
+git checkout v2.9.9
+
+# Apply patch (from autoebiten repo root)
+git apply /path/to/autoebiten/ebiten.patch
+go mod tidy
+```
+
+**Add to game's go.mod:**
+
+```go
+replace github.com/hajimehoshi/ebiten/v2 => /path/to/local/ebiten
+```
+
+**Build and run:**
+
+```bash
+go build ./cmd/mygame
+./mygame
+```
+
+**Expected:** Game runs normally. Automation socket created at startup.
+
+**Troubleshooting:**
+- Patch doesn't apply: Check Ebiten version matches v2.9.9
+- Import errors: Run `go mod tidy` in both repos
+
+---
+
+### Step 3: Library Method Setup
+
+**Goal:** Integrate autoebiten directly into game code.
+
+**Prerequisites:**
+- Control over game source code
+
+**Actions:**
+
+Add import:
+
+```go
+import "github.com/s3cy/autoebiten"
+```
+
+Modify Update:
+
+```go
+func (g *Game) Update() error {
+    if !autoebiten.Update() {
+        return fmt.Errorf("exit requested")
+    }
+    // Your logic here
+    return nil
+}
+```
+
+Modify Draw:
+
+```go
+func (g *Game) Draw(screen *ebiten.Image) {
+    // Your drawing here
+    autoebiten.Capture(screen) // Call at end
+}
+```
+
+Replace input calls:
+
+```go
+// Before
+if ebiten.IsKeyPressed(ebiten.KeySpace) { ... }
+
+// After (Library method)
+if autoebiten.IsKeyPressed(ebiten.KeySpace) { ... }
+```
+
+**Build modes:**
+
+```bash
+# Development (automation enabled)
+go build ./cmd/mygame
+
+# Release (no automation)
+go build -tags release ./cmd/mygame
+```
+
+---
+
 ### Step 4: Verify Connection
 
 **Goal:** Confirm CLI can communicate with game.
@@ -44,7 +144,7 @@ autoebiten launch -- ./mygame &
 ./mygame &
 
 # Check connection
-autoebiten ping
+{{command "tutorial_examples/tutorial_ping.sh"}}
 ```
 
 **Expected output:**
@@ -65,16 +165,14 @@ autoebiten ping
 **Actions:**
 
 ```bash
-# Press a key
-autoebiten input --key KeySpace --action press
+{{command "tutorial_examples/tutorial_input.sh"}}
 ```
 
 **Output:**
 {{output "tutorial_examples/tutorial_input_out.txt" "text"}}
 
 ```bash
-# Move mouse
-autoebiten mouse -x 100 -y 200
+{{command "tutorial_examples/tutorial_mouse.sh"}}
 ```
 
 **Output:**
@@ -127,7 +225,7 @@ autoebiten.Register("getPlayerInfo", func(ctx autoebiten.CommandContext) {
 **From CLI:**
 
 ```bash
-autoebiten custom getPlayerInfo
+{{command "tutorial_examples/tutorial_custom_getinfo.sh"}}
 ```
 
 **Expected output:**
@@ -166,14 +264,14 @@ func NewGame() *Game {
 
 **CLI usage:**
 ```bash
-autoebiten custom heal
+{{command "tutorial_examples/tutorial_custom_heal.sh"}}
 ```
 
 **Output:**
 {{output "tutorial_examples/tutorial_custom_heal_out.txt" "text"}}
 
 ```bash
-autoebiten custom damage
+{{command "tutorial_examples/tutorial_custom_damage.sh"}}
 ```
 
 **Output:**
@@ -253,4 +351,138 @@ autoebiten --pid 12345 input --key KeySpace
 
 # Or set socket path
 AUTOEBITEN_SOCKET=/tmp/autoebiten/autoebiten-custom.sock autoebiten ping
+```
+
+---
+
+### Library Integration
+
+**Goal:** Full integration for testing and automation.
+
+**Complete example:**
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/hajimehoshi/ebiten/v2"
+    "github.com/s3cy/autoebiten"
+)
+
+type Game struct {
+    PlayerX, PlayerY float64
+    Health           int
+}
+
+func (g *Game) Update() error {
+    // Handle automation exit
+    if !autoebiten.Update() {
+        return fmt.Errorf("exit requested")
+    }
+
+    // Use wrapped input functions
+    if autoebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+        g.PlayerX += 2
+    }
+    if autoebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+        g.PlayerX -= 2
+    }
+
+    return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+    // Your rendering code
+    // ...
+
+    // Capture for screenshots (call at end)
+    autoebiten.Capture(screen)
+}
+
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+    return 640, 480
+}
+
+func main() {
+    game := &Game{Health: 100}
+
+    // Register custom commands
+    autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
+        game.Health = min(game.Health+20, 100)
+        ctx.Respond(fmt.Sprintf("Healed to %d", game.Health))
+    })
+
+    // Register state exporter
+    autoebiten.RegisterStateExporter("gamestate", game)
+
+    ebiten.RunGame(game)
+}
+```
+
+---
+
+### Launch and Output Capture
+
+**Scenario:** Capture game output between commands.
+
+**Using launch:**
+
+```bash
+# Start with output capture
+autoebiten launch -- ./mygame
+
+# Commands show output changes
+autoebiten ping
+# OK: game is running
+
+# Output is captured between commands
+autoebiten input --key KeySpace
+# Shows any new output from game
+
+# Exit cleans up
+autoebiten exit
+```
+
+**Benefits:**
+- Captures stdout/stderr between commands
+- Shows crash diagnostics automatically
+- Maintains connection state
+
+---
+
+### Crash Diagnostic Testing
+
+**Scenario:** Test crash detection before and after RPC connection.
+
+**Example game:** `examples/crash_diagnostic/main.go`
+
+This demo game can be configured to crash at different points:
+
+```bash
+# Build the example
+cd examples/crash_diagnostic
+go build -o crash_demo
+
+# Test 1: Normal operation (no crash)
+autoebiten launch -- ./crash_demo
+autoebiten ping
+# OK: game is running
+autoebiten exit
+
+# Test 2: Crash BEFORE RPC connection
+autoebiten launch -- ./crash_demo --crash-before-rpc
+autoebiten ping
+# Error: game not connected
+# Shows crash output and diagnostics
+
+# Test 3: Crash AFTER RPC connection
+autoebiten launch -- ./crash_demo --crash-after-rpc
+autoebiten ping
+# OK: game is running
+# Wait for crash (~3 seconds)
+autoebiten ping
+# Error: game not connected
+# Shows crash output and diagnostics
 ```

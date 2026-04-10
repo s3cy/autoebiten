@@ -383,6 +383,12 @@ func (g *Game) ScrollWheel(x, y float64) error {
 	return nil
 }
 
+// SocketPath returns the path to the Unix socket used for communication.
+// This can be passed to external scripts via AUTOEBITEN_SOCKET environment variable.
+func (g *Game) SocketPath() string {
+	return g.socketPath
+}
+
 // Screenshot captures the current game screen and returns it as an image.
 func (g *Game) Screenshot() (*image.RGBA, error) {
 	if g.client == nil {

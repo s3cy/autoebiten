@@ -53,11 +53,6 @@ func detectProxyOrDirect() (*rpc.Client, bool, error) {
 		return nil, false, err
 	}
 
-	// Show tip about launch command (only once)
-	if !usingProxy {
-		fmt.Fprintln(os.Stderr, "Tip: Use 'autoebiten launch -- ./game' to capture game output between commands.")
-	}
-
 	return client, false, nil
 }
 

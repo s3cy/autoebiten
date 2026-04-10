@@ -1,14 +1,1 @@
-Error: no running game found
-Usage:
-  autoebiten custom [name] [flags]
-
-Flags:
-  -h, --help             help for custom
-  -n, --name string      Custom command name
-      --no-record        Skip recording this command
-  -r, --request string   Request data to pass to the command
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: <Button _addr="<ADDR>" disabled="false" height="40" id="submit-btn" role="primary" state="unchecked" visible="true" width="200" x="100" y="50"></Button><Button _addr="<ADDR>" disabled="false" height="40" id="cancel-btn" role="secondary" state="unchecked" visible="true" width="200" x="100" y="200"></Button>

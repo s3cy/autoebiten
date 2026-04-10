@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -66,13 +67,14 @@ func generateExamples(exampleDir string) {
 	fmt.Println("Game ready")
 
 	// Find and run all scripts
+	socketPath := game.SocketPath()
 	scripts := findScripts(exampleDir)
 	for _, script := range scripts {
 		name := strings.TrimSuffix(filepath.Base(script), ".sh")
 		outputFile := filepath.Join(exampleDir, name+"_out.txt")
 
 		fmt.Printf("Running: %s\n", script)
-		output := runScript(script)
+		output := runScript(script, socketPath)
 
 		// Normalize output
 		normalized := docgen.Normalize(output, config.Normalize)
@@ -148,17 +150,19 @@ func findScripts(dir string) []string {
 	return files
 }
 
-func runScript(script string) string {
+func runScript(script string, socketPath string) string {
 	cmd := exec.Command("bash", script)
-	output, err := cmd.Output()
-	if err != nil {
-		// Include stderr in output for debugging
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return string(exitErr.Stderr)
-		}
-		return fmt.Sprintf("ERROR: %v", err)
-	}
-	return string(output)
+	// Pass AUTOEBITEN_SOCKET so scripts can connect to the launched game
+	cmd.Env = append(os.Environ(), "AUTOEBITEN_SOCKET="+socketPath)
+
+	// Combine stdout and stderr to capture all output
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	_ = cmd.Run() // Run script, capture output regardless of exit code
+	// Return combined output (stdout + stderr) regardless of exit code
+	return stdout.String() + stderr.String()
 }
 
 func fatal(err error) {

@@ -1,1 +1,1 @@
-["autoui.exists","autoui.tree","autoui.at","autoui.find","autoui.xpath","autoui.call","autoui.highlight"]
+["heal","damage","echo","deferred","getPlayerInfo"]

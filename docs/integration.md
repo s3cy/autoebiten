@@ -318,35 +318,12 @@ autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
 
 Check if custom commands are available:
 ```json
-Error: no running game found
-Usage:
-  autoebiten list_custom [flags]
-
-Flags:
-  -h, --help   help for list_custom
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+["damage","echo","deferred","getPlayerInfo","heal"]
 ```
 
 Execute a custom command:
 ```text
-Error: no running game found
-Usage:
-  autoebiten custom [name] [flags]
-
-Flags:
-  -h, --help             help for custom
-  -n, --name string      Custom command name
-      --no-record        Skip recording this command
-  -r, --request string   Request data to pass to the command
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: Healed from 100 to 100
 ```
 
 ---
@@ -438,16 +415,11 @@ autoebiten state --name gamestate --path Enemies.0.Name
 
 After integrating autoebiten into your game, verify the connection:
 
+```bash
+autoebiten ping
+```
+
+Output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten ping [flags]
-
-Flags:
-  -h, --help   help for ping
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: game is running
 ```

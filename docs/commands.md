@@ -114,31 +114,12 @@ autoebiten input --key <KeyName> --action <Action> [--duration_ticks N]
 
 **Examples:**
 ```bash
-# Press space once
-autoebiten input --key KeySpace --action press
-
-# Hold W for 10 ticks (~167ms at 60 TPS)
-autoebiten input --key KeyW --action hold --duration_ticks 10
+autoebiten input --key KeyH --action press
 ```
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten input [flags]
-
-Flags:
-  -a, --action string        Action: press, release, or hold (default "hold")
-      --async                Async mode: return immediately without waiting for the input to be processed
-  -d, --duration_ticks int   Duration in ticks for hold action (default 6)
-  -h, --help                 help for input
-  -k, --key string           Key name (e.g., KeyA, KeySpace, KeyArrowUp)
-      --no-record            Skip recording this command
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: input press KeyH
 ```
 
 ---
@@ -168,41 +149,14 @@ autoebiten mouse --action <Action> [-x N] [-y N] [--button <ButtonName>]
 - `release` - Release button
 - `hold` - Press and hold for duration_ticks, then auto-release (default when --button is set)
 
-**Examples:**
+**Example:**
 ```bash
-# Move cursor
 autoebiten mouse -x 100 -y 200
-
-# Click
-autoebiten mouse --button MouseButtonLeft
-
-# Click at position
-autoebiten mouse -x 100 -y 200 --button MouseButtonLeft
-
-# Restore real mouse input
-autoebiten mouse -x 0 -y 0
 ```
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten mouse [flags]
-
-Flags:
-  -a, --action string        Action: position, press, release, or hold (defaults to position, or hold when --button is used)
-      --async                Async mode: return immediately without waiting for the input to be processed
-  -b, --button string        Mouse button (e.g., MouseButtonLeft, MouseButtonRight)
-  -d, --duration_ticks int   Duration in ticks for hold action (default 6)
-  -h, --help                 help for mouse
-      --no-record            Skip recording this command
-  -x, --x int                X coordinate
-  -y, --y int                Y coordinate
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: mouse position at (100, 200)
 ```
 
 ---
@@ -223,32 +177,14 @@ autoebiten wheel -x <X> -y <Y>
 | --async | Return immediately |
 | --no-record | Skip recording |
 
-**Examples:**
+**Example:**
 ```bash
-# Scroll up 3 units
-autoebiten wheel -y -3
-
-# Restore real wheel input
-autoebiten wheel -x 0 -y 0
+autoebiten wheel -x 0 -y -3
 ```
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten wheel [flags]
-
-Flags:
-      --async       Async mode: return immediately without waiting for the input to be processed
-  -h, --help        help for wheel
-      --no-record   Skip recording this command
-  -x, --x float     Horizontal scroll (negative=left, positive=right)
-  -y, --y float     Vertical scroll (negative=down, positive=up)
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: wheel moved by (0.00, -3.00)
 ```
 
 ---
@@ -271,30 +207,14 @@ autoebiten screenshot [--output <Path>] [--base64]
 | --async, -a | Return immediately |
 | --no-record | Skip recording |
 
-**Examples:**
+**Example:**
 ```bash
-autoebiten screenshot
-autoebiten screenshot --output capture.png
-autoebiten screenshot --base64
+autoebiten screenshot --output /tmp/commands_screenshot.png
 ```
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten screenshot [flags]
-
-Flags:
-  -a, --async           Async mode: return immediately without waiting for capture
-      --base64          Output screenshot as base64 string instead of saving to a file
-  -h, --help            help for screenshot
-      --no-record       Skip recording this command
-  -o, --output string   Output file path (optional)
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: screenshot saved to <PATH>.png
 ```
 
 ---
@@ -316,30 +236,15 @@ autoebiten run --inline '<JSON>'
 | --script, -s | Path to script file |
 | --inline | Inline JSON string |
 
-**Examples:**
+**Example:**
 ```bash
-# From file
-autoebiten run --script automation.json
-
-# Inline
-autoebiten run --inline '{"version":"1.0","commands":[{"input":{"key":"KeySpace"}}]}'
+autoebiten run --inline '{"version":"1.0","commands":[{"input":{"key":"KeyH","action":"press"}}]}'
 ```
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten run [flags]
-
-Flags:
-  -h, --help            help for run
-      --inline string   Inline JSON script string
-  -s, --script string   Path to script file
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: input press KeyH
+OK: executed 1 commands
 ```
 
 ---
@@ -356,17 +261,7 @@ autoebiten ping
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten ping [flags]
-
-Flags:
-  -h, --help   help for ping
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: game is running
 ```
 
 ---
@@ -381,9 +276,8 @@ autoebiten version
 
 Example output:
 ```text
-CLI version:    v0.7.1-0.20260409094100-ac392531f833
-failed to connect to socket /tmp/autoebiten/autoebiten-48340.sock: dial unix /tmp/autoebiten/autoebiten-48340.sock: connect: no such file or directory
-Game version:   not connected
+CLI version:    v0.7.1-0.20260410004918-9504a32a5cf4+dirty
+Game version:   unknown
 ```
 
 ---
@@ -398,17 +292,7 @@ autoebiten keys
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten keys [flags]
-
-Flags:
-  -h, --help   help for keys
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+["KeyA","KeyAlt","KeyAltLeft","KeyAltRight","KeyArrowDown","KeyArrowLeft","KeyArrowRight","KeyArrowUp","KeyB","KeyBackquote","KeyBackslash","KeyBackspace","KeyBracketLeft","KeyBracketRight","KeyC","KeyCapsLock","KeyComma","KeyContextMenu","KeyControl","KeyControlLeft","KeyControlRight","KeyD","KeyDelete","KeyDigit0","KeyDigit1","KeyDigit2","KeyDigit3","KeyDigit4","KeyDigit5","KeyDigit6","KeyDigit7","KeyDigit8","KeyDigit9","KeyE","KeyEnd","KeyEnter","KeyEqual","KeyEscape","KeyF","KeyF1","KeyF10","KeyF11","KeyF12","KeyF13","KeyF14","KeyF15","KeyF16","KeyF17","KeyF18","KeyF19","KeyF2","KeyF20","KeyF21","KeyF22","KeyF23","KeyF24","KeyF3","KeyF4","KeyF5","KeyF6","KeyF7","KeyF8","KeyF9","KeyG","KeyH","KeyHome","KeyI","KeyInsert","KeyIntlBackslash","KeyJ","KeyK","KeyL","KeyM","KeyMeta","KeyMetaLeft","KeyMetaRight","KeyMinus","KeyN","KeyNumLock","KeyNumpad0","KeyNumpad1","KeyNumpad2","KeyNumpad3","KeyNumpad4","KeyNumpad5","KeyNumpad6","KeyNumpad7","KeyNumpad8","KeyNumpad9","KeyNumpadAdd","KeyNumpadDecimal","KeyNumpadDivide","KeyNumpadEnter","KeyNumpadEqual","KeyNumpadMultiply","KeyNumpadSubtract","KeyO","KeyP","KeyPageDown","KeyPageUp","KeyPause","KeyPeriod","KeyPrintScreen","KeyQ","KeyQuote","KeyR","KeyS","KeyScrollLock","KeySemicolon","KeyShift","KeyShiftLeft","KeyShiftRight","KeySlash","KeySpace","KeyT","KeyTab","KeyU","KeyV","KeyW","KeyX","KeyY","KeyZ"]
 ```
 
 ---
@@ -423,17 +307,7 @@ autoebiten mouse_buttons
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten mouse_buttons [flags]
-
-Flags:
-  -h, --help   help for mouse_buttons
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+["MouseButton0","MouseButton1","MouseButton2","MouseButton3","MouseButton4","MouseButtonLeft","MouseButtonMiddle","MouseButtonRight"]
 ```
 
 ---
@@ -448,17 +322,7 @@ autoebiten get_mouse_position
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten get_mouse_position [flags]
-
-Flags:
-  -h, --help   help for get_mouse_position
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: mouse position: (0, 0)
 ```
 
 ---
@@ -473,17 +337,7 @@ autoebiten get_wheel_position
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten get_wheel_position [flags]
-
-Flags:
-  -h, --help   help for get_wheel_position
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: wheel position: (0.00, 0.00)
 ```
 
 ---
@@ -493,7 +347,7 @@ Error: no running game found
 Output JSON Schema for script files.
 
 ```bash
-autoebiten schema > autoebiten-schema.json
+autoebiten schema
 ```
 
 Example output:
@@ -845,17 +699,7 @@ autoebiten list_custom
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten list_custom [flags]
-
-Flags:
-  -h, --help   help for list_custom
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+["heal","damage","echo","deferred","getPlayerInfo"]
 ```
 
 ---
@@ -875,46 +719,14 @@ autoebiten custom <Name> [--request <Data>]
 | --request, -r | Request data to pass |
 | --no-record | Skip recording |
 
-**Examples:**
+**Example:**
 ```bash
 autoebiten custom getPlayerInfo
-autoebiten custom echo --request "hello"
 ```
 
-Example output for getPlayerInfo:
+Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten custom [name] [flags]
-
-Flags:
-  -h, --help             help for custom
-  -n, --name string      Custom command name
-      --no-record        Skip recording this command
-  -r, --request string   Request data to pass to the command
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
-```
-
-Example output for echo:
-```text
-Error: no running game found
-Usage:
-  autoebiten custom [name] [flags]
-
-Flags:
-  -h, --help             help for custom
-  -n, --name string      Custom command name
-      --no-record        Skip recording this command
-  -r, --request string   Request data to pass to the command
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: Health: 100, Mana: 50
 ```
 
 ---
@@ -991,17 +803,7 @@ autoebiten clear_recording
 
 Example output:
 ```text
-Error: no running game found
-Usage:
-  autoebiten clear_recording [flags]
-
-Flags:
-  -h, --help   help for clear_recording
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: recording cleared
 ```
 
 ---
@@ -1020,31 +822,12 @@ autoebiten replay [--speed N] [--dump <Path>]
 | --speed, -s | Speed multiplier (default 1.0) |
 | --dump, -d | Dump script to file instead of executing |
 
-**Examples:**
+**Example:**
 ```bash
-# Replay at normal speed
-autoebiten replay
-
-# Replay at 2x speed
-autoebiten replay --speed 2
-
-# Dump script without executing
-autoebiten replay --dump script.json
+autoebiten replay --dump /tmp/replay_script.json
 ```
 
-Example output for dump:
+Example output:
 ```json
-Error: no running game found
-Usage:
-  autoebiten replay [flags]
-
-Flags:
-  -d, --dump string   Dump script to file instead of executing
-  -h, --help          help for replay
-  -s, --speed float   Speed multiplier (default 1.0) (default 1)
-
-Global Flags:
-  -p, --pid int   Target game process PID (auto-detected if not specified)
-
-Error: no running game found
+OK: script dumped to /tmp/replay_script.json
 ```
