@@ -40,17 +40,18 @@ func generateExamples(exampleDir string) {
 		fatal(err)
 	}
 
-	// Build game binary
-	gameBin := filepath.Join(config.GameDir, "autoui_demo")
-	fmt.Printf("Building: %s\n", config.GameDir)
-	buildCmd := exec.Command("go", "build", "-o", "autoui_demo", ".")
+	// Build game binary - use directory name + "_demo" as binary name
+	gameBinary := filepath.Base(config.GameDir) + "_demo"
+	gameBin := filepath.Join(config.GameDir, gameBinary)
+	fmt.Printf("Building: %s (binary: %s)\n", config.GameDir, gameBinary)
+	buildCmd := exec.Command("go", "build", "-o", gameBinary, ".")
 	buildCmd.Dir = config.GameDir
 	if output, err := buildCmd.CombinedOutput(); err != nil {
 		fatal(fmt.Errorf("failed to build game: %w\n%s", err, output))
 	}
 
 	// Launch game using testkit
-	fmt.Println("Launching game...")
+	fmt.Printf("Launching game: %s\n", gameBin)
 	t := &testing.T{}
 	game := testkit.Launch(t, gameBin, testkit.WithTimeout(30*time.Second))
 

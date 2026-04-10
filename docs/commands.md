@@ -63,10 +63,11 @@ autoebiten ping
 # game exited: exit status 2
 # </proxy_error>
 # Error: game not connected
+```
 
 ---
 
-#### exit
+### exit
 
 Send exit signal to gracefully terminate the game.
 
@@ -87,9 +88,9 @@ autoebiten exit
 
 ---
 
-### Input Control
+## Input Control
 
-#### input
+### input
 
 Send keyboard input to the game.
 
@@ -120,9 +121,29 @@ autoebiten input --key KeySpace --action press
 autoebiten input --key KeyW --action hold --duration_ticks 10
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten input [flags]
+
+Flags:
+  -a, --action string        Action: press, release, or hold (default "hold")
+      --async                Async mode: return immediately without waiting for the input to be processed
+  -d, --duration_ticks int   Duration in ticks for hold action (default 6)
+  -h, --help                 help for input
+  -k, --key string           Key name (e.g., KeyA, KeySpace, KeyArrowUp)
+      --no-record            Skip recording this command
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### mouse
+### mouse
 
 Send mouse input to the game.
 
@@ -162,9 +183,31 @@ autoebiten mouse -x 100 -y 200 --button MouseButtonLeft
 autoebiten mouse -x 0 -y 0
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten mouse [flags]
+
+Flags:
+  -a, --action string        Action: position, press, release, or hold (defaults to position, or hold when --button is used)
+      --async                Async mode: return immediately without waiting for the input to be processed
+  -b, --button string        Mouse button (e.g., MouseButtonLeft, MouseButtonRight)
+  -d, --duration_ticks int   Duration in ticks for hold action (default 6)
+  -h, --help                 help for mouse
+      --no-record            Skip recording this command
+  -x, --x int                X coordinate
+  -y, --y int                Y coordinate
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### wheel
+### wheel
 
 Send scroll wheel input.
 
@@ -189,11 +232,30 @@ autoebiten wheel -y -3
 autoebiten wheel -x 0 -y 0
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten wheel [flags]
+
+Flags:
+      --async       Async mode: return immediately without waiting for the input to be processed
+  -h, --help        help for wheel
+      --no-record   Skip recording this command
+  -x, --x float     Horizontal scroll (negative=left, positive=right)
+  -y, --y float     Vertical scroll (negative=down, positive=up)
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-### Screenshot
+## Screenshot
 
-#### screenshot
+### screenshot
 
 Capture the game window.
 
@@ -204,7 +266,7 @@ autoebiten screenshot [--output <Path>] [--base64]
 **Flags:**
 | Flag | Description |
 |------|-------------|
-| --output, -o | Output file path relative to game's working directory (auto-generated if not set) |
+| --output, -o | Output file path (auto-generated if not set) |
 | --base64 | Output as base64 string instead of file |
 | --async, -a | Return immediately |
 | --no-record | Skip recording |
@@ -216,11 +278,30 @@ autoebiten screenshot --output capture.png
 autoebiten screenshot --base64
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten screenshot [flags]
+
+Flags:
+  -a, --async           Async mode: return immediately without waiting for capture
+      --base64          Output screenshot as base64 string instead of saving to a file
+  -h, --help            help for screenshot
+      --no-record       Skip recording this command
+  -o, --output string   Output file path (optional)
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-### Script Execution
+## Script Execution
 
-#### run
+### run
 
 Execute a JSON script.
 
@@ -244,11 +325,28 @@ autoebiten run --script automation.json
 autoebiten run --inline '{"version":"1.0","commands":[{"input":{"key":"KeySpace"}}]}'
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten run [flags]
+
+Flags:
+  -h, --help            help for run
+      --inline string   Inline JSON script string
+  -s, --script string   Path to script file
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-### Status and Info
+## Status and Info
 
-#### ping
+### ping
 
 Check if game is running and responsive.
 
@@ -256,9 +354,24 @@ Check if game is running and responsive.
 autoebiten ping
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten ping [flags]
+
+Flags:
+  -h, --help   help for ping
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### version
+### version
 
 Print CLI and game library versions.
 
@@ -266,9 +379,16 @@ Print CLI and game library versions.
 autoebiten version
 ```
 
+Example output:
+```text
+CLI version:    v0.7.1-0.20260409094100-ac392531f833
+failed to connect to socket /tmp/autoebiten/autoebiten-48340.sock: dial unix /tmp/autoebiten/autoebiten-48340.sock: connect: no such file or directory
+Game version:   not connected
+```
+
 ---
 
-#### keys
+### keys
 
 List all available key names.
 
@@ -276,9 +396,24 @@ List all available key names.
 autoebiten keys
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten keys [flags]
+
+Flags:
+  -h, --help   help for keys
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### mouse_buttons
+### mouse_buttons
 
 List all available mouse button names.
 
@@ -286,9 +421,24 @@ List all available mouse button names.
 autoebiten mouse_buttons
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten mouse_buttons [flags]
+
+Flags:
+  -h, --help   help for mouse_buttons
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### get_mouse_position
+### get_mouse_position
 
 Get injected mouse cursor position.
 
@@ -296,9 +446,24 @@ Get injected mouse cursor position.
 autoebiten get_mouse_position
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten get_mouse_position [flags]
+
+Flags:
+  -h, --help   help for get_mouse_position
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### get_wheel_position
+### get_wheel_position
 
 Get injected wheel position.
 
@@ -306,9 +471,24 @@ Get injected wheel position.
 autoebiten get_wheel_position
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten get_wheel_position [flags]
+
+Flags:
+  -h, --help   help for get_wheel_position
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### schema
+### schema
 
 Output JSON Schema for script files.
 
@@ -316,11 +496,346 @@ Output JSON Schema for script files.
 autoebiten schema > autoebiten-schema.json
 ```
 
+Example output:
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/s3cy/autoebiten/internal/script/script-schema",
+  "$ref": "#/$defs/ScriptSchema",
+  "$defs": {
+    "CommandSchema": {
+      "oneOf": [
+        {
+          "required": [
+            "input"
+          ],
+          "title": "input"
+        },
+        {
+          "required": [
+            "mouse"
+          ],
+          "title": "mouse"
+        },
+        {
+          "required": [
+            "wheel"
+          ],
+          "title": "wheel"
+        },
+        {
+          "required": [
+            "screenshot"
+          ],
+          "title": "screenshot"
+        },
+        {
+          "required": [
+            "delay"
+          ],
+          "title": "delay"
+        },
+        {
+          "required": [
+            "custom"
+          ],
+          "title": "custom"
+        },
+        {
+          "required": [
+            "state"
+          ],
+          "title": "state"
+        },
+        {
+          "required": [
+            "wait"
+          ],
+          "title": "wait"
+        },
+        {
+          "required": [
+            "repeat"
+          ],
+          "title": "repeat"
+        }
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/$defs/InputCmd",
+          "description": "Inject keyboard input"
+        },
+        "mouse": {
+          "$ref": "#/$defs/MouseCmd",
+          "description": "Inject mouse input"
+        },
+        "wheel": {
+          "$ref": "#/$defs/WheelCmd",
+          "description": "Inject wheel/scroll input"
+        },
+        "screenshot": {
+          "$ref": "#/$defs/ScreenshotCmd",
+          "description": "Capture game screenshot"
+        },
+        "delay": {
+          "$ref": "#/$defs/DelayCmd",
+          "description": "Pause execution for a duration"
+        },
+        "custom": {
+          "$ref": "#/$defs/CustomCmd",
+          "description": "Execute a registered custom command"
+        },
+        "state": {
+          "$ref": "#/$defs/StateCmd",
+          "description": "Query game state via registered exporter"
+        },
+        "wait": {
+          "$ref": "#/$defs/WaitCmd",
+          "description": "Wait for condition to be met"
+        },
+        "repeat": {
+          "$ref": "#/$defs/RepeatSchema",
+          "description": "Repeat a block of commands"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "title": "Command",
+      "description": "A single command to execute"
+    },
+    "CustomCmd": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the registered custom command"
+        },
+        "request": {
+          "type": "string",
+          "description": "Optional request data to pass to the custom command"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "DelayCmd": {
+      "properties": {
+        "ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Milliseconds to wait"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "InputCmd": {
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "press",
+            "release",
+            "hold"
+          ],
+          "description": "Action to perform"
+        },
+        "key": {
+          "type": "string",
+          "description": "Key name (use 'autoebiten keys' to list all)"
+        },
+        "duration_ticks": {
+          "type": "integer",
+          "description": "Duration in game ticks for hold action",
+          "default": 6
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Return immediately without waiting",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "MouseCmd": {
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "position",
+            "press",
+            "release",
+            "hold"
+          ],
+          "description": "Action to perform (default is position or hold when button is used)"
+        },
+        "x": {
+          "type": "integer",
+          "description": "X coordinate",
+          "default": 0
+        },
+        "y": {
+          "type": "integer",
+          "description": "Y coordinate",
+          "default": 0
+        },
+        "button": {
+          "type": "string",
+          "description": "Mouse button (use 'autoebiten mouse_buttons' to list all)"
+        },
+        "duration_ticks": {
+          "type": "integer",
+          "description": "Duration in game ticks for hold action",
+          "default": 6
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Return immediately without waiting",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "RepeatSchema": {
+      "properties": {
+        "times": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of times to repeat"
+        },
+        "commands": {
+          "items": {
+            "$ref": "#/$defs/CommandSchema"
+          },
+          "type": "array",
+          "description": "Commands to repeat"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ScreenshotCmd": {
+      "properties": {
+        "output": {
+          "type": "string",
+          "description": "Output file path (optional"
+        },
+        "base64": {
+          "type": "boolean",
+          "description": "Return screenshot as base64 string in the response instead of saving to a file",
+          "default": false
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Return immediately without waiting",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ScriptSchema": {
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "JSON Schema URI for this document"
+        },
+        "version": {
+          "type": "string",
+          "enum": [
+            "1.0"
+          ],
+          "description": "Script format version"
+        },
+        "commands": {
+          "items": {
+            "$ref": "#/$defs/CommandSchema"
+          },
+          "type": "array",
+          "description": "List of commands to execute in order"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "StateCmd": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "State exporter name"
+        },
+        "path": {
+          "type": "string",
+          "description": "Dot-notation path to query"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ]
+    },
+    "WaitCmd": {
+      "properties": {
+        "condition": {
+          "type": "string",
+          "description": "Condition to poll for (e.g."
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Maximum wait duration (e.g."
+        },
+        "interval": {
+          "type": "string",
+          "description": "Poll interval (default 100ms)"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Print errors during polling"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "condition",
+        "timeout"
+      ]
+    },
+    "WheelCmd": {
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "Horizontal scroll",
+          "default": 0
+        },
+        "y": {
+          "type": "number",
+          "description": "Vertical scroll",
+          "default": 0
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Return immediately without waiting",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  },
+  "title": "AutoEbiten Script",
+  "description": "JSON script format for automating Ebitengine games"
+}
+```
+
 ---
 
-### Custom Commands
+## Custom Commands
 
-#### list_custom
+### list_custom
 
 List registered custom commands.
 
@@ -328,9 +843,24 @@ List registered custom commands.
 autoebiten list_custom
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten list_custom [flags]
+
+Flags:
+  -h, --help   help for list_custom
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### custom
+### custom
 
 Execute a custom command.
 
@@ -351,11 +881,47 @@ autoebiten custom getPlayerInfo
 autoebiten custom echo --request "hello"
 ```
 
+Example output for getPlayerInfo:
+```text
+Error: no running game found
+Usage:
+  autoebiten custom [name] [flags]
+
+Flags:
+  -h, --help             help for custom
+  -n, --name string      Custom command name
+      --no-record        Skip recording this command
+  -r, --request string   Request data to pass to the command
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
+Example output for echo:
+```text
+Error: no running game found
+Usage:
+  autoebiten custom [name] [flags]
+
+Flags:
+  -h, --help             help for custom
+  -n, --name string      Custom command name
+      --no-record        Skip recording this command
+  -r, --request string   Request data to pass to the command
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-### State Queries
+## State Queries
 
-#### state
+### state
 
 Query game state via registered exporter.
 
@@ -378,7 +944,7 @@ autoebiten state --name gamestate --path Inventory.0.Name
 
 ---
 
-#### wait-for
+### wait-for
 
 Wait for a condition to be met.
 
@@ -397,38 +963,25 @@ autoebiten wait-for --condition "<Condition>" --timeout <Duration>
 
 **Condition format:**
 ```
-<type>:<name>:<path>[.<responsePath>] <operator> <value>
+<type>:<name>:<path> <operator> <value>
 ```
 
 - type: `state` or `custom`
 - name: exporter name or custom command name
 - path: dot-notation path or request string
-- responsePath: (optional) dot-notation path to extract from JSON response
 - operator: ==, !=, <, >, <=, >=
-- value: JSON value (number, string, boolean)
-
-**Response path extraction:**
-
-For custom commands returning JSON, append `.<field>` to extract a specific value. This is required when comparing against primitive values since wait-for cannot compare entire objects.
+- value: JSON value
 
 **Examples:**
 ```bash
-# State exporter with nested path
 autoebiten wait-for --condition "state:gamestate:Player.Health == 100" --timeout 10s
-
-# Custom command with response path extraction
-# Extracts "found" field from {"found":true,"count":2}
-autoebiten wait-for --condition "custom:autoui.exists:type=Dialog.found == true" --timeout 5s
-
-# Custom command with JSON request and response path
-autoebiten wait-for --condition 'custom:autoui.exists:{"type":"Button"}.count > 0' --timeout 5s
 ```
 
 ---
 
-### Recording
+## Recording
 
-#### clear_recording
+### clear_recording
 
 Clear the recording file for current game.
 
@@ -436,9 +989,24 @@ Clear the recording file for current game.
 autoebiten clear_recording
 ```
 
+Example output:
+```text
+Error: no running game found
+Usage:
+  autoebiten clear_recording [flags]
+
+Flags:
+  -h, --help   help for clear_recording
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
+```
+
 ---
 
-#### replay
+### replay
 
 Replay recorded commands.
 
@@ -462,4 +1030,21 @@ autoebiten replay --speed 2
 
 # Dump script without executing
 autoebiten replay --dump script.json
+```
+
+Example output for dump:
+```json
+Error: no running game found
+Usage:
+  autoebiten replay [flags]
+
+Flags:
+  -d, --dump string   Dump script to file instead of executing
+  -h, --help          help for replay
+  -s, --speed float   Speed multiplier (default 1.0) (default 1)
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
 ```

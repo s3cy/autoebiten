@@ -1,0 +1,22 @@
+# docs/generate/commands_examples/config.yaml
+game_dir: examples/custom_commands
+normalize:
+  # Normalize memory addresses
+  - pattern: '_addr="[^"]*"'
+    replace: '_addr="<ADDR>"'
+
+  # Normalize timestamps
+  - pattern: '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+'
+    replace: '<TIMESTAMP>'
+
+  # Normalize PIDs
+  - pattern: 'PID=\d+'
+    replace: 'PID=<PID>'
+
+  # Normalize file paths in screenshot output
+  - pattern: '/[^\s]*\.png'
+    replace: '<PATH>.png'
+
+  # Normalize tick counts in replay output (may vary slightly)
+  - pattern: '"tick":\s*\d+'
+    replace: '"tick": <TICK>'

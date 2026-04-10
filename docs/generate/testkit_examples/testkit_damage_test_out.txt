@@ -1,0 +1,4 @@
+=== RUN   TestPlayerTakesDamage
+--- PASS: TestPlayerTakesDamage (<TIME>)
+PASS
+ok  	github.com/s3cy/autoebiten/examples/testkit	<TIME>

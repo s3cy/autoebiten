@@ -1,0 +1,256 @@
+# Tutorial and Examples
+
+> Purpose: Step-by-step tutorial and practical examples for using autoebiten
+> Audience: Developers learning autoebiten through hands-on examples
+
+---
+
+## Tutorial
+
+**Decision tree:**
+1. Check your game's go.mod for `replace github.com/hajimehoshi/ebiten/v2`
+2. If found → Patch method already applied
+3. If not found → Check for `autoebiten.Update()` in code
+4. If found → Library method already integrated
+5. If neither → Choose based on needs
+
+**Patch method checklist:**
+- [ ] Clone Ebiten locally
+- [ ] Checkout v2.9.9
+- [ ] Apply `ebiten.patch`
+- [ ] Add replace directive to go.mod
+
+**Library method checklist:**
+- [ ] Import autoebiten package
+- [ ] Add `autoebiten.Update()` to Update()
+- [ ] Add `autoebiten.Capture()` to Draw()
+- [ ] Replace input calls with wrappers
+
+---
+
+### Step 4: Verify Connection
+
+**Goal:** Confirm CLI can communicate with game.
+
+**Option A: Using launch (recommended)**
+```bash
+# Start game with output capture and crash diagnostics
+autoebiten launch -- ./mygame &
+```
+
+**Option B: Running game directly**
+```bash
+# Start game in background
+./mygame &
+
+# Check connection
+autoebiten ping
+```
+
+**Expected output:**
+{{output "tutorial_examples/tutorial_ping_out.txt" "text"}}
+
+**Troubleshooting:**
+- "connection failed": Game not started or socket not created
+- "timeout waiting for RPC": Game takes longer to initialize, use `--timeout 30s`
+- "game not connected": Game crashed; check `<log_diff>` for error output
+- Multiple games running: Use `--pid` to specify
+
+---
+
+### Step 5: Basic CLI Commands
+
+**Goal:** Send simple inputs and capture screenshot.
+
+**Actions:**
+
+```bash
+# Press a key
+autoebiten input --key KeySpace --action press
+```
+
+**Output:**
+{{output "tutorial_examples/tutorial_input_out.txt" "text"}}
+
+```bash
+# Move mouse
+autoebiten mouse -x 100 -y 200
+```
+
+**Output:**
+{{output "tutorial_examples/tutorial_mouse_out.txt" "text"}}
+
+```bash
+# Click
+autoebiten mouse --button MouseButtonLeft
+
+# Take screenshot
+autoebiten screenshot --output test.png
+```
+
+---
+
+### Step 6: Understanding Ticks
+
+**Goal:** Use duration_ticks correctly.
+
+**Key concept:** 1 tick = 1 `Update()` call. Ebiten runs at 60 TPS by default.
+
+**Duration calculation:**
+- 6 ticks ≈ 100ms (default)
+- 10 ticks ≈ 167ms
+- 60 ticks ≈ 1 second
+
+**Example:**
+
+```bash
+# Hold key for 1 second
+autoebiten input --key KeyW --action hold --duration_ticks 60
+```
+
+**Note:** TPS ≠ FPS. Game can render at 120 FPS while running at 60 TPS.
+
+---
+
+### Step 7: Custom Commands Intro
+
+**Goal:** Add game-specific commands.
+
+**In game code:**
+
+```go
+autoebiten.Register("getPlayerInfo", func(ctx autoebiten.CommandContext) {
+    ctx.Respond(fmt.Sprintf("Health: %d", player.Health))
+})
+```
+
+**From CLI:**
+
+```bash
+autoebiten custom getPlayerInfo
+```
+
+**Expected output:**
+{{output "tutorial_examples/tutorial_custom_getinfo_out.txt" "text"}}
+
+---
+
+## Examples
+
+### Custom Commands
+
+**Scenario:** Add game-specific actions callable from CLI.
+
+**Code:**
+```go
+// In game initialization
+func NewGame() *Game {
+    g := &Game{
+        PlayerHealth: 100,
+    }
+
+    // Register commands
+    autoebiten.Register("heal", func(ctx autoebiten.CommandContext) {
+        g.PlayerHealth = min(g.PlayerHealth+20, 100)
+        ctx.Respond(fmt.Sprintf("Healed to %d", g.PlayerHealth))
+    })
+
+    autoebiten.Register("damage", func(ctx autoebiten.CommandContext) {
+        g.PlayerHealth = max(g.PlayerHealth-10, 0)
+        ctx.Respond(fmt.Sprintf("Health: %d", g.PlayerHealth))
+    })
+
+    return g
+}
+```
+
+**CLI usage:**
+```bash
+autoebiten custom heal
+```
+
+**Output:**
+{{output "tutorial_examples/tutorial_custom_heal_out.txt" "text"}}
+
+```bash
+autoebiten custom damage
+```
+
+**Output:**
+{{output "tutorial_examples/tutorial_custom_damage_out.txt" "text"}}
+
+---
+
+### State Exporter
+
+**Scenario:** Expose game state for testing and verification.
+
+**Code:**
+```go
+type GameState struct {
+    Player struct {
+        X      float64
+        Y      float64
+        Health int
+    }
+    Inventory []string
+}
+
+func main() {
+    game := &GameState{}
+    autoebiten.RegisterStateExporter("gamestate", game)
+
+    // ... game loop
+}
+```
+
+**CLI usage:**
+```bash
+autoebiten state --name gamestate --path Player.Health
+autoebiten state --name gamestate --path Inventory.0
+```
+
+---
+
+### Scripted Automation
+
+**Scenario:** Complex input sequences.
+
+**Script:**
+```json
+{
+  "version": "1.0",
+  "commands": [
+    {"input": {"action": "press", "key": "KeyW"}},
+    {"delay": {"ms": 100}},
+    {"repeat": {"times": 3, "commands": [
+      {"input": {"action": "press", "key": "KeyA"}},
+      {"delay": {"ms": 200}}
+    ]}},
+    {"screenshot": {"output": "final.png"}}
+  ]
+}
+```
+
+**How to run:**
+```bash
+autoebiten run --script automation.json
+```
+
+---
+
+### Multiple Game Instances
+
+**Scenario:** Control specific game when multiple are running.
+
+**Detection:**
+```bash
+# Auto-detect (fails if multiple)
+autoebiten ping
+
+# Specify PID
+autoebiten --pid 12345 input --key KeySpace
+
+# Or set socket path
+AUTOEBITEN_SOCKET=/tmp/autoebiten/autoebiten-custom.sock autoebiten ping
+```

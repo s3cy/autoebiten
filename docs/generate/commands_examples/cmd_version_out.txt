@@ -1,0 +1,2 @@
+CLI version:    v0.7.1-0.20260409094100-ac392531f833
+Game version:   unknown

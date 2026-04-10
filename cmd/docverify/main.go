@@ -28,10 +28,11 @@ func verifyExamples(exampleDir string) {
 		fatal(err)
 	}
 
-	// Build game binary
-	gameBin := filepath.Join(config.GameDir, "autoui_demo")
-	fmt.Printf("Building: %s\n", config.GameDir)
-	buildCmd := exec.Command("go", "build", "-o", "autoui_demo", ".")
+	// Build game binary - use directory name + "_demo" as binary name
+	gameBinary := filepath.Base(config.GameDir) + "_demo"
+	gameBin := filepath.Join(config.GameDir, gameBinary)
+	fmt.Printf("Building: %s (binary: %s)\n", config.GameDir, gameBinary)
+	buildCmd := exec.Command("go", "build", "-o", gameBinary, ".")
 	buildCmd.Dir = config.GameDir
 	if err := buildCmd.Run(); err != nil {
 		fatal(fmt.Errorf("failed to build game: %w", err))

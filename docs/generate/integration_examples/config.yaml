@@ -1,0 +1,23 @@
+# docs/generate/integration_examples/config.yaml
+game_dir: examples/custom_commands
+normalize:
+  # Normalize memory addresses (e.g., _addr="0x14000123456")
+  - pattern: '_addr="[^"]*"'
+    replace: '_addr="<ADDR>"'
+
+  # Normalize timestamps in game logs
+  - pattern: '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+'
+    replace: '<TIMESTAMP>'
+
+  # Normalize PIDs
+  - pattern: 'PID=\d+'
+    replace: 'PID=<PID>'
+
+  # Normalize socket paths with PIDs
+  - pattern: 'autoebiten-\d+\.sock'
+    replace: 'autoebiten-<PID>.sock'
+
+  # Normalize process IDs in error messages
+  - pattern: 'process \d+ not found'
+    replace: 'process <PID> not found'
+

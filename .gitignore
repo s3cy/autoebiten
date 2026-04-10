@@ -39,7 +39,3 @@ go.work.sum
 /autoebiten
 /docgen
 /docverify
-
-# Example binaries
-examples/*/autoui_demo
-examples/*/**/autoui_demo

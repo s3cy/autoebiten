@@ -1,0 +1,11 @@
+Error: no running game found
+Usage:
+  autoebiten list_custom [flags]
+
+Flags:
+  -h, --help   help for list_custom
+
+Global Flags:
+  -p, --pid int   Target game process PID (auto-detected if not specified)
+
+Error: no running game found
