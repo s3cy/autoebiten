@@ -423,3 +423,85 @@ func TestConvertArg_NonEmptyInterfaceNotImplemented(t *testing.T) {
 		t.Errorf("Expected 'interface not implemented' error, got: %v", err)
 	}
 }
+
+// TestInvokeMethodWithResult_ReturnValue tests capturing return values from widget methods.
+func TestInvokeMethodWithResult_ReturnValue(t *testing.T) {
+	textInput := widget.NewTextInput(
+		widget.TextInputOpts.WidgetOpts(
+			widget.WidgetOpts.MinSize(200, 30),
+		),
+	)
+	textInput.GetWidget().Rect = image.Rect(10, 10, 210, 40)
+	textInput.SetText("Hello")
+
+	info := autoui.ExtractWidgetInfo(textInput)
+
+	result, err := autoui.InvokeMethodWithResult(info.Widget, "GetText", nil)
+	if err != nil {
+		t.Errorf("InvokeMethodWithResult failed: %v", err)
+	}
+
+	if result != "Hello" {
+		t.Errorf("Expected 'Hello', got %v", result)
+	}
+}
+
+// TestInvokeMethodWithResult_EnumReturn tests capturing enum return values and converting to int64.
+func TestInvokeMethodWithResult_EnumReturn(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed:  createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+		Disabled: createTestNineSlice(100, 30, color.RGBA{150, 150, 150, 255}),
+	}
+
+	btn := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.ToggleMode(), // Enable toggle mode so State() works
+	)
+	btn.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	// SetState directly changes the WidgetState enum
+	btn.SetState(widget.WidgetChecked)
+
+	info := autoui.ExtractWidgetInfo(btn)
+
+	result, err := autoui.InvokeMethodWithResult(info.Widget, "State", nil)
+	if err != nil {
+		t.Errorf("InvokeMethodWithResult failed: %v", err)
+	}
+
+	stateInt, ok := result.(int64)
+	if !ok {
+		t.Errorf("Expected int64, got %T", result)
+	}
+	if stateInt != 1 { // WidgetChecked = 1
+		t.Errorf("Expected state 1 (checked), got %d", stateInt)
+	}
+}
+
+// TestInvokeMethodWithResult_SliceReturn tests capturing []any slice return values.
+func TestInvokeMethodWithResult_SliceReturn(t *testing.T) {
+	entries := []any{"Entry A", "Entry B", "Entry C"}
+	list := widget.NewList(
+		widget.ListOpts.Entries(entries),
+		widget.ListOpts.EntryLabelFunc(func(e any) string {
+			return e.(string)
+		}),
+	)
+	list.GetWidget().Rect = image.Rect(10, 10, 210, 200)
+
+	info := autoui.ExtractWidgetInfo(list)
+
+	result, err := autoui.InvokeMethodWithResult(info.Widget, "Entries", nil)
+	if err != nil {
+		t.Errorf("InvokeMethodWithResult failed: %v", err)
+	}
+
+	entriesResult, ok := result.([]any)
+	if !ok {
+		t.Errorf("Expected []any, got %T", result)
+	}
+	if len(entriesResult) != 3 {
+		t.Errorf("Expected 3 entries, got %d", len(entriesResult))
+	}
+}

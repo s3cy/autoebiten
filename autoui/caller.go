@@ -54,6 +54,85 @@ func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, arg
 	return nil
 }
 
+// ProxyHandler is a function that handles method invocation for specific methods.
+// Returns the result and error from the custom implementation.
+type ProxyHandler func(w widget.PreferredSizeLocateableWidget, args []any) (any, error)
+
+// GetProxyHandler returns a registered proxy handler for a method name.
+// Proxy handlers provide custom implementations for methods that can't be invoked via reflection.
+// Returns nil if no proxy handler is registered for the method.
+func GetProxyHandler(methodName string) ProxyHandler {
+	// Proxy registry will be populated in Task 5
+	return nil
+}
+
+// InvokeMethodWithResult invokes a method and returns the result.
+// Extends InvokeMethod to capture return values for getters.
+func InvokeMethodWithResult(w widget.PreferredSizeLocateableWidget, methodName string, args []any) (any, error) {
+	if w == nil {
+		return nil, fmt.Errorf("widget is nil")
+	}
+
+	// Check proxy registry first
+	if handler := GetProxyHandler(methodName); handler != nil {
+		return handler(w, args)
+	}
+
+	method := reflect.ValueOf(w).MethodByName(methodName)
+	if !method.IsValid() {
+		return nil, fmt.Errorf("method '%s' not found on widget type %T", methodName, w)
+	}
+
+	methodType := method.Type()
+
+	if !isWhitelistedSignature(methodType) {
+		return nil, fmt.Errorf("method '%s' has non-whitelisted signature %s", methodName, methodType)
+	}
+
+	expectedArgs := methodType.NumIn()
+	if len(args) != expectedArgs {
+		return nil, fmt.Errorf("method '%s' expects %d arguments, got %d", methodName, expectedArgs, len(args))
+	}
+
+	convertedArgs, err := convertArgs(args, methodType)
+	if err != nil {
+		return nil, fmt.Errorf("argument conversion failed: %w", err)
+	}
+
+	results := method.Call(convertedArgs)
+
+	// Capture return value
+	if len(results) > 0 {
+		ret := results[0]
+
+		// Check for error return
+		if errVal, ok := ret.Interface().(error); ok && errVal != nil {
+			return nil, fmt.Errorf("method '%s' returned error: %w", methodName, errVal)
+		}
+
+		// Convert enum types to underlying type for JSON serialization
+		if ret.Kind() != reflect.Interface {
+			switch ret.Kind() {
+			case reflect.Int, reflect.Int32, reflect.Int64:
+				return ret.Int(), nil
+			case reflect.Float32, reflect.Float64:
+				return ret.Float(), nil
+			case reflect.Bool:
+				return ret.Bool(), nil
+			case reflect.String:
+				return ret.String(), nil
+			case reflect.Slice:
+				return ret.Interface(), nil
+			default:
+				return ret.Interface(), nil
+			}
+		}
+		return ret.Interface(), nil
+	}
+
+	return nil, nil
+}
+
 // isWhitelistedSignature checks if a method signature is allowed for invocation.
 // Whitelisted signatures:
 // - func()
