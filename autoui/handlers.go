@@ -16,6 +16,9 @@ type CoordinateRequest struct {
 	Y int `json:"y"`
 }
 
+// radioGroupPrefix is the target prefix for RadioGroup method calls.
+const radioGroupPrefix = "radiogroup="
+
 // handleTreeCommand handles the "tree" command which returns the full widget tree as XML.
 func handleTreeCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 	return func(ctx autoebiten.CommandContext) {
@@ -181,6 +184,10 @@ type CallResponse struct {
 
 	// Error contains the error message if invocation failed.
 	Error string `json:"error,omitempty"`
+
+	// Result contains the return value from the method (if applicable).
+	// Used for getter methods like ActiveIndex, TabIndex, etc.
+	Result any `json:"result,omitempty"`
 }
 
 // ExistsResponse represents the response from the exists command.
@@ -195,6 +202,7 @@ type ExistsResponse struct {
 
 // handleCallCommand handles the "call" command which invokes a method on a widget.
 // Request format: `{"target":"query","method":"name","args":[...]}`.
+// Special target format: "radiogroup=name" for RadioGroup method calls.
 func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 	return func(ctx autoebiten.CommandContext) {
 		if ui == nil {
@@ -222,6 +230,30 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 
 		if callReq.Method == "" {
 			ctx.Respond("error: missing method name")
+			return
+		}
+
+		// Check for RadioGroup target prefix
+		if strings.HasPrefix(callReq.Target, radioGroupPrefix) {
+			name := strings.TrimPrefix(callReq.Target, radioGroupPrefix)
+			rg := GetRadioGroup(name)
+			if rg == nil {
+				ctx.Respond(fmt.Sprintf("error: RadioGroup '%s' not registered. Did you call autoui.RegisterRadioGroup?", name))
+				return
+			}
+
+			result, err := InvokeRadioGroupMethod(rg, callReq.Method, callReq.Args)
+
+			response := CallResponse{Success: err == nil}
+			if err != nil {
+				response.Error = err.Error()
+			}
+			if result != nil {
+				response.Result = result
+			}
+
+			respData, _ := json.Marshal(response)
+			ctx.Respond(string(respData))
 			return
 		}
 

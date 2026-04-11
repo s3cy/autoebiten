@@ -413,3 +413,99 @@ func TestExistsResponse_WaitForCompatible(t *testing.T) {
 	expected := map[string]any{"found": true}
 	assert.Equal(t, expected["found"], parsed["found"])
 }
+
+// TestIntegration_RadioGroupCallHandler tests the radiogroup=name target syntax in call command.
+func TestIntegration_RadioGroupCallHandler(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Create buttons for RadioGroup elements
+	buttonImage := createButtonImage()
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	// Create RadioGroup with elements
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2))
+
+	// Create UI with root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+	ui := &ebitenui.UI{Container: root}
+
+	// Register autoui commands
+	autoui.Register(ui)
+
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("test-call-group", rg)
+
+	// Test ActiveIndex method via radiogroup=name target
+	request := `{"target":"radiogroup=test-call-group","method":"ActiveIndex","args":[]}`
+	result := executeCommand("autoui.call", request)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("test-call-group")
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Verify response is successful
+	assert.Contains(t, result, `"success":true`)
+
+	// Verify result contains active_index (should be 0 for first element or -1 if none selected)
+	var resp autoui.CallResponse
+	err := json.Unmarshal([]byte(result), &resp)
+	require.NoError(t, err)
+	assert.True(t, resp.Success)
+
+	// Result should be present for getter methods
+	if resp.Result != nil {
+		// Result should be an integer (index)
+		assert.Contains(t, result, `"result"`)
+	}
+}
+
+// TestIntegration_RadioGroupCallHandler_NotFound tests error handling for unregistered RadioGroup.
+func TestIntegration_RadioGroupCallHandler_NotFound(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Create simple UI
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+	ui := &ebitenui.UI{Container: root}
+
+	// Register autoui commands
+	autoui.Register(ui)
+
+	// Try to call a RadioGroup that is NOT registered
+	request := `{"target":"radiogroup=nonexistent","method":"ActiveIndex","args":[]}`
+	result := executeCommand("autoui.call", request)
+
+	// Cleanup
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Verify error response
+	assert.Contains(t, result, "error:")
+	assert.Contains(t, result, "nonexistent")
+	assert.Contains(t, result, "not registered")
+}

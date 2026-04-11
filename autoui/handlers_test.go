@@ -149,3 +149,62 @@ func createTestImage(width, height int, c color.Color) *image.NRGBA {
 	}
 	return img
 }
+
+// mockCommandContext is a mock implementation of autoebiten.CommandContext for testing.
+type mockCommandContext struct {
+	request  string
+	response string
+}
+
+func (m *mockCommandContext) Request() string {
+	return m.request
+}
+
+func (m *mockCommandContext) Respond(response string) {
+	m.response = response
+}
+
+func (m *mockCommandContext) GetResponse() string {
+	return m.response
+}
+
+// TestCallResponse_ResultField tests that CallResponse includes Result field.
+func TestCallResponse_ResultField(t *testing.T) {
+	resp := autoui.CallResponse{
+		Success: true,
+		Result:  42,
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("Failed to marshal CallResponse: %v", err)
+	}
+
+	// Should include result field
+	var parsed map[string]interface{}
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	if parsed["success"] != true {
+		t.Errorf("Expected success=true, got %v", parsed["success"])
+	}
+	if parsed["result"] != 42.0 { // JSON numbers are float64
+		t.Errorf("Expected result=42, got %v", parsed["result"])
+	}
+}
+
+// TestCallResponse_NoResult tests CallResponse without result field.
+func TestCallResponse_NoResult(t *testing.T) {
+	resp := autoui.CallResponse{
+		Success: true,
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("Failed to marshal CallResponse: %v", err)
+	}
+
+	expected := `{"success":true}`
+	if string(data) != expected {
+		t.Errorf("Expected %s, got %s", expected, string(data))
+	}
+}
