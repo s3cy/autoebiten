@@ -14,6 +14,11 @@ type ProxyHandler func(w widget.PreferredSizeLocateableWidget, args []any) (any,
 var proxyHandlers = map[string]ProxyHandler{
 	"SelectEntryByIndex": handleSelectEntryByIndex,
 	"SelectedEntryIndex": handleSelectedEntryIndex,
+	"Tabs":               handleTabs,
+	"TabIndex":           handleTabIndex,
+	"SetTabByIndex":      handleSetTabByIndex,
+	"TabLabel":           handleTabLabel,
+	"SetTabByLabel":      handleSetTabByLabel,
 }
 
 // GetProxyHandler returns the handler for a proxy method name, or nil if not found.

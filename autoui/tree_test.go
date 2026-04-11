@@ -3,8 +3,10 @@ package autoui_test
 import (
 	"image"
 	"image/color"
+	"reflect"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/ebitenui/ebitenui"
 	ebitenuiImage "github.com/ebitenui/ebitenui/image"
@@ -452,5 +454,355 @@ func TestSnapshotTree_NilUI(t *testing.T) {
 
 	if widgets != nil {
 		t.Errorf("Expected nil for nil UI, got %d widgets", len(widgets))
+	}
+}
+
+// TestWalkTree_TabBookInjection tests that TabBookTab widgets are injected as children of TabBook.
+func TestWalkTree_TabBookInjection(t *testing.T) {
+	// Create TabBookTab instances
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Settings"))
+	tab3 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Advanced"))
+	tab3.Disabled = true // Test disabled tab
+
+	// Create TabBook and set tabs via reflection
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1, tab2, tab3})
+	setPrivateFieldOnTabBook(tb, "tab", tab1) // Set active tab
+
+	// Walk the tree
+	infoList := autoui.WalkTree(tb)
+
+	// Expected: TabBook + 3 TabBookTab = 4 widgets
+	if len(infoList) != 4 {
+		t.Fatalf("Expected 4 widgets (TabBook + 3 tabs), got %d", len(infoList))
+	}
+
+	// Verify TabBook is first
+	if infoList[0].Type != "TabBook" {
+		t.Errorf("Expected first widget to be TabBook, got %s", infoList[0].Type)
+	}
+
+	// Verify TabBookTab entries follow
+	for i, tabType := range []string{"TabBookTab", "TabBookTab", "TabBookTab"} {
+		if infoList[i+1].Type != tabType {
+			t.Errorf("Expected widget %d to be TabBookTab, got %s", i+1, infoList[i+1].Type)
+		}
+	}
+
+	// Verify tab labels via State
+	expectedLabels := []string{"General", "Settings", "Advanced"}
+	for i, expected := range expectedLabels {
+		if infoList[i+1].State["label"] != expected {
+			t.Errorf("Tab %d: expected label '%s', got '%s'", i, expected, infoList[i+1].State["label"])
+		}
+	}
+
+	// Verify disabled attribute for tab3
+	if infoList[3].Disabled != true {
+		t.Error("Expected tab3 to be disabled")
+	}
+	if infoList[3].State["disabled"] != "true" {
+		t.Error("Expected tab3 State['disabled'] to be 'true'")
+	}
+
+	// Verify disabled is false for enabled tabs
+	if infoList[1].Disabled != false {
+		t.Error("Expected tab1 to not be disabled")
+	}
+}
+
+// TestWalkTree_TabBookTabWithChildren tests that TabBookTab children are traversed.
+func TestWalkTree_TabBookTabWithChildren(t *testing.T) {
+	// Create TabBookTab with a child button
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab1.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+
+	// Add a button to the tab
+	btn := widget.NewButton()
+	btn.GetWidget().Rect = image.Rect(10, 60, 100, 90)
+	tab1.AddChild(btn)
+
+	// Create TabBook with one tab
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1})
+	setPrivateFieldOnTabBook(tb, "tab", tab1)
+
+	// Walk the tree
+	infoList := autoui.WalkTree(tb)
+
+	// Expected: TabBook + TabBookTab + Button = 3 widgets
+	if len(infoList) != 3 {
+		t.Fatalf("Expected 3 widgets (TabBook + TabBookTab + Button), got %d", len(infoList))
+	}
+
+	// Verify order: TabBook -> TabBookTab -> Button
+	expectedTypes := []string{"TabBook", "TabBookTab", "Button"}
+	for i, expected := range expectedTypes {
+		if infoList[i].Type != expected {
+			t.Errorf("Widget %d: expected type '%s', got '%s'", i, expected, infoList[i].Type)
+		}
+	}
+
+	// Verify tab label
+	if infoList[1].State["label"] != "General" {
+		t.Errorf("Expected tab label 'General', got '%s'", infoList[1].State["label"])
+	}
+}
+
+// TestWalkTree_TabBookEmpty tests empty TabBook (no tabs).
+func TestWalkTree_TabBookEmpty(t *testing.T) {
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{})
+
+	// Walk the tree
+	infoList := autoui.WalkTree(tb)
+
+	// Expected: only TabBook (no tabs to inject)
+	if len(infoList) != 1 {
+		t.Fatalf("Expected 1 widget (TabBook only), got %d", len(infoList))
+	}
+
+	if infoList[0].Type != "TabBook" {
+		t.Errorf("Expected TabBook, got %s", infoList[0].Type)
+	}
+}
+
+// TestWalkTree_TabBookNestedInContainer tests TabBook nested in a container.
+func TestWalkTree_TabBookNestedInContainer(t *testing.T) {
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	// Create TabBook with tabs
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Tab1"))
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Tab2"))
+
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(50, 50, 750, 550)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1, tab2})
+	setPrivateFieldOnTabBook(tb, "tab", tab1)
+
+	// Add TabBook to container (Note: in real usage, TabBook would be added via proper setup)
+	// For this test, we manually set parent relationship
+	root.AddChild(tb)
+
+	// Walk the tree
+	infoList := autoui.WalkTree(root)
+
+	// Expected: Container + TabBook + 2 TabBookTab = 4 widgets
+	if len(infoList) != 4 {
+		t.Fatalf("Expected 4 widgets, got %d", len(infoList))
+	}
+
+	// Verify order: Container -> TabBook -> TabBookTab -> TabBookTab
+	expectedTypes := []string{"Container", "TabBook", "TabBookTab", "TabBookTab"}
+	for i, expected := range expectedTypes {
+		if infoList[i].Type != expected {
+			t.Errorf("Widget %d: expected type '%s', got '%s'", i, expected, infoList[i].Type)
+		}
+	}
+}
+
+// setPrivateFieldOnTabBook is a test helper to set private fields on TabBook.
+func setPrivateFieldOnTabBook(tb *widget.TabBook, fieldName string, value interface{}) {
+	v := reflect.ValueOf(tb).Elem()
+	field := v.FieldByName(fieldName)
+	fieldPtr := unsafe.Pointer(field.UnsafeAddr())
+	realField := reflect.NewAt(field.Type(), fieldPtr).Elem()
+	realField.Set(reflect.ValueOf(value))
+}
+
+// TestWalkTree_RadioGroupInjection tests that registered RadioGroups are appended to tree output.
+func TestWalkTree_RadioGroupInjection(t *testing.T) {
+	// Create buttons as RadioGroup elements
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed:  createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+		Disabled: createTestNineSlice(100, 30, color.RGBA{150, 150, 150, 255}),
+	}
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	// Create RadioGroup with elements
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2))
+
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("test-group", rg)
+
+	// Create a simple root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	// Walk tree - RadioGroups should be appended
+	widgets := autoui.WalkTree(root)
+
+	// Cleanup registration
+	autoui.UnregisterRadioGroup("test-group")
+
+	// Find RadioGroup in result
+	var radioGroupInfo *autoui.WidgetInfo
+	var radioGroupIndex int
+	for i, w := range widgets {
+		if w.Type == "RadioGroup" {
+			radioGroupInfo = &widgets[i]
+			radioGroupIndex = i
+			break
+		}
+	}
+
+	if radioGroupInfo == nil {
+		t.Fatal("RadioGroup not found in tree")
+	}
+
+	// Verify RadioGroup has name attribute
+	if radioGroupInfo.State["name"] != "test-group" {
+		t.Errorf("expected RadioGroup name 'test-group', got '%s'", radioGroupInfo.State["name"])
+	}
+
+	// Verify RadioGroup elements follow (at least 2 elements)
+	// Note: elements are appended after RadioGroup entry
+	remainingWidgets := widgets[radioGroupIndex+1:]
+	if len(remainingWidgets) < 2 {
+		t.Errorf("expected at least 2 RadioGroup elements, got %d", len(remainingWidgets))
+	}
+
+	// Find element widgets and verify they have "active" state
+	var foundBtn1, foundBtn2 bool
+	for _, w := range remainingWidgets {
+		if w.Type == "Button" {
+			if w.State["text"] == "Option A" || w.Addr == autoui.ExtractWidgetInfo(btn1).Addr {
+				foundBtn1 = true
+				if w.State["active"] == "" {
+					t.Error("expected element to have 'active' state")
+				}
+			}
+			if w.State["text"] == "Option B" || w.Addr == autoui.ExtractWidgetInfo(btn2).Addr {
+				foundBtn2 = true
+				if w.State["active"] == "" {
+					t.Error("expected element to have 'active' state")
+				}
+			}
+		}
+	}
+
+	if !foundBtn1 {
+		t.Error("btn1 not found as RadioGroup element")
+	}
+	if !foundBtn2 {
+		t.Error("btn2 not found as RadioGroup element")
+	}
+}
+
+// TestWalkTree_RadioGroupEmpty tests empty RadioGroup (no elements).
+func TestWalkTree_RadioGroupEmpty(t *testing.T) {
+	// Create RadioGroup with no elements
+	rg := widget.NewRadioGroup()
+
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("empty-group", rg)
+
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+
+	// Walk tree
+	widgets := autoui.WalkTree(root)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("empty-group")
+
+	// Find RadioGroup
+	var radioGroupInfo *autoui.WidgetInfo
+	for i, w := range widgets {
+		if w.Type == "RadioGroup" {
+			radioGroupInfo = &widgets[i]
+			break
+		}
+	}
+
+	if radioGroupInfo == nil {
+		t.Fatal("RadioGroup not found in tree")
+	}
+
+	// Verify name
+	if radioGroupInfo.State["name"] != "empty-group" {
+		t.Errorf("expected name 'empty-group', got '%s'", radioGroupInfo.State["name"])
+	}
+
+	// Empty RadioGroup should have no active_index (or -1?)
+	// No elements should follow
+	if radioGroupInfo.State["active_index"] != "" {
+		t.Logf("Note: empty RadioGroup has active_index '%s'", radioGroupInfo.State["active_index"])
+	}
+}
+
+// TestWalkTree_MultipleRadioGroups tests multiple registered RadioGroups.
+func TestWalkTree_MultipleRadioGroups(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+	}
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+	}
+
+	// Create first RadioGroup
+	btn1 := widget.NewButton(widget.ButtonOpts.Image(buttonImage), widget.ButtonOpts.Text("A1", nil, buttonColor))
+	btn1.GetWidget().Rect = image.Rect(0, 0, 100, 30)
+	rg1 := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1))
+	autoui.RegisterRadioGroup("group1", rg1)
+
+	// Create second RadioGroup
+	btn2 := widget.NewButton(widget.ButtonOpts.Image(buttonImage), widget.ButtonOpts.Text("B1", nil, buttonColor))
+	btn2.GetWidget().Rect = image.Rect(0, 0, 100, 30)
+	rg2 := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn2))
+	autoui.RegisterRadioGroup("group2", rg2)
+
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	// Walk tree
+	widgets := autoui.WalkTree(root)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("group1")
+	autoui.UnregisterRadioGroup("group2")
+
+	// Find both RadioGroups
+	var foundGroup1, foundGroup2 bool
+	for _, w := range widgets {
+		if w.Type == "RadioGroup" {
+			if w.State["name"] == "group1" {
+				foundGroup1 = true
+			}
+			if w.State["name"] == "group2" {
+				foundGroup2 = true
+			}
+		}
+	}
+
+	if !foundGroup1 {
+		t.Error("group1 RadioGroup not found")
+	}
+	if !foundGroup2 {
+		t.Error("group2 RadioGroup not found")
 	}
 }

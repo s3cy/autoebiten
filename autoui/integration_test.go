@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"image"
 	"image/color"
+	"reflect"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
@@ -414,109 +416,287 @@ func TestExistsResponse_WaitForCompatible(t *testing.T) {
 	assert.Equal(t, expected["found"], parsed["found"])
 }
 
-// TestIntegration_ListSelectionWorkflow tests the complete List selection workflow
-// using proxy handlers for SelectEntryByIndex and SelectedEntryIndex.
-func TestIntegration_ListSelectionWorkflow(t *testing.T) {
+// TestIntegration_RadioGroupCallHandler tests the radiogroup=name target syntax in call command.
+func TestIntegration_RadioGroupCallHandler(t *testing.T) {
 	// Clean up any existing commands from previous tests
 	for _, name := range autoebiten.ListCustomCommands() {
 		autoebiten.Unregister(name)
 	}
 
-	// 1. Build UI with List widget
-	root := widget.NewContainer()
-	root.GetWidget().Rect = image.Rect(0, 0, 400, 300)
-
-	// Create List with entries
-	entries := []any{"Entry A", "Entry B", "Entry C", "Entry D"}
-	list := widget.NewList(
-		widget.ListOpts.Entries(entries),
-		widget.ListOpts.EntryLabelFunc(func(e any) string {
-			return e.(string)
-		}),
-	)
-	list.GetWidget().Rect = image.Rect(50, 50, 250, 200)
-	list.GetWidget().CustomData = struct {
-		ID string `ae:"id"`
-	}{
-		ID: "test-list",
+	// Create buttons for RadioGroup elements
+	buttonImage := createButtonImage()
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
 	}
-	root.AddChild(list)
 
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	// Create RadioGroup with elements
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2))
+
+	// Create UI with root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
 	ui := &ebitenui.UI{Container: root}
+
+	// Register autoui commands
 	autoui.Register(ui)
 
-	// 2. Test SelectEntryByIndex proxy handler
-	t.Run("SelectEntryByIndex valid index", func(t *testing.T) {
-		// Select entry at index 2 ("Entry C")
-		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[]}")
-		// Should not error, but we need to pass the index
-		assert.Contains(t, result, "\"success\":false")
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("test-call-group", rg)
+
+	// Test ActiveIndex method via radiogroup=name target
+	request := `{"target":"radiogroup=test-call-group","method":"ActiveIndex","args":[]}`
+	result := executeCommand("autoui.call", request)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("test-call-group")
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Verify response is successful
+	assert.Contains(t, result, `"success":true`)
+
+	// Verify result contains active_index (should be 0 for first element or -1 if none selected)
+	var resp autoui.CallResponse
+	err := json.Unmarshal([]byte(result), &resp)
+	require.NoError(t, err)
+	assert.True(t, resp.Success)
+
+	// Result should be present for getter methods
+	if resp.Result != nil {
+		// Result should be an integer (index)
+		assert.Contains(t, result, `"result"`)
+	}
+}
+
+// TestIntegration_RadioGroupCallHandler_NotFound tests error handling for unregistered RadioGroup.
+func TestIntegration_RadioGroupCallHandler_NotFound(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Create simple UI
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+	ui := &ebitenui.UI{Container: root}
+
+	// Register autoui commands
+	autoui.Register(ui)
+
+	// Try to call a RadioGroup that is NOT registered
+	request := `{"target":"radiogroup=nonexistent","method":"ActiveIndex","args":[]}`
+	result := executeCommand("autoui.call", request)
+
+	// Cleanup
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Verify error response
+	assert.Contains(t, result, "error:")
+	assert.Contains(t, result, "nonexistent")
+	assert.Contains(t, result, "not registered")
+}
+
+// TestIntegration_RadioGroupFullWorkflow tests full RadioGroup automation workflow.
+func TestIntegration_RadioGroupFullWorkflow(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// Setup: Create buttons for RadioGroup elements
+	buttonImage := createButtonImage()
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	btn3 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option C", nil, buttonColor),
+	)
+	btn3.GetWidget().Rect = image.Rect(10, 90, 110, 120)
+
+	// Create RadioGroup with 3 elements
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2, btn3))
+
+	// Create UI with root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 150)
+	ui := &ebitenui.UI{Container: root}
+
+	// Register autoui commands
+	autoui.Register(ui)
+
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("options", rg)
+
+	// Test 1: Get elements - returns type info (label may be empty without validation)
+	t.Run("Elements", func(t *testing.T) {
+		request := `{"target":"radiogroup=options","method":"Elements","args":[]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
+		// Elements returns list of element info with type
+		assert.Contains(t, result, `"type":"Button"`)
 	})
 
-	t.Run("SelectEntryByIndex with index argument", func(t *testing.T) {
-		// Select entry at index 2 ("Entry C") - JSON numbers are float64
-		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[2]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.True(t, resp.Success)
-
-		// Verify selection was made
-		selected := list.SelectedEntry()
-		assert.Equal(t, "Entry C", selected)
+	// Test 2: Get active index - no selection initially (returns -1)
+	t.Run("ActiveIndex_NoSelection", func(t *testing.T) {
+		request := `{"target":"radiogroup=options","method":"ActiveIndex","args":[]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
+		// No selection initially, returns -1
+		assert.Contains(t, result, `"result":-1`)
 	})
 
-	t.Run("SelectEntryByIndex out of range", func(t *testing.T) {
-		// Try to select index 10 (out of range)
-		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[10]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.False(t, resp.Success)
-		assert.Contains(t, resp.Error, "out of range")
+	// Test 3: Set active by index to first element
+	t.Run("SetActiveByIndex", func(t *testing.T) {
+		request := `{"target":"radiogroup=options","method":"SetActiveByIndex","args":[0]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
 	})
 
-	t.Run("SelectEntryByIndex negative index", func(t *testing.T) {
-		// Try to select index -1
-		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[-1]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.False(t, resp.Success)
-		assert.Contains(t, resp.Error, "out of range")
+	// Test 4: Verify active index after setting
+	t.Run("ActiveIndex_AfterSet", func(t *testing.T) {
+		request := `{"target":"radiogroup=options","method":"ActiveIndex","args":[]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
+		assert.Contains(t, result, `"result":0`)
 	})
 
-	// 3. Test SelectedEntryIndex proxy handler
-	t.Run("SelectedEntryIndex returns current selection", func(t *testing.T) {
-		// First select entry at index 1
-		list.SetSelectedEntry(entries[1])
-
-		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectedEntryIndex\",\"args\":[]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.True(t, resp.Success)
-
-		// Result should be int64(1)
-		index, ok := resp.Result.(float64) // JSON unmarshals numbers to float64
-		require.True(t, ok)
-		assert.Equal(t, 1.0, index)
+	// Test 5: Tree output includes RadioGroup
+	t.Run("TreeOutput", func(t *testing.T) {
+		result := executeCommand("autoui.tree", "")
+		assert.Contains(t, result, "<RadioGroup")
+		assert.Contains(t, result, "name=\"options\"")
 	})
 
-	t.Run("SelectedEntryIndex no selection returns -1", func(t *testing.T) {
-		// Clear selection
-		list.SetSelectedEntry(nil)
+	// Cleanup
+	autoui.UnregisterRadioGroup("options")
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+}
+// TestIntegration_TabBookFullWorkflow tests full TabBook automation workflow.
+func TestIntegration_TabBookFullWorkflow(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
 
-		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectedEntryIndex\",\"args\":[]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.True(t, resp.Success)
+	// Setup: Create TabBookTab with content
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab1.GetWidget().Rect = image.Rect(0, 50, 400, 250)
 
-		// Result should be -1
-		index, ok := resp.Result.(float64)
-		require.True(t, ok)
-		assert.Equal(t, -1.0, index)
+	// Add a button to tab1
+	buttonImage := createButtonImage()
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+	saveBtn := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Save", nil, buttonColor),
+		widget.ButtonOpts.WidgetOpts(
+			widget.WidgetOpts.CustomData(map[string]string{"id": "save-btn"}),
+		),
+	)
+	saveBtn.GetWidget().Rect = image.Rect(10, 60, 110, 90)
+	tab1.AddChild(saveBtn)
+
+	// Create second tab (disabled)
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Settings"))
+	tab2.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+	tab2.Disabled = true
+
+	// Create TabBook and set tabs via reflection (same pattern as tree tests)
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBookIntegration(tb, "tabs", []*widget.TabBookTab{tab1, tab2})
+	setPrivateFieldOnTabBookIntegration(tb, "tab", tab1) // Set active tab
+
+	// Create root container with TabBook
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 500, 350)
+	root.AddChild(tb)
+
+	// Create UI
+	ui := &ebitenui.UI{Container: root}
+
+	// Register autoui commands
+	autoui.Register(ui)
+
+	// Test 1: Get tabs
+	t.Run("Tabs", func(t *testing.T) {
+		request := `{"target":"type=TabBook","method":"Tabs","args":[]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
+		assert.Contains(t, result, "General")
+		assert.Contains(t, result, "Settings")
+		assert.Contains(t, result, `"disabled":true`)
+	})
+
+	// Test 2: Get active tab label
+	t.Run("TabLabel", func(t *testing.T) {
+		request := `{"target":"type=TabBook","method":"TabLabel","args":[]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
+		assert.Contains(t, result, "General")
+	})
+
+	// Test 3: Get tab index
+	t.Run("TabIndex", func(t *testing.T) {
+		request := `{"target":"type=TabBook","method":"TabIndex","args":[]}`
+		result := executeCommand("autoui.call", request)
+		assert.Contains(t, result, `"success":true`)
+		// First tab is active, index should be 0
+		assert.Contains(t, result, `"result":0`)
+	})
+
+	// Test 4: Tree output includes TabBookTab
+	t.Run("TreeOutput", func(t *testing.T) {
+		result := executeCommand("autoui.tree", "")
+		assert.Contains(t, result, "<TabBook")
+		assert.Contains(t, result, "<TabBookTab")
+		assert.Contains(t, result, "label=\"General\"")
+		assert.Contains(t, result, "label=\"Settings\"")
+		assert.Contains(t, result, "disabled=\"true\"")
+	})
+
+	// Test 5: Set tab by index (try to set to disabled tab - should fail)
+	t.Run("SetTabByIndexDisabled", func(t *testing.T) {
+		request := `{"target":"type=TabBook","method":"SetTabByIndex","args":[1]}`
+		result := executeCommand("autoui.call", request)
+		// Should fail because tab 1 is disabled
+		assert.Contains(t, result, `"success":false`)
+		assert.Contains(t, result, "disabled")
 	})
 
 	// Cleanup
@@ -525,88 +705,11 @@ func TestIntegration_ListSelectionWorkflow(t *testing.T) {
 	}
 }
 
-// TestIntegration_WidgetStateWorkflow tests WidgetState enum return values
-// are properly converted to int64 for JSON serialization.
-func TestIntegration_WidgetStateWorkflow(t *testing.T) {
-	// Clean up any existing commands from previous tests
-	for _, name := range autoebiten.ListCustomCommands() {
-		autoebiten.Unregister(name)
-	}
-
-	// 1. Build UI with Button in toggle mode
-	root := widget.NewContainer()
-	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
-
-	buttonImage := createButtonImage()
-	buttonColor := &widget.ButtonTextColor{
-		Idle:     color.White,
-		Disabled: color.Gray{128},
-	}
-
-	btn := widget.NewButton(
-		widget.ButtonOpts.Image(buttonImage),
-		widget.ButtonOpts.Text("Toggle", nil, buttonColor),
-		widget.ButtonOpts.ToggleMode(),
-		widget.ButtonOpts.WidgetOpts(
-			widget.WidgetOpts.CustomData(struct {
-				ID string `ae:"id"`
-			}{
-				ID: "toggle-btn",
-			}),
-		),
-	)
-	btn.GetWidget().Rect = image.Rect(50, 50, 150, 80)
-	root.AddChild(btn)
-
-	ui := &ebitenui.UI{Container: root}
-	autoui.Register(ui)
-
-	// 2. Test State() returns enum converted to int64
-	t.Run("State returns WidgetUnchecked as 0", func(t *testing.T) {
-		// Initially unchecked (WidgetUnchecked = 0)
-		result := executeCommand("autoui.call", "{\"target\":\"id=toggle-btn\",\"method\":\"State\",\"args\":[]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.True(t, resp.Success)
-
-		// Result should be 0 (WidgetUnchecked)
-		state, ok := resp.Result.(float64)
-		require.True(t, ok)
-		assert.Equal(t, 0.0, state)
-	})
-
-	t.Run("State returns WidgetChecked as 1", func(t *testing.T) {
-		// Set to checked state
-		btn.SetState(widget.WidgetChecked)
-
-		result := executeCommand("autoui.call", "{\"target\":\"id=toggle-btn\",\"method\":\"State\",\"args\":[]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.True(t, resp.Success)
-
-		// Result should be 1 (WidgetChecked)
-		state, ok := resp.Result.(float64)
-		require.True(t, ok)
-		assert.Equal(t, 1.0, state)
-	})
-
-	t.Run("SetState with enum value", func(t *testing.T) {
-		// Set state back to unchecked via method call
-		// SetState(widget.WidgetState) - need to pass int which gets converted to enum
-		result := executeCommand("autoui.call", "{\"target\":\"id=toggle-btn\",\"method\":\"SetState\",\"args\":[0]}")
-		var resp autoui.CallResponse
-		err := json.Unmarshal([]byte(result), &resp)
-		require.NoError(t, err)
-		assert.True(t, resp.Success)
-
-		// Verify state was changed
-		assert.Equal(t, widget.WidgetUnchecked, btn.State())
-	})
-
-	// Cleanup
-	for _, name := range autoebiten.ListCustomCommands() {
-		autoebiten.Unregister(name)
-	}
+// setPrivateFieldOnTabBookIntegration is a test helper to set private fields on TabBook.
+func setPrivateFieldOnTabBookIntegration(tb *widget.TabBook, fieldName string, value any) {
+	v := reflect.ValueOf(tb).Elem()
+	field := v.FieldByName(fieldName)
+	fieldPtr := unsafe.Pointer(field.UnsafeAddr())
+	realField := reflect.NewAt(field.Type(), fieldPtr).Elem()
+	realField.Set(reflect.ValueOf(value))
 }

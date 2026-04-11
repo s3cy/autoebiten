@@ -4,8 +4,10 @@ import (
 	"encoding/xml"
 	"image"
 	"image/color"
+	"reflect"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/s3cy/autoebiten/autoui"
@@ -583,5 +585,264 @@ func TestMarshalWidgetsXML_Empty(t *testing.T) {
 
 	if xmlData != nil {
 		t.Errorf("Expected nil for empty widgets, got: %s", xmlData)
+	}
+}
+
+// TestMarshalXML_TabBookWithTabs tests TabBook XML output with TabBookTab children.
+// TabBook should have TabBookTab as children in the XML tree.
+func TestMarshalXML_TabBookWithTabs(t *testing.T) {
+	// Create TabBook with tabs
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab1.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Settings"))
+	tab2.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+
+	tab3 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Advanced"))
+	tab3.Disabled = true
+	tab3.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBookXML(tb, "tabs", []*widget.TabBookTab{tab1, tab2, tab3})
+	setPrivateFieldOnTabBookXML(tb, "tab", tab1) // Set active tab
+
+	// Walk tree and marshal
+	infoList := autoui.WalkTree(tb)
+	xmlData, err := autoui.MarshalWidgetTreeXML(infoList)
+	if err != nil {
+		t.Fatalf("MarshalWidgetTreeXML failed: %v", err)
+	}
+
+	xmlStr := string(xmlData)
+
+	// Verify TabBook element exists
+	if !strings.Contains(xmlStr, "<TabBook") {
+		t.Error("Expected <TabBook> element")
+	}
+
+	// Verify TabBookTab elements exist as children
+	if !strings.Contains(xmlStr, "<TabBookTab") {
+		t.Error("Expected <TabBookTab> element")
+	}
+
+	// Verify tab labels appear as attributes
+	if !strings.Contains(xmlStr, "label=\"General\"") {
+		t.Error("Expected label='General' attribute")
+	}
+	if !strings.Contains(xmlStr, "label=\"Settings\"") {
+		t.Error("Expected label='Settings' attribute")
+	}
+	if !strings.Contains(xmlStr, "label=\"Advanced\"") {
+		t.Error("Expected label='Advanced' attribute")
+	}
+
+	// Verify disabled tab has disabled attribute
+	if !strings.Contains(xmlStr, "label=\"Advanced\"") {
+		t.Error("Expected disabled='true' for Advanced tab")
+	}
+
+	// Parse and verify structure
+	var node autoui.WidgetNode
+	if err := xml.Unmarshal(xmlData, &node); err != nil {
+		t.Fatalf("Failed to unmarshal XML: %v", err)
+	}
+
+	// UI should have 1 child (TabBook)
+	if len(node.Children) != 1 {
+		t.Fatalf("Expected UI to have 1 child (TabBook), got %d", len(node.Children))
+	}
+
+	tabBookNode := node.Children[0]
+	if tabBookNode.XMLName.Local != "TabBook" {
+		t.Errorf("Expected TabBook element, got %s", tabBookNode.XMLName.Local)
+	}
+
+	// TabBook should have 3 TabBookTab children
+	if len(tabBookNode.Children) != 3 {
+		t.Fatalf("Expected TabBook to have 3 TabBookTab children, got %d", len(tabBookNode.Children))
+	}
+
+	// Verify each TabBookTab has correct label
+	expectedLabels := []string{"General", "Settings", "Advanced"}
+	for i, expected := range expectedLabels {
+		tabNode := tabBookNode.Children[i]
+		if tabNode.XMLName.Local != "TabBookTab" {
+			t.Errorf("Tab %d: expected TabBookTab element, got %s", i, tabNode.XMLName.Local)
+		}
+		if tabNode.Attrs["label"] != expected {
+			t.Errorf("Tab %d: expected label='%s', got '%s'", i, expected, tabNode.Attrs["label"])
+		}
+	}
+
+	// Verify disabled state for Advanced tab
+	advancedTab := tabBookNode.Children[2]
+	if advancedTab.Attrs["disabled"] != "true" {
+		t.Errorf("Expected Advanced tab to have disabled='true', got '%s'", advancedTab.Attrs["disabled"])
+	}
+}
+
+// TestMarshalXML_TabBookTabWithNestedChildren tests TabBookTab with children appears correctly.
+func TestMarshalXML_TabBookTabWithNestedChildren(t *testing.T) {
+	// Create tab with a button
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab1.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+
+	buttonImage := &widget.ButtonImage{
+		Idle: createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+	}
+	btn := widget.NewButton(widget.ButtonOpts.Image(buttonImage))
+	btn.GetWidget().Rect = image.Rect(10, 60, 110, 90)
+	btn.GetWidget().CustomData = map[string]string{"id": "tab-button"}
+	tab1.AddChild(btn)
+
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBookXML(tb, "tabs", []*widget.TabBookTab{tab1})
+	setPrivateFieldOnTabBookXML(tb, "tab", tab1)
+
+	// Walk tree and marshal
+	infoList := autoui.WalkTree(tb)
+	xmlData, err := autoui.MarshalWidgetTreeXML(infoList)
+	if err != nil {
+		t.Fatalf("MarshalWidgetTreeXML failed: %v", err)
+	}
+
+	// Verify structure: TabBook -> TabBookTab -> Button
+	var node autoui.WidgetNode
+	if err := xml.Unmarshal(xmlData, &node); err != nil {
+		t.Fatalf("Failed to unmarshal XML: %v", err)
+	}
+
+	// Navigate: UI -> TabBook -> TabBookTab -> Button
+	tabBookNode := node.Children[0]
+	if len(tabBookNode.Children) != 1 {
+		t.Fatalf("Expected TabBook to have 1 TabBookTab, got %d", len(tabBookNode.Children))
+	}
+
+	tabNode := tabBookNode.Children[0]
+	if tabNode.XMLName.Local != "TabBookTab" {
+		t.Fatalf("Expected TabBookTab, got %s", tabNode.XMLName.Local)
+	}
+
+	// TabBookTab should have Button as child
+	if len(tabNode.Children) != 1 {
+		t.Fatalf("Expected TabBookTab to have 1 child (Button), got %d", len(tabNode.Children))
+	}
+
+	btnNode := tabNode.Children[0]
+	if btnNode.XMLName.Local != "Button" {
+		t.Errorf("Expected Button, got %s", btnNode.XMLName.Local)
+	}
+	if btnNode.Attrs["id"] != "tab-button" {
+		t.Errorf("Expected button id='tab-button', got '%s'", btnNode.Attrs["id"])
+	}
+}
+
+// setPrivateFieldOnTabBookXML is a test helper to set private fields on TabBook.
+func setPrivateFieldOnTabBookXML(tb *widget.TabBook, fieldName string, value interface{}) {
+	v := reflect.ValueOf(tb).Elem()
+	field := v.FieldByName(fieldName)
+	fieldPtr := unsafe.Pointer(field.UnsafeAddr())
+	realField := reflect.NewAt(field.Type(), fieldPtr).Elem()
+	realField.Set(reflect.ValueOf(value))
+}
+
+// TestMarshalXML_RadioGroupWithElements tests RadioGroup XML output with element children.
+// RadioGroup should appear at UI root level with elements as children.
+func TestMarshalXML_RadioGroupWithElements(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+	}
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+	}
+
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	// Create and register RadioGroup
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2))
+	autoui.RegisterRadioGroup("test-rg", rg)
+
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	// Walk tree and marshal
+	infoList := autoui.WalkTree(root)
+	xmlData, err := autoui.MarshalWidgetTreeXML(infoList)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("test-rg")
+
+	if err != nil {
+		t.Fatalf("MarshalWidgetTreeXML failed: %v", err)
+	}
+
+	xmlStr := string(xmlData)
+
+	// Verify RadioGroup element exists
+	if !strings.Contains(xmlStr, "<RadioGroup") {
+		t.Error("Expected <RadioGroup> element")
+	}
+
+	// Verify RadioGroup has name attribute
+	if !strings.Contains(xmlStr, "name=\"test-rg\"") {
+		t.Error("Expected name='test-rg' attribute on RadioGroup")
+	}
+
+	// Verify Button elements appear
+	if !strings.Contains(xmlStr, "<Button") {
+		t.Error("Expected <Button> elements as RadioGroup children")
+	}
+
+	// Parse and verify structure
+	var node autoui.WidgetNode
+	if err := xml.Unmarshal(xmlData, &node); err != nil {
+		t.Fatalf("Failed to unmarshal XML: %v", err)
+	}
+
+	// UI should have 2 children (Container + RadioGroup)
+	if len(node.Children) < 2 {
+		t.Fatalf("Expected UI to have at least 2 children (Container + RadioGroup), got %d", len(node.Children))
+	}
+
+	// Find RadioGroup node
+	var radioGroupNode *autoui.WidgetNode
+	for _, child := range node.Children {
+		if child.XMLName.Local == "RadioGroup" {
+			radioGroupNode = child
+			break
+		}
+	}
+
+	if radioGroupNode == nil {
+		t.Fatal("RadioGroup node not found in XML tree")
+	}
+
+	// RadioGroup should have 2 Button children
+	if len(radioGroupNode.Children) != 2 {
+		t.Fatalf("Expected RadioGroup to have 2 Button children, got %d", len(radioGroupNode.Children))
+	}
+
+	// Verify children are Buttons
+	for i, child := range radioGroupNode.Children {
+		if child.XMLName.Local != "Button" {
+			t.Errorf("Child %d: expected Button, got %s", i, child.XMLName.Local)
+		}
+		// Each button should have "active" attribute
+		if _, hasActive := child.Attrs["active"]; !hasActive {
+			t.Errorf("Child %d: expected 'active' attribute", i)
+		}
 	}
 }

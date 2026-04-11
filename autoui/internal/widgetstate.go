@@ -201,11 +201,10 @@ func extractListComboButtonState(lcb *widget.ListComboButton, result map[string]
 }
 
 // extractTabBookState extracts state from a TabBook widget.
-// Attributes: active_tab
+// Attributes: active_tab (label of active tab)
 func extractTabBookState(tb *widget.TabBook, result map[string]string) {
 	if tab := tb.Tab(); tab != nil {
-		// Tab label is stored in a private field, use widget type
-		result["active_tab"] = fmt.Sprintf("%T", tab)
+		result["active_tab"] = GetTabBookTabLabel(tab)
 	}
 }
 
