@@ -413,3 +413,200 @@ func TestExistsResponse_WaitForCompatible(t *testing.T) {
 	expected := map[string]any{"found": true}
 	assert.Equal(t, expected["found"], parsed["found"])
 }
+
+// TestIntegration_ListSelectionWorkflow tests the complete List selection workflow
+// using proxy handlers for SelectEntryByIndex and SelectedEntryIndex.
+func TestIntegration_ListSelectionWorkflow(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// 1. Build UI with List widget
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+
+	// Create List with entries
+	entries := []any{"Entry A", "Entry B", "Entry C", "Entry D"}
+	list := widget.NewList(
+		widget.ListOpts.Entries(entries),
+		widget.ListOpts.EntryLabelFunc(func(e any) string {
+			return e.(string)
+		}),
+	)
+	list.GetWidget().Rect = image.Rect(50, 50, 250, 200)
+	list.GetWidget().CustomData = struct {
+		ID string `ae:"id"`
+	}{
+		ID: "test-list",
+	}
+	root.AddChild(list)
+
+	ui := &ebitenui.UI{Container: root}
+	autoui.Register(ui)
+
+	// 2. Test SelectEntryByIndex proxy handler
+	t.Run("SelectEntryByIndex valid index", func(t *testing.T) {
+		// Select entry at index 2 ("Entry C")
+		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[]}")
+		// Should not error, but we need to pass the index
+		assert.Contains(t, result, "\"success\":false")
+	})
+
+	t.Run("SelectEntryByIndex with index argument", func(t *testing.T) {
+		// Select entry at index 2 ("Entry C") - JSON numbers are float64
+		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[2]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+
+		// Verify selection was made
+		selected := list.SelectedEntry()
+		assert.Equal(t, "Entry C", selected)
+	})
+
+	t.Run("SelectEntryByIndex out of range", func(t *testing.T) {
+		// Try to select index 10 (out of range)
+		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[10]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.False(t, resp.Success)
+		assert.Contains(t, resp.Error, "out of range")
+	})
+
+	t.Run("SelectEntryByIndex negative index", func(t *testing.T) {
+		// Try to select index -1
+		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectEntryByIndex\",\"args\":[-1]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.False(t, resp.Success)
+		assert.Contains(t, resp.Error, "out of range")
+	})
+
+	// 3. Test SelectedEntryIndex proxy handler
+	t.Run("SelectedEntryIndex returns current selection", func(t *testing.T) {
+		// First select entry at index 1
+		list.SetSelectedEntry(entries[1])
+
+		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectedEntryIndex\",\"args\":[]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+
+		// Result should be int64(1)
+		index, ok := resp.Result.(float64) // JSON unmarshals numbers to float64
+		require.True(t, ok)
+		assert.Equal(t, 1.0, index)
+	})
+
+	t.Run("SelectedEntryIndex no selection returns -1", func(t *testing.T) {
+		// Clear selection
+		list.SetSelectedEntry(nil)
+
+		result := executeCommand("autoui.call", "{\"target\":\"id=test-list\",\"method\":\"SelectedEntryIndex\",\"args\":[]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+
+		// Result should be -1
+		index, ok := resp.Result.(float64)
+		require.True(t, ok)
+		assert.Equal(t, -1.0, index)
+	})
+
+	// Cleanup
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+}
+
+// TestIntegration_WidgetStateWorkflow tests WidgetState enum return values
+// are properly converted to int64 for JSON serialization.
+func TestIntegration_WidgetStateWorkflow(t *testing.T) {
+	// Clean up any existing commands from previous tests
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+
+	// 1. Build UI with Button in toggle mode
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	buttonImage := createButtonImage()
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+
+	btn := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Toggle", nil, buttonColor),
+		widget.ButtonOpts.ToggleMode(),
+		widget.ButtonOpts.WidgetOpts(
+			widget.WidgetOpts.CustomData(struct {
+				ID string `ae:"id"`
+			}{
+				ID: "toggle-btn",
+			}),
+		),
+	)
+	btn.GetWidget().Rect = image.Rect(50, 50, 150, 80)
+	root.AddChild(btn)
+
+	ui := &ebitenui.UI{Container: root}
+	autoui.Register(ui)
+
+	// 2. Test State() returns enum converted to int64
+	t.Run("State returns WidgetUnchecked as 0", func(t *testing.T) {
+		// Initially unchecked (WidgetUnchecked = 0)
+		result := executeCommand("autoui.call", "{\"target\":\"id=toggle-btn\",\"method\":\"State\",\"args\":[]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+
+		// Result should be 0 (WidgetUnchecked)
+		state, ok := resp.Result.(float64)
+		require.True(t, ok)
+		assert.Equal(t, 0.0, state)
+	})
+
+	t.Run("State returns WidgetChecked as 1", func(t *testing.T) {
+		// Set to checked state
+		btn.SetState(widget.WidgetChecked)
+
+		result := executeCommand("autoui.call", "{\"target\":\"id=toggle-btn\",\"method\":\"State\",\"args\":[]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+
+		// Result should be 1 (WidgetChecked)
+		state, ok := resp.Result.(float64)
+		require.True(t, ok)
+		assert.Equal(t, 1.0, state)
+	})
+
+	t.Run("SetState with enum value", func(t *testing.T) {
+		// Set state back to unchecked via method call
+		// SetState(widget.WidgetState) - need to pass int which gets converted to enum
+		result := executeCommand("autoui.call", "{\"target\":\"id=toggle-btn\",\"method\":\"SetState\",\"args\":[0]}")
+		var resp autoui.CallResponse
+		err := json.Unmarshal([]byte(result), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+
+		// Verify state was changed
+		assert.Equal(t, widget.WidgetUnchecked, btn.State())
+	})
+
+	// Cleanup
+	for _, name := range autoebiten.ListCustomCommands() {
+		autoebiten.Unregister(name)
+	}
+}
