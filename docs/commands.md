@@ -291,7 +291,7 @@ autoebiten version
 
 Output:
 ```
-CLI version:    v0.7.1-0.20260410004918-9504a32a5cf4+dirty
+CLI version:    v0.8.1
 Game version:   unknown
 ```
 
@@ -726,7 +726,7 @@ autoebiten list_custom
 
 Output:
 ```
-["getPlayerInfo","heal","damage","echo","deferred"]
+["deferred","getPlayerInfo","heal","damage","echo"]
 ```
 
 

@@ -292,9 +292,31 @@ OK: {"success":true}
 ```
 
 **Whitelisted signatures:**
-- `func()`
-- `func(bool)`, `func(int)`, `func(float64)`, `func(string)`
-- `func() error`, `func(bool) error`, etc.
+- `func()` - void methods (Click, Press, etc.)
+- `func(bool)`, `func(int)`, `func(float64)`, `func(string)` - with basic type args
+- `func(any)` - accepts any value (flexible input)
+- `func() error`, `func(bool) error`, etc. - with error return
+- `func() any`, `func() string`, `func() int` - getter methods (return values)
+- `func() []any`, `func() []string` - slice returns (e.g., Entries)
+- `func() EnumType` - enum returns (WidgetState, Visibility)
+
+**Response format:**
+```json
+{"success":true}                    // Void method (no return)
+{"success":true,"result":"value"}   // Getter method (captures return)
+{"success":false,"error":"..."}     // Failed invocation
+```
+
+**Getter methods:** Methods that return values are now supported. The `result` field captures the return value:
+```bash
+# Get current text
+autoebiten custom autoui.call --request '{"target":"type=TextInput","method":"GetText"}'
+# Response: {"success":true,"result":"current text"}
+
+# Get widget state (enum converted to int)
+autoebiten custom autoui.call --request '{"target":"type=Button","method":"State"}'
+# Response: {"success":true,"result":1}  // WidgetStatePressed = 1
+```
 
 **SetText Example:**
 
@@ -311,6 +333,37 @@ OK: error: no widget found matching target query
 ```
 
 **Why use SetText:** TextInput's `SetText(string)` method fires `ChangedEvent` for game logic. Setting the field directly would bypass events.
+
+---
+
+### List Selection Operations
+
+Select entries in a List widget by index:
+
+**CLI Usage:**
+```bash
+# Get list entries
+autoebiten custom autoui.call --request '{"target":"type=List","method":"Entries"}'
+# Response: {"success":true,"result":["Option A","Option B","Option C"]}
+
+# Select entry by index
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
+# Response: {"success":true}
+
+# Get selected entry index
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntryIndex"}'
+# Response: {"success":true,"result":1}
+
+# Get selected entry value
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntry"}'
+# Response: {"success":true,"result":"Option B"}
+```
+
+**Available Methods:**
+- `Entries()` - Return list of entries
+- `SelectEntryByIndex(int)` - Select entry at position
+- `SelectedEntryIndex()` - Return current selection index (-1 if none)
+- `SelectedEntry()` - Return currently selected entry value
 
 **Error:** `{"success":false,"error":"method 'X' not found"}`
 
