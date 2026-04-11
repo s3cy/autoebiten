@@ -10,6 +10,7 @@ import (
 // InvokeMethod invokes a method on a widget using reflection with whitelist safety.
 // Only whitelisted method signatures are allowed for security.
 // Supported signatures: func(), func(bool), func(int), func(float64), func(string)
+// Note: For proxy methods (e.g., SelectEntryByIndex), use InvokeMethodWithResult instead.
 func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, args []any) error {
 	if w == nil {
 		return fmt.Errorf("widget is nil")
@@ -56,6 +57,13 @@ func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, arg
 
 // InvokeMethodWithResult invokes a method and returns the result.
 // Extends InvokeMethod to capture return values for getters.
+// Also handles proxy methods that bypass reflection (e.g., SelectEntryByIndex).
+//
+// Return values are converted to Go's "largest" representation for JSON compatibility:
+// - Integers (int, int32, int64, enums) → int64
+// - Floats (float32, float64) → float64
+// - bool, string, slices → unchanged
+// This ensures consistent JSON serialization when round-tripping through JSON.
 func InvokeMethodWithResult(w widget.PreferredSizeLocateableWidget, methodName string, args []any) (any, error) {
 	if w == nil {
 		return nil, fmt.Errorf("widget is nil")
@@ -99,23 +107,21 @@ func InvokeMethodWithResult(w widget.PreferredSizeLocateableWidget, methodName s
 		}
 
 		// Convert enum types to underlying type for JSON serialization
-		if ret.Kind() != reflect.Interface {
-			switch ret.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64:
-				return ret.Int(), nil
-			case reflect.Float32, reflect.Float64:
-				return ret.Float(), nil
-			case reflect.Bool:
-				return ret.Bool(), nil
-			case reflect.String:
-				return ret.String(), nil
-			case reflect.Slice:
-				return ret.Interface(), nil
-			default:
-				return ret.Interface(), nil
-			}
+		// Returns Go's "largest" representation for JSON compatibility:
+		// integers → int64, floats → float64
+		switch ret.Kind() {
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			return ret.Int(), nil
+		case reflect.Float32, reflect.Float64:
+			return ret.Float(), nil
+		case reflect.Bool:
+			return ret.Bool(), nil
+		case reflect.String:
+			return ret.String(), nil
+		default:
+			// Slice, struct, interface - return as-is
+			return ret.Interface(), nil
 		}
-		return ret.Interface(), nil
 	}
 
 	return nil, nil

@@ -257,3 +257,22 @@ func TestProxy_SelectEntryByIndex_LastEntry(t *testing.T) {
 		t.Errorf("Expected 'Third', got %v", selected)
 	}
 }
+
+// TestProxy_SelectEntryByIndex_EmptyList tests selecting from an empty list.
+func TestProxy_SelectEntryByIndex_EmptyList(t *testing.T) {
+	list := widget.NewList(
+		widget.ListOpts.Entries([]any{}), // Empty list
+		widget.ListOpts.EntryLabelFunc(func(e any) string { return e.(string) }),
+	)
+	list.GetWidget().Rect = image.Rect(10, 10, 210, 200)
+
+	info := autoui.ExtractWidgetInfo(list)
+
+	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(0)})
+	if err == nil {
+		t.Error("Expected error for empty list")
+	}
+	if !strings.Contains(err.Error(), "has no entries") {
+		t.Errorf("Expected 'has no entries' error, got: %v", err)
+	}
+}

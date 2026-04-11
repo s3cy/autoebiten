@@ -10,6 +10,7 @@ import (
 type ProxyHandler func(w widget.PreferredSizeLocateableWidget, args []any) (any, error)
 
 // proxyHandlers maps proxy method names to their handlers.
+// This is a read-only registry after initialization - safe for concurrent access.
 var proxyHandlers = map[string]ProxyHandler{
 	"SelectEntryByIndex": handleSelectEntryByIndex,
 	"SelectedEntryIndex": handleSelectedEntryIndex,
@@ -26,6 +27,7 @@ func handleSelectEntryByIndex(w widget.PreferredSizeLocateableWidget, args []any
 		return nil, fmt.Errorf("SelectEntryByIndex requires 1 argument (index)")
 	}
 
+	// JSON unmarshals numbers to float64, so we expect float64 input
 	index, ok := args[0].(float64)
 	if !ok {
 		return nil, fmt.Errorf("index must be a number, got %T", args[0])
@@ -34,6 +36,9 @@ func handleSelectEntryByIndex(w widget.PreferredSizeLocateableWidget, args []any
 
 	if list, ok := w.(*widget.List); ok {
 		entries := list.Entries()
+		if len(entries) == 0 {
+			return nil, fmt.Errorf("list has no entries to select")
+		}
 		if idx < 0 || idx >= len(entries) {
 			return nil, fmt.Errorf("index %d out of range (0-%d)", idx, len(entries)-1)
 		}
