@@ -84,6 +84,7 @@ func extractWidgetType(w widget.PreferredSizeLocateableWidget) string {
 
 // WalkTree traverses the widget hierarchy depth-first and returns a flat list of all widgets.
 // It starts from the root widget and recursively visits all children in Container widgets.
+// Registered RadioGroups are appended at the end of traversal.
 func WalkTree(root widget.PreferredSizeLocateableWidget) []WidgetInfo {
 	if root == nil {
 		return nil
@@ -91,6 +92,10 @@ func WalkTree(root widget.PreferredSizeLocateableWidget) []WidgetInfo {
 
 	var result []WidgetInfo
 	walkTreeRecursive(root, &result)
+
+	// Append registered RadioGroups
+	injectRegisteredRadioGroups(&result)
+
 	return result
 }
 
@@ -140,6 +145,54 @@ func injectTabBookTabs(tb *widget.TabBook, result *[]WidgetInfo) {
 		children := tab.Children()
 		for _, child := range children {
 			walkTreeRecursive(child, result)
+		}
+	}
+}
+
+// injectRegisteredRadioGroups appends registered RadioGroups to the result.
+// RadioGroups are synthetic WidgetInfo entries (not widgets) with their elements as children.
+func injectRegisteredRadioGroups(result *[]WidgetInfo) {
+	names := GetRegisteredRadioGroups()
+	for _, name := range names {
+		rg := GetRadioGroup(name)
+		if rg == nil {
+			continue
+		}
+
+		// Create synthetic RadioGroup WidgetInfo
+		info := WidgetInfo{
+			Widget:   nil, // RadioGroup is not a widget
+			Type:     "RadioGroup",
+			Rect:     image.Rectangle{}, // No geometry
+			Visible:  true,
+			Disabled: false,
+			Addr:     "", // No pointer for synthetic element
+			State: map[string]string{
+				"name": name,
+			},
+		}
+
+		// Get active index
+		active := rg.Active()
+		elements := internal.GetRadioGroupElements(rg)
+		for i, elem := range elements {
+			if elem == active {
+				info.State["active_index"] = fmt.Sprintf("%d", i)
+				break
+			}
+		}
+
+		*result = append(*result, info)
+
+		// Inject element widgets as children
+		for _, elem := range elements {
+			// Convert RadioGroupElement to WidgetInfo
+			switch v := elem.(type) {
+			case widget.PreferredSizeLocateableWidget:
+				elemInfo := ExtractWidgetInfo(v)
+				elemInfo.State["active"] = fmt.Sprintf("%v", elem == active)
+				*result = append(*result, elemInfo)
+			}
 		}
 	}
 }

@@ -747,3 +747,102 @@ func setPrivateFieldOnTabBookXML(tb *widget.TabBook, fieldName string, value int
 	realField := reflect.NewAt(field.Type(), fieldPtr).Elem()
 	realField.Set(reflect.ValueOf(value))
 }
+
+// TestMarshalXML_RadioGroupWithElements tests RadioGroup XML output with element children.
+// RadioGroup should appear at UI root level with elements as children.
+func TestMarshalXML_RadioGroupWithElements(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+	}
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+	}
+
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	// Create and register RadioGroup
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2))
+	autoui.RegisterRadioGroup("test-rg", rg)
+
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	// Walk tree and marshal
+	infoList := autoui.WalkTree(root)
+	xmlData, err := autoui.MarshalWidgetTreeXML(infoList)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("test-rg")
+
+	if err != nil {
+		t.Fatalf("MarshalWidgetTreeXML failed: %v", err)
+	}
+
+	xmlStr := string(xmlData)
+
+	// Verify RadioGroup element exists
+	if !strings.Contains(xmlStr, "<RadioGroup") {
+		t.Error("Expected <RadioGroup> element")
+	}
+
+	// Verify RadioGroup has name attribute
+	if !strings.Contains(xmlStr, "name=\"test-rg\"") {
+		t.Error("Expected name='test-rg' attribute on RadioGroup")
+	}
+
+	// Verify Button elements appear
+	if !strings.Contains(xmlStr, "<Button") {
+		t.Error("Expected <Button> elements as RadioGroup children")
+	}
+
+	// Parse and verify structure
+	var node autoui.WidgetNode
+	if err := xml.Unmarshal(xmlData, &node); err != nil {
+		t.Fatalf("Failed to unmarshal XML: %v", err)
+	}
+
+	// UI should have 2 children (Container + RadioGroup)
+	if len(node.Children) < 2 {
+		t.Fatalf("Expected UI to have at least 2 children (Container + RadioGroup), got %d", len(node.Children))
+	}
+
+	// Find RadioGroup node
+	var radioGroupNode *autoui.WidgetNode
+	for _, child := range node.Children {
+		if child.XMLName.Local == "RadioGroup" {
+			radioGroupNode = child
+			break
+		}
+	}
+
+	if radioGroupNode == nil {
+		t.Fatal("RadioGroup node not found in XML tree")
+	}
+
+	// RadioGroup should have 2 Button children
+	if len(radioGroupNode.Children) != 2 {
+		t.Fatalf("Expected RadioGroup to have 2 Button children, got %d", len(radioGroupNode.Children))
+	}
+
+	// Verify children are Buttons
+	for i, child := range radioGroupNode.Children {
+		if child.XMLName.Local != "Button" {
+			t.Errorf("Child %d: expected Button, got %s", i, child.XMLName.Local)
+		}
+		// Each button should have "active" attribute
+		if _, hasActive := child.Attrs["active"]; !hasActive {
+			t.Errorf("Child %d: expected 'active' attribute", i)
+		}
+	}
+}

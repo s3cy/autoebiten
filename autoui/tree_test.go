@@ -615,3 +615,194 @@ func setPrivateFieldOnTabBook(tb *widget.TabBook, fieldName string, value interf
 	realField := reflect.NewAt(field.Type(), fieldPtr).Elem()
 	realField.Set(reflect.ValueOf(value))
 }
+
+// TestWalkTree_RadioGroupInjection tests that registered RadioGroups are appended to tree output.
+func TestWalkTree_RadioGroupInjection(t *testing.T) {
+	// Create buttons as RadioGroup elements
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+		Pressed:  createTestNineSlice(100, 30, color.RGBA{80, 80, 80, 255}),
+		Disabled: createTestNineSlice(100, 30, color.RGBA{150, 150, 150, 255}),
+	}
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+		Disabled: color.Gray{128},
+	}
+
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option A", nil, buttonColor),
+	)
+	btn1.GetWidget().Rect = image.Rect(10, 10, 110, 40)
+
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.Text("Option B", nil, buttonColor),
+	)
+	btn2.GetWidget().Rect = image.Rect(10, 50, 110, 80)
+
+	// Create RadioGroup with elements
+	rg := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2))
+
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("test-group", rg)
+
+	// Create a simple root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	// Walk tree - RadioGroups should be appended
+	widgets := autoui.WalkTree(root)
+
+	// Cleanup registration
+	autoui.UnregisterRadioGroup("test-group")
+
+	// Find RadioGroup in result
+	var radioGroupInfo *autoui.WidgetInfo
+	var radioGroupIndex int
+	for i, w := range widgets {
+		if w.Type == "RadioGroup" {
+			radioGroupInfo = &widgets[i]
+			radioGroupIndex = i
+			break
+		}
+	}
+
+	if radioGroupInfo == nil {
+		t.Fatal("RadioGroup not found in tree")
+	}
+
+	// Verify RadioGroup has name attribute
+	if radioGroupInfo.State["name"] != "test-group" {
+		t.Errorf("expected RadioGroup name 'test-group', got '%s'", radioGroupInfo.State["name"])
+	}
+
+	// Verify RadioGroup elements follow (at least 2 elements)
+	// Note: elements are appended after RadioGroup entry
+	remainingWidgets := widgets[radioGroupIndex+1:]
+	if len(remainingWidgets) < 2 {
+		t.Errorf("expected at least 2 RadioGroup elements, got %d", len(remainingWidgets))
+	}
+
+	// Find element widgets and verify they have "active" state
+	var foundBtn1, foundBtn2 bool
+	for _, w := range remainingWidgets {
+		if w.Type == "Button" {
+			if w.State["text"] == "Option A" || w.Addr == autoui.ExtractWidgetInfo(btn1).Addr {
+				foundBtn1 = true
+				if w.State["active"] == "" {
+					t.Error("expected element to have 'active' state")
+				}
+			}
+			if w.State["text"] == "Option B" || w.Addr == autoui.ExtractWidgetInfo(btn2).Addr {
+				foundBtn2 = true
+				if w.State["active"] == "" {
+					t.Error("expected element to have 'active' state")
+				}
+			}
+		}
+	}
+
+	if !foundBtn1 {
+		t.Error("btn1 not found as RadioGroup element")
+	}
+	if !foundBtn2 {
+		t.Error("btn2 not found as RadioGroup element")
+	}
+}
+
+// TestWalkTree_RadioGroupEmpty tests empty RadioGroup (no elements).
+func TestWalkTree_RadioGroupEmpty(t *testing.T) {
+	// Create RadioGroup with no elements
+	rg := widget.NewRadioGroup()
+
+	// Register RadioGroup
+	autoui.RegisterRadioGroup("empty-group", rg)
+
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 100, 100)
+
+	// Walk tree
+	widgets := autoui.WalkTree(root)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("empty-group")
+
+	// Find RadioGroup
+	var radioGroupInfo *autoui.WidgetInfo
+	for i, w := range widgets {
+		if w.Type == "RadioGroup" {
+			radioGroupInfo = &widgets[i]
+			break
+		}
+	}
+
+	if radioGroupInfo == nil {
+		t.Fatal("RadioGroup not found in tree")
+	}
+
+	// Verify name
+	if radioGroupInfo.State["name"] != "empty-group" {
+		t.Errorf("expected name 'empty-group', got '%s'", radioGroupInfo.State["name"])
+	}
+
+	// Empty RadioGroup should have no active_index (or -1?)
+	// No elements should follow
+	if radioGroupInfo.State["active_index"] != "" {
+		t.Logf("Note: empty RadioGroup has active_index '%s'", radioGroupInfo.State["active_index"])
+	}
+}
+
+// TestWalkTree_MultipleRadioGroups tests multiple registered RadioGroups.
+func TestWalkTree_MultipleRadioGroups(t *testing.T) {
+	buttonImage := &widget.ButtonImage{
+		Idle:     createTestNineSlice(100, 30, color.RGBA{100, 100, 100, 255}),
+	}
+	buttonColor := &widget.ButtonTextColor{
+		Idle:     color.White,
+	}
+
+	// Create first RadioGroup
+	btn1 := widget.NewButton(widget.ButtonOpts.Image(buttonImage), widget.ButtonOpts.Text("A1", nil, buttonColor))
+	btn1.GetWidget().Rect = image.Rect(0, 0, 100, 30)
+	rg1 := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1))
+	autoui.RegisterRadioGroup("group1", rg1)
+
+	// Create second RadioGroup
+	btn2 := widget.NewButton(widget.ButtonOpts.Image(buttonImage), widget.ButtonOpts.Text("B1", nil, buttonColor))
+	btn2.GetWidget().Rect = image.Rect(0, 0, 100, 30)
+	rg2 := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn2))
+	autoui.RegisterRadioGroup("group2", rg2)
+
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 200, 100)
+
+	// Walk tree
+	widgets := autoui.WalkTree(root)
+
+	// Cleanup
+	autoui.UnregisterRadioGroup("group1")
+	autoui.UnregisterRadioGroup("group2")
+
+	// Find both RadioGroups
+	var foundGroup1, foundGroup2 bool
+	for _, w := range widgets {
+		if w.Type == "RadioGroup" {
+			if w.State["name"] == "group1" {
+				foundGroup1 = true
+			}
+			if w.State["name"] == "group2" {
+				foundGroup2 = true
+			}
+		}
+	}
+
+	if !foundGroup1 {
+		t.Error("group1 RadioGroup not found")
+	}
+	if !foundGroup2 {
+		t.Error("group2 RadioGroup not found")
+	}
+}

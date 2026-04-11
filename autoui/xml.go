@@ -33,20 +33,19 @@ func MarshalWidgetXML(info WidgetInfo) ([]byte, error) {
 
 // MarshalWidgetTreeXML converts a flat list of widgets to a tree XML structure.
 // It reconstructs the parent-child relationships and wraps the result in a <UI> root element.
+// RadioGroups appear as children of the UI node (siblings of the root widget).
 func MarshalWidgetTreeXML(widgets []WidgetInfo) ([]byte, error) {
 	if len(widgets) == 0 {
 		return []byte("<UI/>"), nil
 	}
 
-	// Build tree from flat list
-	root := widgetInfoToNode(widgets[0])
-	buildNodeTree(root, widgets)
-
-	// Wrap in UI root element
+	// Create UI root element
 	uiNode := &WidgetNode{
-		XMLName:  xml.Name{Local: "UI"},
-		Children: []*WidgetNode{root},
+		XMLName: xml.Name{Local: "UI"},
 	}
+
+	// Build tree from flat list, passing UI node for RadioGroup handling
+	buildNodeTreeWithUI(uiNode, widgets)
 
 	return xml.MarshalIndent(uiNode, "", "  ")
 }
@@ -139,54 +138,98 @@ func (n *WidgetNode) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	return nil
 }
 
-// buildNodeTree reconstructs the tree structure from a flat list of widgets.
+// buildNodeTreeWithUI reconstructs the tree structure from a flat list of widgets.
 // It uses Widget.Parent() to determine actual parent-child relationships.
 // For filtered results where parent containers may not be in the list, orphan widgets are
-// added to the root node as siblings.
+// added to the UI node as siblings.
 // Special handling for TabBookTab: parent is TabBook (found by searching backwards in list).
-func buildNodeTree(root *WidgetNode, widgets []WidgetInfo) {
-	if len(widgets) <= 1 {
+// Special handling for RadioGroup: appears at UI root level with elements as children.
+func buildNodeTreeWithUI(uiNode *WidgetNode, widgets []WidgetInfo) {
+	if len(widgets) == 0 {
 		return
 	}
 
 	// Map base widgets to their corresponding nodes for parent lookup
 	// Key is the Widget pointer (from GetWidget()), value is the XML node
 	widgetToNode := map[*widget.Widget]*WidgetNode{}
-	widgetToNode[widgets[0].Widget.GetWidget()] = root
 
 	// Track the most recent TabBook node for TabBookTab parent assignment
 	var lastTabBookNode *WidgetNode
 
-	// Process remaining widgets (skip widgets[0] which is already the root)
+	// Track the most recent RadioGroup node for element parent assignment
+	var lastRadioGroupNode *WidgetNode
+
+	// First widget becomes the root container child of UI
+	// Unless it's a synthetic element (RadioGroup), which goes to UI directly
+	firstInfo := widgets[0]
+	if firstInfo.Type == "RadioGroup" {
+		// No real root widget, RadioGroup goes to UI directly
+		node := widgetInfoToNode(firstInfo)
+		uiNode.Children = append(uiNode.Children, node)
+		lastRadioGroupNode = node
+	} else {
+		// First widget is the root container/widget
+		root := widgetInfoToNode(firstInfo)
+		uiNode.Children = append(uiNode.Children, root)
+		if firstInfo.Widget != nil {
+			widgetToNode[firstInfo.Widget.GetWidget()] = root
+			if firstInfo.Type == "TabBook" {
+				lastTabBookNode = root
+			}
+		}
+	}
+
+	// Process remaining widgets (skip widgets[0] which is already processed)
 	for _, info := range widgets[1:] {
 		node := widgetInfoToNode(info)
-		baseWidget := info.Widget.GetWidget()
-		widgetToNode[baseWidget] = node
 
-		// Track TabBook nodes for TabBookTab parent assignment
-		if info.Type == "TabBook" {
-			lastTabBookNode = node
-		}
-
-		// Special handling for TabBookTab: parent is TabBook (not Container)
-		if info.Type == "TabBookTab" {
-			if lastTabBookNode != nil {
-				lastTabBookNode.Children = append(lastTabBookNode.Children, node)
-			} else {
-				// Fallback: no TabBook found (unusual, add to root)
-				root.Children = append(root.Children, node)
-			}
+		// RadioGroup is synthetic (Widget is nil), handle specially
+		if info.Type == "RadioGroup" {
+			// RadioGroups are children of UI node (siblings of root container)
+			uiNode.Children = append(uiNode.Children, node)
+			lastRadioGroupNode = node
 			continue
 		}
 
-		// Find parent using Widget.Parent()
-		parentWidget := baseWidget.Parent()
-		if parentNode, ok := widgetToNode[parentWidget]; ok {
-			parentNode.Children = append(parentNode.Children, node)
+		// Handle RadioGroup elements - they have "active" state and should be children of RadioGroup
+		if _, hasActive := info.State["active"]; hasActive && lastRadioGroupNode != nil {
+			lastRadioGroupNode.Children = append(lastRadioGroupNode.Children, node)
+			continue
+		}
+
+		// Handle widgets with actual Widget reference
+		if info.Widget != nil {
+			baseWidget := info.Widget.GetWidget()
+			widgetToNode[baseWidget] = node
+
+			// Track TabBook nodes for TabBookTab parent assignment
+			if info.Type == "TabBook" {
+				lastTabBookNode = node
+			}
+
+			// Special handling for TabBookTab: parent is TabBook (not Container)
+			if info.Type == "TabBookTab" {
+				if lastTabBookNode != nil {
+					lastTabBookNode.Children = append(lastTabBookNode.Children, node)
+				} else {
+					// Fallback: no TabBook found (unusual, add to UI)
+					uiNode.Children = append(uiNode.Children, node)
+				}
+				continue
+			}
+
+			// Find parent using Widget.Parent()
+			parentWidget := baseWidget.Parent()
+			if parentNode, ok := widgetToNode[parentWidget]; ok {
+				parentNode.Children = append(parentNode.Children, node)
+			} else {
+				// Fallback: no parent found (filtered result without parent container)
+				// Add to UI node as a sibling of root
+				uiNode.Children = append(uiNode.Children, node)
+			}
 		} else {
-			// Fallback: no parent found (filtered result without parent container)
-			// Add to root node as a sibling
-			root.Children = append(root.Children, node)
+			// Synthetic elements without Widget reference go to UI
+			uiNode.Children = append(uiNode.Children, node)
 		}
 	}
 }
