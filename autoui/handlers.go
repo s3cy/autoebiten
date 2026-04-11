@@ -288,7 +288,7 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 			result, err = handler(targetWidget.Widget, callReq.Args)
 		} else {
 			// Use regular InvokeMethod for standard methods
-			err = InvokeMethod(targetWidget.Widget, callReq.Method, callReq.Args)
+			result, err = InvokeMethod(targetWidget.Widget, callReq.Method, callReq.Args)
 		}
 
 		// Build response
