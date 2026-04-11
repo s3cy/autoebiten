@@ -181,6 +181,9 @@ type CallResponse struct {
 
 	// Error contains the error message if invocation failed.
 	Error string `json:"error,omitempty"`
+
+	// Result contains the captured return value (if method has a return).
+	Result any `json:"result,omitempty"`
 }
 
 // ExistsResponse represents the response from the exists command.
@@ -247,8 +250,8 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		// Use the first matching widget
 		targetWidget = &matching[0]
 
-		// Invoke the method
-		err := InvokeMethod(targetWidget.Widget, callReq.Method, callReq.Args)
+		// Use InvokeMethodWithResult to capture return values
+		result, err := InvokeMethodWithResult(targetWidget.Widget, callReq.Method, callReq.Args)
 
 		// Build response
 		response := CallResponse{
@@ -256,6 +259,9 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 		if err != nil {
 			response.Error = err.Error()
+		}
+		if result != nil {
+			response.Result = result
 		}
 
 		// Marshal response to JSON

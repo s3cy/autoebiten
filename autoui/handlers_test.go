@@ -149,3 +149,53 @@ func createTestImage(width, height int, c color.Color) *image.NRGBA {
 	}
 	return img
 }
+
+func TestCallResponse_WithResult(t *testing.T) {
+	resp := autoui.CallResponse{
+		Success: true,
+		Result:  "test value",
+	}
+
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Errorf("Marshal failed: %v", err)
+	}
+
+	expected := `{"success":true,"result":"test value"}`
+	if string(data) != expected {
+		t.Errorf("Expected %s, got %s", expected, string(data))
+	}
+}
+
+func TestCallResponse_WithoutResult(t *testing.T) {
+	resp := autoui.CallResponse{
+		Success: true,
+	}
+
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Errorf("Marshal failed: %v", err)
+	}
+
+	expected := `{"success":true}`
+	if string(data) != expected {
+		t.Errorf("Expected %s, got %s", expected, string(data))
+	}
+}
+
+func TestCallResponse_WithError(t *testing.T) {
+	resp := autoui.CallResponse{
+		Success: false,
+		Error:   "method not found",
+	}
+
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Errorf("Marshal failed: %v", err)
+	}
+
+	expected := `{"success":false,"error":"method not found"}`
+	if string(data) != expected {
+		t.Errorf("Expected %s, got %s", expected, string(data))
+	}
+}
