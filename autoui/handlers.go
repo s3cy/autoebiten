@@ -279,8 +279,17 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		// Use the first matching widget
 		targetWidget = &matching[0]
 
-		// Invoke the method
-		err := InvokeMethod(targetWidget.Widget, callReq.Method, callReq.Args)
+		// Check for proxy handler first (for methods that return values)
+		var result any
+		var err error
+
+		if handler := GetProxyHandler(callReq.Method); handler != nil {
+			// Use proxy handler for special methods (Tabs, TabIndex, etc.)
+			result, err = handler(targetWidget.Widget, callReq.Args)
+		} else {
+			// Use regular InvokeMethod for standard methods
+			err = InvokeMethod(targetWidget.Widget, callReq.Method, callReq.Args)
+		}
 
 		// Build response
 		response := CallResponse{
@@ -288,6 +297,9 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		}
 		if err != nil {
 			response.Error = err.Error()
+		}
+		if result != nil {
+			response.Result = result
 		}
 
 		// Marshal response to JSON
