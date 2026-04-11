@@ -30,7 +30,7 @@ func TestInvokeMethod_ButtonClick(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// Invoke Click method with no arguments - should not return error
-	err := autoui.InvokeMethod(info.Widget, "Click", nil)
+	_, err := autoui.InvokeMethod(info.Widget, "Click", nil)
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestInvokeMethod_InvalidMethod(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// Try to invoke a method that doesn't exist
-	err := autoui.InvokeMethod(info.Widget, "NonExistentMethod", nil)
+	_, err := autoui.InvokeMethod(info.Widget, "NonExistentMethod", nil)
 	if err == nil {
 		t.Error("Expected error for non-existent method, got nil")
 	}
@@ -75,7 +75,7 @@ func TestInvokeMethod_WithArgs(t *testing.T) {
 	}
 
 	// Invoke Focus(true) with bool argument
-	err := autoui.InvokeMethod(info.Widget, "Focus", []any{true})
+	_, err := autoui.InvokeMethod(info.Widget, "Focus", []any{true})
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -86,7 +86,7 @@ func TestInvokeMethod_WithArgs(t *testing.T) {
 	}
 
 	// Invoke Focus(false) to remove focus
-	err = autoui.InvokeMethod(info.Widget, "Focus", []any{false})
+	_, err = autoui.InvokeMethod(info.Widget, "Focus", []any{false})
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestInvokeMethod_SetText(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(textInput)
 
 	// Invoke SetText("Hello World")
-	err := autoui.InvokeMethod(info.Widget, "SetText", []any{"Hello World"})
+	_, err := autoui.InvokeMethod(info.Widget, "SetText", []any{"Hello World"})
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestInvokeMethod_SetText(t *testing.T) {
 
 // TestInvokeMethod_NilWidget tests error when widget is nil.
 func TestInvokeMethod_NilWidget(t *testing.T) {
-	err := autoui.InvokeMethod(nil, "Click", nil)
+	_, err := autoui.InvokeMethod(nil, "Click", nil)
 	if err == nil {
 		t.Error("Expected error for nil widget, got nil")
 	}
@@ -142,7 +142,7 @@ func TestInvokeMethod_ArgumentCountMismatch(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// Click() takes no arguments, but we pass one
-	err := autoui.InvokeMethod(info.Widget, "Click", []any{true})
+	_, err := autoui.InvokeMethod(info.Widget, "Click", []any{true})
 	if err == nil {
 		t.Error("Expected error for argument count mismatch, got nil")
 	}
@@ -162,7 +162,7 @@ func TestInvokeMethod_NonWhitelistedSignature(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// SetImage takes *ButtonImage (pointer to struct) which is not whitelisted
-	err := autoui.InvokeMethod(info.Widget, "SetImage", []any{buttonImage})
+	_, err := autoui.InvokeMethod(info.Widget, "SetImage", []any{buttonImage})
 	if err == nil {
 		t.Error("Expected error for non-whitelisted signature (struct pointer), got nil")
 	}
@@ -185,13 +185,13 @@ func TestInvokeMethod_NumericConversion(t *testing.T) {
 
 	// Test that bool conversion works (already tested in Focus)
 	// Focus takes bool, passing int should fail
-	err := autoui.InvokeMethod(info.Widget, "Focus", []any{1})
+	_, err := autoui.InvokeMethod(info.Widget, "Focus", []any{1})
 	if err == nil {
 		t.Error("Expected error when passing int to bool parameter, got nil")
 	}
 
 	// Passing float64 to bool should also fail
-	err = autoui.InvokeMethod(info.Widget, "Focus", []any{1.5})
+	_, err = autoui.InvokeMethod(info.Widget, "Focus", []any{1.5})
 	if err == nil {
 		t.Error("Expected error when passing float64 to bool parameter, got nil")
 	}
@@ -215,7 +215,7 @@ func TestInvokeMethod_ButtonPress(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// Invoke Press method with no arguments - should not return error
-	err := autoui.InvokeMethod(info.Widget, "Press", nil)
+	_, err := autoui.InvokeMethod(info.Widget, "Press", nil)
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -244,7 +244,7 @@ func TestInvokeMethod_ButtonRelease(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// Invoke Release method with no arguments - should not return error
-	err := autoui.InvokeMethod(info.Widget, "Release", nil)
+	_, err := autoui.InvokeMethod(info.Widget, "Release", nil)
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -274,7 +274,7 @@ func TestInvokeMethod_ButtonSetText(t *testing.T) {
 	info := autoui.ExtractWidgetInfo(btn)
 
 	// Invoke SetText("New Text")
-	err := autoui.InvokeMethod(info.Widget, "SetText", []any{"New Text"})
+	_, err := autoui.InvokeMethod(info.Widget, "SetText", []any{"New Text"})
 	if err != nil {
 		t.Errorf("InvokeMethod failed: %v", err)
 	}
@@ -436,7 +436,7 @@ func TestInvokeMethodWithResult_ReturnValue(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(textInput)
 
-	result, err := autoui.InvokeMethodWithResult(info.Widget, "GetText", nil)
+	result, err := autoui.InvokeMethod(info.Widget, "GetText", nil)
 	if err != nil {
 		t.Errorf("InvokeMethodWithResult failed: %v", err)
 	}
@@ -465,7 +465,7 @@ func TestInvokeMethodWithResult_EnumReturn(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(btn)
 
-	result, err := autoui.InvokeMethodWithResult(info.Widget, "State", nil)
+	result, err := autoui.InvokeMethod(info.Widget, "State", nil)
 	if err != nil {
 		t.Errorf("InvokeMethodWithResult failed: %v", err)
 	}
@@ -492,7 +492,7 @@ func TestInvokeMethodWithResult_SliceReturn(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	result, err := autoui.InvokeMethodWithResult(info.Widget, "Entries", nil)
+	result, err := autoui.InvokeMethod(info.Widget, "Entries", nil)
 	if err != nil {
 		t.Errorf("InvokeMethodWithResult failed: %v", err)
 	}

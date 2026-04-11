@@ -8,63 +8,19 @@ import (
 )
 
 // InvokeMethod invokes a method on a widget using reflection with whitelist safety.
-// Only whitelisted method signatures are allowed for security.
-// Supported signatures: func(), func(bool), func(int), func(float64), func(string)
-// Note: For proxy methods (e.g., SelectEntryByIndex), use InvokeMethodWithResult instead.
-func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, args []any) error {
-	if w == nil {
-		return fmt.Errorf("widget is nil")
-	}
-
-	// Get the method by name
-	method := reflect.ValueOf(w).MethodByName(methodName)
-	if !method.IsValid() {
-		return fmt.Errorf("method '%s' not found on widget type %T", methodName, w)
-	}
-
-	// Get method type for signature checking
-	methodType := method.Type()
-
-	// Check if signature is whitelisted
-	if !isWhitelistedSignature(methodType) {
-		return fmt.Errorf("method '%s' has non-whitelisted signature %s", methodName, methodType)
-	}
-
-	// Check argument count
-	expectedArgs := methodType.NumIn()
-	if len(args) != expectedArgs {
-		return fmt.Errorf("method '%s' expects %d arguments, got %d", methodName, expectedArgs, len(args))
-	}
-
-	// Convert arguments to reflect.Value
-	convertedArgs, err := convertArgs(args, methodType)
-	if err != nil {
-		return fmt.Errorf("argument conversion failed: %w", err)
-	}
-
-	// Call the method
-	results := method.Call(convertedArgs)
-
-	// Check for error return value (if method returns error)
-	if len(results) > 0 {
-		if errVal, ok := results[0].Interface().(error); ok && errVal != nil {
-			return fmt.Errorf("method '%s' returned error: %w", methodName, errVal)
-		}
-	}
-
-	return nil
-}
-
-// InvokeMethodWithResult invokes a method and returns the result.
-// Extends InvokeMethod to capture return values for getters.
 // Also handles proxy methods that bypass reflection (e.g., SelectEntryByIndex).
+//
+// Only whitelisted method signatures are allowed for security:
+// - func()
+// - func(any/interface{})
+// - func(bool), func(int), func(float64), func(string)
+// - func(enum types) - types with underlying basic kind
 //
 // Return values are converted to Go's "largest" representation for JSON compatibility:
 // - Integers (int, int32, int64, enums) → int64
 // - Floats (float32, float64) → float64
 // - bool, string, slices → unchanged
-// This ensures consistent JSON serialization when round-tripping through JSON.
-func InvokeMethodWithResult(w widget.PreferredSizeLocateableWidget, methodName string, args []any) (any, error) {
+func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, args []any) (any, error) {
 	if w == nil {
 		return nil, fmt.Errorf("widget is nil")
 	}
@@ -107,8 +63,6 @@ func InvokeMethodWithResult(w widget.PreferredSizeLocateableWidget, methodName s
 		}
 
 		// Convert enum types to underlying type for JSON serialization
-		// Returns Go's "largest" representation for JSON compatibility:
-		// integers → int64, floats → float64
 		switch ret.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			return ret.Int(), nil

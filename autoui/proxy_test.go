@@ -21,7 +21,7 @@ func TestProxy_SelectEntryByIndex(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	result, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(1)})
+	result, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(1)})
 	if err != nil {
 		t.Errorf("SelectEntryByIndex failed: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestProxy_SelectedEntryIndex(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	result, err := autoui.InvokeMethodWithResult(info.Widget, "SelectedEntryIndex", nil)
+	result, err := autoui.InvokeMethod(info.Widget, "SelectedEntryIndex", nil)
 	if err != nil {
 		t.Errorf("SelectedEntryIndex failed: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestProxy_SelectedEntryIndex_NoSelection(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	result, err := autoui.InvokeMethodWithResult(info.Widget, "SelectedEntryIndex", nil)
+	result, err := autoui.InvokeMethod(info.Widget, "SelectedEntryIndex", nil)
 	if err != nil {
 		t.Errorf("SelectedEntryIndex failed: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestProxy_SelectEntryByIndex_OutOfBounds(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(5)})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(5)})
 	if err == nil {
 		t.Error("Expected error for out of bounds index")
 	}
@@ -120,7 +120,7 @@ func TestProxy_SelectEntryByIndex_NegativeIndex(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(-1)})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(-1)})
 	if err == nil {
 		t.Error("Expected error for negative index")
 	}
@@ -135,7 +135,7 @@ func TestProxy_SelectEntryByIndex_WrongWidgetType(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(btn)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(0)})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(0)})
 	if err == nil {
 		t.Error("Expected error for wrong widget type")
 	}
@@ -150,7 +150,7 @@ func TestProxy_SelectedEntryIndex_WrongWidgetType(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(btn)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectedEntryIndex", nil)
+	_, err := autoui.InvokeMethod(info.Widget, "SelectedEntryIndex", nil)
 	if err == nil {
 		t.Error("Expected error for wrong widget type")
 	}
@@ -169,7 +169,7 @@ func TestProxy_SelectEntryByIndex_WrongArgCount(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", nil)
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", nil)
 	if err == nil {
 		t.Error("Expected error for missing argument")
 	}
@@ -188,7 +188,7 @@ func TestProxy_SelectEntryByIndex_WrongArgType(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{"not a number"})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{"not a number"})
 	if err == nil {
 		t.Error("Expected error for wrong argument type")
 	}
@@ -207,7 +207,7 @@ func TestProxy_SelectedEntryIndex_WithArgs(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectedEntryIndex", []any{"unexpected"})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectedEntryIndex", []any{"unexpected"})
 	if err == nil {
 		t.Error("Expected error for unexpected argument")
 	}
@@ -226,7 +226,7 @@ func TestProxy_SelectEntryByIndex_FirstEntry(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(0)})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(0)})
 	if err != nil {
 		t.Errorf("SelectEntryByIndex failed: %v", err)
 	}
@@ -247,7 +247,7 @@ func TestProxy_SelectEntryByIndex_LastEntry(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(2)})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(2)})
 	if err != nil {
 		t.Errorf("SelectEntryByIndex failed: %v", err)
 	}
@@ -268,7 +268,7 @@ func TestProxy_SelectEntryByIndex_EmptyList(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(list)
 
-	_, err := autoui.InvokeMethodWithResult(info.Widget, "SelectEntryByIndex", []any{float64(0)})
+	_, err := autoui.InvokeMethod(info.Widget, "SelectEntryByIndex", []any{float64(0)})
 	if err == nil {
 		t.Error("Expected error for empty list")
 	}

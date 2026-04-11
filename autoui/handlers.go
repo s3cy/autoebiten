@@ -250,8 +250,7 @@ func handleCallCommand(ui *ebitenui.UI) func(ctx autoebiten.CommandContext) {
 		// Use the first matching widget
 		targetWidget = &matching[0]
 
-		// Use InvokeMethodWithResult to capture return values
-		result, err := InvokeMethodWithResult(targetWidget.Widget, callReq.Method, callReq.Args)
+		result, err := InvokeMethod(targetWidget.Widget, callReq.Method, callReq.Args)
 
 		// Build response
 		response := CallResponse{
