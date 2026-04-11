@@ -2,6 +2,7 @@ package autoui
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 	"unsafe"
 
@@ -198,6 +199,28 @@ func TestHandleSetTabByIndexWrongWidget(t *testing.T) {
 	}
 }
 
+// TestHandleSetTabByIndexDisabled tests that disabled tabs cannot be selected by index.
+func TestHandleSetTabByIndexDisabled(t *testing.T) {
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Settings"))
+	tab2.Disabled = true // Disable tab2
+
+	tb := widget.NewTabBook()
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1, tab2})
+	setPrivateFieldOnTabBook(tb, "tab", tab1) // Start with tab1 active
+
+	// Try to set to disabled tab2 (index 1)
+	_, err := handleSetTabByIndex(tb, []any{float64(1)})
+	if err == nil {
+		t.Fatal("expected error for disabled tab")
+	}
+
+	// Verify error message mentions disabled
+	if !strings.Contains(err.Error(), "disabled") {
+		t.Errorf("expected error to mention 'disabled', got: %s", err.Error())
+	}
+}
+
 // TestHandleTabLabel tests getting the label of the active tab.
 func TestHandleTabLabel(t *testing.T) {
 	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
@@ -308,6 +331,28 @@ func TestHandleSetTabByLabelWrongWidget(t *testing.T) {
 	_, err := handleSetTabByLabel(btn, []any{"SomeLabel"})
 	if err == nil {
 		t.Fatal("expected error for wrong widget type")
+	}
+}
+
+// TestHandleSetTabByLabelDisabled tests that disabled tabs cannot be selected by label.
+func TestHandleSetTabByLabelDisabled(t *testing.T) {
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Settings"))
+	tab2.Disabled = true // Disable tab2
+
+	tb := widget.NewTabBook()
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1, tab2})
+	setPrivateFieldOnTabBook(tb, "tab", tab1) // Start with tab1 active
+
+	// Try to set to disabled "Settings" tab
+	_, err := handleSetTabByLabel(tb, []any{"Settings"})
+	if err == nil {
+		t.Fatal("expected error for disabled tab")
+	}
+
+	// Verify error message mentions disabled
+	if !strings.Contains(err.Error(), "disabled") {
+		t.Errorf("expected error to mention 'disabled', got: %s", err.Error())
 	}
 }
 

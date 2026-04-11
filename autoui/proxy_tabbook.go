@@ -92,7 +92,12 @@ func handleSetTabByIndex(w widget.PreferredSizeLocateableWidget, args []any) (an
 		return nil, fmt.Errorf("index %d out of range (0-%d)", idx, len(tabs)-1)
 	}
 
-	tb.SetTab(tabs[idx])
+	tab := tabs[idx]
+	if tab.Disabled {
+		return nil, fmt.Errorf("tab at index %d is disabled", idx)
+	}
+
+	tb.SetTab(tab)
 	return nil, nil
 }
 
@@ -135,6 +140,9 @@ func handleSetTabByLabel(w widget.PreferredSizeLocateableWidget, args []any) (an
 	tabs := internal.GetTabBookTabs(tb)
 	for _, tab := range tabs {
 		if internal.GetTabBookTabLabel(tab) == label {
+			if tab.Disabled {
+				return nil, fmt.Errorf("tab with label '%s' is disabled", label)
+			}
 			tb.SetTab(tab)
 			return nil, nil
 		}
