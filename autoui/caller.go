@@ -54,18 +54,6 @@ func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, arg
 	return nil
 }
 
-// ProxyHandler is a function that handles method invocation for specific methods.
-// Returns the result and error from the custom implementation.
-type ProxyHandler func(w widget.PreferredSizeLocateableWidget, args []any) (any, error)
-
-// GetProxyHandler returns a registered proxy handler for a method name.
-// Proxy handlers provide custom implementations for methods that can't be invoked via reflection.
-// Returns nil if no proxy handler is registered for the method.
-func GetProxyHandler(methodName string) ProxyHandler {
-	// Proxy registry will be populated in Task 5
-	return nil
-}
-
 // InvokeMethodWithResult invokes a method and returns the result.
 // Extends InvokeMethod to capture return values for getters.
 func InvokeMethodWithResult(w widget.PreferredSizeLocateableWidget, methodName string, args []any) (any, error) {
