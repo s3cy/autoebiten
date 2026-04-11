@@ -1,9 +1,11 @@
 package autoui_test
 
 import (
+	"io"
 	"image"
 	"image/color"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/ebitenui/ebitenui/widget"
@@ -371,5 +373,53 @@ func TestIsWhitelistedSignature_TwoReturns(t *testing.T) {
 
 	if autoui.IsWhitelistedSignature(fnType) {
 		t.Error("Expected func() (int, error) to NOT be whitelisted")
+	}
+}
+
+// TestConvertArg_IntToEnum tests converting int/float64 to enum types like WidgetState.
+func TestConvertArg_IntToEnum(t *testing.T) {
+	targetType := reflect.TypeOf(widget.WidgetState(0))
+	arg := float64(1) // JSON unmarshals numbers to float64
+
+	result, err := autoui.ConvertArg(arg, targetType)
+	if err != nil {
+		t.Errorf("ConvertArg failed: %v", err)
+	}
+
+	// Should convert to WidgetState(1)
+	if result.Int() != 1 {
+		t.Errorf("Expected int value 1, got %d", result.Int())
+	}
+}
+
+// TestConvertArg_AnyParam tests that interface{} target accepts any value.
+func TestConvertArg_AnyParam(t *testing.T) {
+	// interface{} target should accept any value
+	targetType := reflect.TypeOf((*interface{})(nil)).Elem()
+	arg := "test string"
+
+	result, err := autoui.ConvertArg(arg, targetType)
+	if err != nil {
+		t.Errorf("ConvertArg failed: %v", err)
+	}
+
+	if result.String() != "test string" {
+		t.Errorf("Expected 'test string', got %v", result.Interface())
+	}
+}
+
+// TestConvertArg_NonEmptyInterfaceNotImplemented tests that non-empty interface
+// targets with incompatible values return an error.
+func TestConvertArg_NonEmptyInterfaceNotImplemented(t *testing.T) {
+	// io.Reader is a non-empty interface that string does not implement
+	targetType := reflect.TypeOf((*io.Reader)(nil)).Elem()
+	arg := "not a reader"
+
+	_, err := autoui.ConvertArg(arg, targetType)
+	if err == nil {
+		t.Error("Expected error for non-implemented interface")
+	}
+	if !strings.Contains(err.Error(), "interface not implemented") {
+		t.Errorf("Expected 'interface not implemented' error, got: %v", err)
 	}
 }

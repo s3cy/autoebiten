@@ -176,48 +176,57 @@ func convertArgs(args []any, methodType reflect.Type) ([]reflect.Value, error) {
 }
 
 // convertArg converts a single argument to the target reflect.Type.
-// Handles numeric conversions:
-// - float64 -> int (truncation)
-// - int -> float64 (conversion)
+// Handles:
+// - Direct type match
+// - interface{} targets - accept any non-nil value (must check BEFORE ConvertibleTo)
+// - Convertible types (int → enum, etc.) via reflect.ConvertibleTo
+// - Numeric conversions: float64 → int (truncation), int → float64
 // - bool, string direct matches only
 func convertArg(arg any, targetType reflect.Type) (reflect.Value, error) {
 	if arg == nil {
 		return reflect.Value{}, fmt.Errorf("nil argument not supported")
 	}
 
-	argType := reflect.TypeOf(arg)
 	argValue := reflect.ValueOf(arg)
+	argType := argValue.Type()
 
 	// Direct type match
 	if argType == targetType {
 		return argValue, nil
 	}
 
-	// Handle conversions based on target type
+	// Handle interface{} targets FIRST - accept any non-nil value
+	// Must check before ConvertibleTo since all types are convertible to interface{}
+	if targetType.Kind() == reflect.Interface && targetType.PkgPath() == "" {
+		return argValue, nil
+	}
+
+	// If arg is convertible to target type (int → enum, etc.)
+	if argType.ConvertibleTo(targetType) {
+		return argValue.Convert(targetType), nil
+	}
+
+	// Handle conversions based on target type's underlying kind
 	switch targetType.Kind() {
 	case reflect.Bool:
-		// Only accept bool for bool parameters
 		if argType.Kind() == reflect.Bool {
 			return argValue, nil
 		}
 		return reflect.Value{}, fmt.Errorf("cannot convert %s to bool", argType)
 
 	case reflect.Int, reflect.Int32, reflect.Int64:
-		// Accept int types and float64 (with truncation)
 		switch argType.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return argValue.Convert(targetType), nil
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return argValue.Convert(targetType), nil
 		case reflect.Float32, reflect.Float64:
-			// Truncate float to int
 			return argValue.Convert(targetType), nil
 		default:
 			return reflect.Value{}, fmt.Errorf("cannot convert %s to %s", argType, targetType)
 		}
 
 	case reflect.Float32, reflect.Float64:
-		// Accept float types and int types (conversion)
 		switch argType.Kind() {
 		case reflect.Float32, reflect.Float64:
 			return argValue.Convert(targetType), nil
@@ -230,11 +239,15 @@ func convertArg(arg any, targetType reflect.Type) (reflect.Value, error) {
 		}
 
 	case reflect.String:
-		// Only accept string for string parameters
 		if argType.Kind() == reflect.String {
 			return argValue, nil
 		}
 		return reflect.Value{}, fmt.Errorf("cannot convert %s to string", argType)
+
+	case reflect.Interface:
+		// For non-empty interface targets that weren't caught by ConvertibleTo check,
+		// the argument does not implement the interface - return error
+		return reflect.Value{}, fmt.Errorf("cannot convert %s to %s (interface not implemented)", argType, targetType)
 
 	default:
 		return reflect.Value{}, fmt.Errorf("unsupported target type %s", targetType)
