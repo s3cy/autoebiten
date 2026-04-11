@@ -143,6 +143,7 @@ func (n *WidgetNode) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 // It uses Widget.Parent() to determine actual parent-child relationships.
 // For filtered results where parent containers may not be in the list, orphan widgets are
 // added to the root node as siblings.
+// Special handling for TabBookTab: parent is TabBook (found by searching backwards in list).
 func buildNodeTree(root *WidgetNode, widgets []WidgetInfo) {
 	if len(widgets) <= 1 {
 		return
@@ -153,11 +154,30 @@ func buildNodeTree(root *WidgetNode, widgets []WidgetInfo) {
 	widgetToNode := map[*widget.Widget]*WidgetNode{}
 	widgetToNode[widgets[0].Widget.GetWidget()] = root
 
+	// Track the most recent TabBook node for TabBookTab parent assignment
+	var lastTabBookNode *WidgetNode
+
 	// Process remaining widgets (skip widgets[0] which is already the root)
 	for _, info := range widgets[1:] {
 		node := widgetInfoToNode(info)
 		baseWidget := info.Widget.GetWidget()
 		widgetToNode[baseWidget] = node
+
+		// Track TabBook nodes for TabBookTab parent assignment
+		if info.Type == "TabBook" {
+			lastTabBookNode = node
+		}
+
+		// Special handling for TabBookTab: parent is TabBook (not Container)
+		if info.Type == "TabBookTab" {
+			if lastTabBookNode != nil {
+				lastTabBookNode.Children = append(lastTabBookNode.Children, node)
+			} else {
+				// Fallback: no TabBook found (unusual, add to root)
+				root.Children = append(root.Children, node)
+			}
+			continue
+		}
 
 		// Find parent using Widget.Parent()
 		parentWidget := baseWidget.Parent()

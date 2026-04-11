@@ -3,8 +3,10 @@ package autoui_test
 import (
 	"image"
 	"image/color"
+	"reflect"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/ebitenui/ebitenui"
 	ebitenuiImage "github.com/ebitenui/ebitenui/image"
@@ -453,4 +455,163 @@ func TestSnapshotTree_NilUI(t *testing.T) {
 	if widgets != nil {
 		t.Errorf("Expected nil for nil UI, got %d widgets", len(widgets))
 	}
+}
+
+// TestWalkTree_TabBookInjection tests that TabBookTab widgets are injected as children of TabBook.
+func TestWalkTree_TabBookInjection(t *testing.T) {
+	// Create TabBookTab instances
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Settings"))
+	tab3 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Advanced"))
+	tab3.Disabled = true // Test disabled tab
+
+	// Create TabBook and set tabs via reflection
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1, tab2, tab3})
+	setPrivateFieldOnTabBook(tb, "tab", tab1) // Set active tab
+
+	// Walk the tree
+	infoList := autoui.WalkTree(tb)
+
+	// Expected: TabBook + 3 TabBookTab = 4 widgets
+	if len(infoList) != 4 {
+		t.Fatalf("Expected 4 widgets (TabBook + 3 tabs), got %d", len(infoList))
+	}
+
+	// Verify TabBook is first
+	if infoList[0].Type != "TabBook" {
+		t.Errorf("Expected first widget to be TabBook, got %s", infoList[0].Type)
+	}
+
+	// Verify TabBookTab entries follow
+	for i, tabType := range []string{"TabBookTab", "TabBookTab", "TabBookTab"} {
+		if infoList[i+1].Type != tabType {
+			t.Errorf("Expected widget %d to be TabBookTab, got %s", i+1, infoList[i+1].Type)
+		}
+	}
+
+	// Verify tab labels via State
+	expectedLabels := []string{"General", "Settings", "Advanced"}
+	for i, expected := range expectedLabels {
+		if infoList[i+1].State["label"] != expected {
+			t.Errorf("Tab %d: expected label '%s', got '%s'", i, expected, infoList[i+1].State["label"])
+		}
+	}
+
+	// Verify disabled attribute for tab3
+	if infoList[3].Disabled != true {
+		t.Error("Expected tab3 to be disabled")
+	}
+	if infoList[3].State["disabled"] != "true" {
+		t.Error("Expected tab3 State['disabled'] to be 'true'")
+	}
+
+	// Verify disabled is false for enabled tabs
+	if infoList[1].Disabled != false {
+		t.Error("Expected tab1 to not be disabled")
+	}
+}
+
+// TestWalkTree_TabBookTabWithChildren tests that TabBookTab children are traversed.
+func TestWalkTree_TabBookTabWithChildren(t *testing.T) {
+	// Create TabBookTab with a child button
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("General"))
+	tab1.GetWidget().Rect = image.Rect(0, 50, 400, 250)
+
+	// Add a button to the tab
+	btn := widget.NewButton()
+	btn.GetWidget().Rect = image.Rect(10, 60, 100, 90)
+	tab1.AddChild(btn)
+
+	// Create TabBook with one tab
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1})
+	setPrivateFieldOnTabBook(tb, "tab", tab1)
+
+	// Walk the tree
+	infoList := autoui.WalkTree(tb)
+
+	// Expected: TabBook + TabBookTab + Button = 3 widgets
+	if len(infoList) != 3 {
+		t.Fatalf("Expected 3 widgets (TabBook + TabBookTab + Button), got %d", len(infoList))
+	}
+
+	// Verify order: TabBook -> TabBookTab -> Button
+	expectedTypes := []string{"TabBook", "TabBookTab", "Button"}
+	for i, expected := range expectedTypes {
+		if infoList[i].Type != expected {
+			t.Errorf("Widget %d: expected type '%s', got '%s'", i, expected, infoList[i].Type)
+		}
+	}
+
+	// Verify tab label
+	if infoList[1].State["label"] != "General" {
+		t.Errorf("Expected tab label 'General', got '%s'", infoList[1].State["label"])
+	}
+}
+
+// TestWalkTree_TabBookEmpty tests empty TabBook (no tabs).
+func TestWalkTree_TabBookEmpty(t *testing.T) {
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(0, 0, 400, 300)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{})
+
+	// Walk the tree
+	infoList := autoui.WalkTree(tb)
+
+	// Expected: only TabBook (no tabs to inject)
+	if len(infoList) != 1 {
+		t.Fatalf("Expected 1 widget (TabBook only), got %d", len(infoList))
+	}
+
+	if infoList[0].Type != "TabBook" {
+		t.Errorf("Expected TabBook, got %s", infoList[0].Type)
+	}
+}
+
+// TestWalkTree_TabBookNestedInContainer tests TabBook nested in a container.
+func TestWalkTree_TabBookNestedInContainer(t *testing.T) {
+	// Create root container
+	root := widget.NewContainer()
+	root.GetWidget().Rect = image.Rect(0, 0, 800, 600)
+
+	// Create TabBook with tabs
+	tab1 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Tab1"))
+	tab2 := widget.NewTabBookTab(widget.TabBookTabOpts.Label("Tab2"))
+
+	tb := widget.NewTabBook()
+	tb.GetWidget().Rect = image.Rect(50, 50, 750, 550)
+	setPrivateFieldOnTabBook(tb, "tabs", []*widget.TabBookTab{tab1, tab2})
+	setPrivateFieldOnTabBook(tb, "tab", tab1)
+
+	// Add TabBook to container (Note: in real usage, TabBook would be added via proper setup)
+	// For this test, we manually set parent relationship
+	root.AddChild(tb)
+
+	// Walk the tree
+	infoList := autoui.WalkTree(root)
+
+	// Expected: Container + TabBook + 2 TabBookTab = 4 widgets
+	if len(infoList) != 4 {
+		t.Fatalf("Expected 4 widgets, got %d", len(infoList))
+	}
+
+	// Verify order: Container -> TabBook -> TabBookTab -> TabBookTab
+	expectedTypes := []string{"Container", "TabBook", "TabBookTab", "TabBookTab"}
+	for i, expected := range expectedTypes {
+		if infoList[i].Type != expected {
+			t.Errorf("Widget %d: expected type '%s', got '%s'", i, expected, infoList[i].Type)
+		}
+	}
+}
+
+// setPrivateFieldOnTabBook is a test helper to set private fields on TabBook.
+func setPrivateFieldOnTabBook(tb *widget.TabBook, fieldName string, value interface{}) {
+	v := reflect.ValueOf(tb).Elem()
+	field := v.FieldByName(fieldName)
+	fieldPtr := unsafe.Pointer(field.UnsafeAddr())
+	realField := reflect.NewAt(field.Type(), fieldPtr).Elem()
+	realField.Set(reflect.ValueOf(value))
 }

@@ -101,9 +101,43 @@ func walkTreeRecursive(w widget.PreferredSizeLocateableWidget, result *[]WidgetI
 	info := ExtractWidgetInfo(w)
 	*result = append(*result, info)
 
+	// Handle TabBook specially: inject TabBookTab children and traverse via tabs
+	if tb, ok := w.(*widget.TabBook); ok {
+		injectTabBookTabs(tb, result)
+		return // TabBook's children are handled via tabs
+	}
+
 	// If this is a Container, traverse children
 	if container, ok := w.(widget.Containerer); ok {
 		children := container.Children()
+		for _, child := range children {
+			walkTreeRecursive(child, result)
+		}
+	}
+}
+
+// injectTabBookTabs injects synthetic TabBookTab WidgetInfo entries into the result.
+// Each TabBookTab is a child of TabBook and can contain its own children.
+// This makes TabBook tabs appear as children in the XML tree output.
+func injectTabBookTabs(tb *widget.TabBook, result *[]WidgetInfo) {
+	tabs := internal.GetTabBookTabs(tb)
+	for _, tab := range tabs {
+		tabInfo := WidgetInfo{
+			Widget:   tab, // TabBookTab implements PreferredSizeLocateableWidget via Container
+			Type:     "TabBookTab",
+			Rect:     tab.GetWidget().Rect,
+			Visible:  tab.GetWidget().IsVisible(),
+			Disabled: tab.Disabled,
+			Addr:     fmt.Sprintf("0x%x", reflect.ValueOf(tab).Pointer()),
+			State: map[string]string{
+				"label":    internal.GetTabBookTabLabel(tab),
+				"disabled": fmt.Sprintf("%v", tab.Disabled),
+			},
+		}
+		*result = append(*result, tabInfo)
+		// Traverse tab's children (TabBookTab embeds Container which implements Containerer)
+		// Only traverse children, don't re-add the tab itself
+		children := tab.Children()
 		for _, child := range children {
 			walkTreeRecursive(child, result)
 		}
