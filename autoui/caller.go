@@ -57,48 +57,92 @@ func InvokeMethod(w widget.PreferredSizeLocateableWidget, methodName string, arg
 // isWhitelistedSignature checks if a method signature is allowed for invocation.
 // Whitelisted signatures:
 // - func()
-// - func(bool)
-// - func(int)
-// - func(float64)
-// - func(string)
+// - func(any/interface{})
+// - func(bool), func(int), func(float64), func(string)
+// - func(enum types) - types with underlying basic kind (int, float, string, bool)
+// - func() any/interface{} (return value capture)
+// - func() []any, func() []string, func() []int, etc. (slice returns)
 // - func() error (no args, returns error)
-// - func(bool) error
-// - func(int) error
-// - func(float64) error
-// - func(string) error
+// - func(error) error
+// - func(any) error, func(bool) error, func(int) error, etc.
 //
-// Note: Custom types based on basic types (e.g., widget.WidgetState) are NOT whitelisted.
-// Only built-in Go types are allowed.
+// Note: Custom types based on basic types (enums like widget.WidgetState) ARE now whitelisted.
 func isWhitelistedSignature(t reflect.Type) bool {
 	numIn := t.NumIn()
 	numOut := t.NumOut()
 
-	// Check return values - must be either 0 or 1 (error only)
+	// Check return values - must be either 0 or 1 (single return)
 	if numOut > 1 {
 		return false
 	}
 
-	// If there's a return value, it must be error type
+	// If there's a return value, check if it's allowed
 	if numOut == 1 {
-		if !t.Out(0).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
-			return false
+		returnType := t.Out(0)
+
+		// Allow error
+		if returnType.Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+			return true
 		}
+
+		// Allow any/interface{} (empty PkgPath, interface Kind)
+		if returnType.Kind() == reflect.Interface && returnType.PkgPath() == "" {
+			return true
+		}
+
+		// Allow slices of basic types or any
+		if returnType.Kind() == reflect.Slice {
+			elemType := returnType.Elem()
+			// []any
+			if elemType.Kind() == reflect.Interface && elemType.PkgPath() == "" {
+				return true
+			}
+			// []string, []int, []bool, etc. (element has empty PkgPath = built-in)
+			if elemType.PkgPath() == "" {
+				switch elemType.Kind() {
+				case reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64,
+					reflect.Float32, reflect.Float64, reflect.String:
+					return true
+				}
+			}
+		}
+
+		// Allow types with underlying basic Kind (enums and built-in types)
+		switch returnType.Kind() {
+		case reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64,
+			reflect.Float32, reflect.Float64, reflect.String:
+			return true
+		}
+
+		return false
 	}
 
 	// Check input parameters against whitelist
 	switch numIn {
 	case 0:
-		// func() or func() error - always whitelisted
+		// func() - always whitelisted
 		return true
 	case 1:
 		// Check single parameter type
 		paramType := t.In(0)
-		// Only allow built-in types (PkgPath is empty for built-in types)
-		if paramType.PkgPath() != "" {
-			// Custom type from external package - not whitelisted
-			return false
+
+		// Allow any/interface{} (empty PkgPath with interface Kind)
+		if paramType.Kind() == reflect.Interface && paramType.PkgPath() == "" {
+			return true
 		}
-		// Allow basic types only
+
+		// Allow built-in basic types (PkgPath is empty)
+		if paramType.PkgPath() == "" {
+			switch paramType.Kind() {
+			case reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64,
+				reflect.Float32, reflect.Float64, reflect.String:
+				return true
+			default:
+				return false
+			}
+		}
+
+		// Allow enum types (custom types with underlying basic kind)
 		switch paramType.Kind() {
 		case reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64,
 			reflect.Float32, reflect.Float64, reflect.String:

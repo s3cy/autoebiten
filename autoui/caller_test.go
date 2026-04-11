@@ -3,6 +3,7 @@ package autoui_test
 import (
 	"image"
 	"image/color"
+	"reflect"
 	"testing"
 
 	"github.com/ebitenui/ebitenui/widget"
@@ -158,10 +159,10 @@ func TestInvokeMethod_NonWhitelistedSignature(t *testing.T) {
 
 	info := autoui.ExtractWidgetInfo(btn)
 
-	// SetState takes WidgetState which is not whitelisted
-	err := autoui.InvokeMethod(info.Widget, "SetState", []any{widget.WidgetChecked})
+	// SetImage takes *ButtonImage (pointer to struct) which is not whitelisted
+	err := autoui.InvokeMethod(info.Widget, "SetImage", []any{buttonImage})
 	if err == nil {
-		t.Error("Expected error for non-whitelisted signature, got nil")
+		t.Error("Expected error for non-whitelisted signature (struct pointer), got nil")
 	}
 }
 
@@ -279,5 +280,96 @@ func TestInvokeMethod_ButtonSetText(t *testing.T) {
 	// Verify text was set (Text() returns *Text widget, we check label)
 	if btn.Text() == nil {
 		t.Log("Warning: Text() returned nil (may require validation)")
+	}
+}
+
+// TestIsWhitelistedSignature_AnyReturn tests that func() any is whitelisted.
+func TestIsWhitelistedSignature_AnyReturn(t *testing.T) {
+	fn := func() any { return "test" }
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() any to be whitelisted for returns")
+	}
+}
+
+// TestIsWhitelistedSignature_SliceAnyReturn tests that func() []any is whitelisted.
+func TestIsWhitelistedSignature_SliceAnyReturn(t *testing.T) {
+	fn := func() []any { return []any{"a", "b"} }
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() []any to be whitelisted")
+	}
+}
+
+// TestIsWhitelistedSignature_EnumReturn tests that func() WidgetState (enum) is whitelisted.
+func TestIsWhitelistedSignature_EnumReturn(t *testing.T) {
+	// WidgetState is defined as: type WidgetState int
+	fn := func() widget.WidgetState { return widget.WidgetChecked }
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() WidgetState (enum) to be whitelisted")
+	}
+}
+
+// TestIsWhitelistedSignature_AnyParam tests that func(any) is whitelisted.
+func TestIsWhitelistedSignature_AnyParam(t *testing.T) {
+	fn := func(any) {}
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func(any) to be whitelisted for params")
+	}
+}
+
+// TestIsWhitelistedSignature_EnumParam tests that func(WidgetState) is whitelisted.
+func TestIsWhitelistedSignature_EnumParam(t *testing.T) {
+	fn := func(widget.WidgetState) {}
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func(WidgetState) to be whitelisted for enum params")
+	}
+}
+
+// TestIsWhitelistedSignature_BasicSliceReturn tests that func() []string is whitelisted.
+func TestIsWhitelistedSignature_BasicSliceReturn(t *testing.T) {
+	fn := func() []string { return []string{"a", "b"} }
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() []string to be whitelisted")
+	}
+}
+
+// TestIsWhitelistedSignature_BasicIntReturn tests that func() int is whitelisted.
+func TestIsWhitelistedSignature_BasicIntReturn(t *testing.T) {
+	fn := func() int { return 42 }
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() int to be whitelisted")
+	}
+}
+
+// TestIsWhitelistedSignature_ErrorReturn tests that func() error is whitelisted.
+func TestIsWhitelistedSignature_ErrorReturn(t *testing.T) {
+	fn := func() error { return nil }
+	fnType := reflect.TypeOf(fn)
+
+	if !autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() error to be whitelisted")
+	}
+}
+
+// TestIsWhitelistedSignature_TwoReturns tests that multi-return is NOT whitelisted.
+func TestIsWhitelistedSignature_TwoReturns(t *testing.T) {
+	fn := func() (int, error) { return 0, nil }
+	fnType := reflect.TypeOf(fn)
+
+	if autoui.IsWhitelistedSignature(fnType) {
+		t.Error("Expected func() (int, error) to NOT be whitelisted")
 	}
 }
