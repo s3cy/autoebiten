@@ -484,10 +484,62 @@ disabled      → "true" or "false"
 | ComboButton | label, open |
 | ListComboButton | label, selected, open, focused |
 | TabBook | active_tab |
+| TabBookTab | label, disabled (synthetic child of TabBook) |
+| RadioGroup | name, active_index (synthetic, requires registration) |
 | ScrollContainer | scroll_x, scroll_y, content_width, content_height |
 | Text | text, max_width |
 
 **Note:** Button `text` attribute requires font setup via `ButtonOpts.Text()`. For buttons without fonts, use `id` from CustomData for queries.
+
+---
+
+### RadioGroup Operations
+
+**Note:** RadioGroup requires explicit registration. It is not discoverable via tree traversal because it is not a PreferredSizeLocateableWidget.
+
+**Registration:**
+```go
+settingsGroup := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2, btn3))
+autoui.RegisterRadioGroup("settings-group", settingsGroup)
+```
+
+**CLI Usage:**
+```bash
+# Get elements list
+autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"Elements"}'
+
+# Set active by index
+autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"SetActiveByIndex","args":[1]}'
+```
+
+**Available Methods:**
+- `Elements()` - Return element list with type, label, active status
+- `ActiveIndex()` - Return index of active element (-1 if none)
+- `SetActiveByIndex(int)` - Set active element by position
+- `ActiveLabel()` - Return label of active element
+- `SetActiveByLabel(string)` - Set active by matching label
+
+---
+
+### TabBook Operations
+
+TabBook is discoverable via tree traversal (no registration needed). TabBookTab elements appear as synthetic children of TabBook.
+
+**CLI Usage:**
+```bash
+# Get tabs list
+autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"Tabs"}'
+
+# Set active tab by index
+autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"SetTabByIndex","args":[1]}'
+```
+
+**Available Methods:**
+- `Tabs()` - Return tab list with index, label, disabled status
+- `TabIndex()` - Return index of active tab
+- `SetTabByIndex(int)` - Set active tab by position (fails if disabled)
+- `TabLabel()` - Return label of active tab
+- `SetTabByLabel(string)` - Set tab by matching label (fails if disabled)
 
 ---
 
