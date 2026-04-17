@@ -54,11 +54,17 @@ Run checks in order:
 - Looking for practical examples
 - Understanding crash diagnostics
 
-**READ references/autoui.md when:**
-- Automating EbitenUI widget trees
+**READ references/autoui-commands.md when:**
 - Querying widgets by coordinates, attributes, or XPath
 - Invoking widget methods (Click, SetText) without hard-coded coordinates
 - Writing tests that interact with UI widgets
+- Looking up CLI command syntax and examples
+
+**READ references/autoui-reference.md when:**
+- Understanding XML format and ae tags for custom attributes
+- Writing XPath queries for widget selection
+- Understanding autoui API and integration
+- Setting up custom data with struct field tags
 
 **READ references/testkit.md when:**
 - Choosing between Black-box (Launch) vs White-box (Mock)
@@ -115,7 +121,8 @@ For full documentation, **READ the appropriate reference file** based on your ta
 - **[Integration Guide](references/integration.md)** - Patch vs Library integration, API reference, custom commands, state exporter setup
 - **[CLI Commands](references/commands.md)** - Complete CLI command reference with all flags and options
 - **[Tutorial & Examples](references/tutorial.md)** - Step-by-step tutorial and practical examples
-- **[autoui Reference](references/autoui.md)** - EbitenUI widget automation, XPath queries, widget method invocation
+- **[autoui Commands](references/autoui-commands.md)** - CLI commands, examples, debugging guides, test patterns
+- **[autoui Reference](references/autoui-reference.md)** - XML format, ae tags, XPath queries, API reference
 - **[Testkit Reference](references/testkit.md)** - Black-box vs White-box testing, test API, state queries, testing patterns
 
 ---

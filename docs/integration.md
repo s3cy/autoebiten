@@ -335,7 +335,7 @@ autoebiten list_custom
 **Output:**
 ```
 
-["deferred","getPlayerInfo","heal","damage","echo"]
+["getPlayerInfo","heal","damage","echo","deferred"]
 
 ```
 
