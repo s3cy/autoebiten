@@ -2,6 +2,7 @@
 package custom
 
 import (
+	"slices"
 	"sync"
 )
 
@@ -98,5 +99,6 @@ func List() []string {
 	for name := range commands {
 		names = append(names, name)
 	}
+	slices.Sort(names)
 	return names
 }
