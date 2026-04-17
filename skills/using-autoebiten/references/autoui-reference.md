@@ -98,7 +98,27 @@ OK: {"success":true}
 
 ```
 
-Get selected entry index:
+> **Note:** `SelectedEntryIndex` returns `-1` when no entry is selected. After `SelectEntryByIndex`, it returns the selected index.
+
+**Sequential workflow (select → verify → get value):**
+
+```bash
+# Select entry, then verify selection index
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntryIndex"}'
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntry"}'
+```
+
+**Output (all commands in one session):**
+```json
+
+OK: {"success":true}
+OK: {"success":true,"result":1}
+OK: {"success":true,"result":"Option B"}
+
+```
+
+**Get selected entry index (no selection):**
 ```bash
 autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntryIndex"}'
 ```
@@ -107,18 +127,6 @@ autoebiten custom autoui.call --request '{"target":"type=List","method":"Selecte
 ```json
 
 OK: {"success":true,"result":-1}
-
-```
-
-Get selected entry value:
-```bash
-autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntry"}'
-```
-
-**Output:**
-```json
-
-OK: {"success":true}
 
 ```
 
