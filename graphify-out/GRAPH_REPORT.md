@@ -1,74 +1,80 @@
-# Graph Report - /Users/s3cy/Desktop/go/autoebiten  (2026-04-17)
+# Graph Report - .  (2026-04-17)
 
 ## Corpus Check
-- 172 files · ~169,720 words
+- 12 files · ~173,132 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1469 nodes · 3555 edges · 59 communities detected
-- Extraction: 48% EXTRACTED · 48% INFERRED · 0% AMBIGUOUS · INFERRED: 1700 edges (avg confidence: 0.8)
-- Token cost: 98,900 input · 29,500 output
+- 1558 nodes · 3714 edges · 65 communities detected
+- Extraction: 48% EXTRACTED · 48% INFERRED · 0% AMBIGUOUS · INFERRED: 1769 edges (avg confidence: 0.8)
+- Token cost: 12,500 input · 8,500 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Core Input & Server|Core Input & Server]]
-- [[_COMMUNITY_CLI Commands & Recording|CLI Commands & Recording]]
-- [[_COMMUNITY_autoui Widget Search|autoui Widget Search]]
-- [[_COMMUNITY_autoui Command Handlers|autoui Command Handlers]]
-- [[_COMMUNITY_Launch & Game Management|Launch & Game Management]]
-- [[_COMMUNITY_Black-box Testing|Black-box Testing]]
-- [[_COMMUNITY_autoui Demo Game|autoui Demo Game]]
-- [[_COMMUNITY_autoui Registry & Proxy|autoui Registry & Proxy]]
-- [[_COMMUNITY_E2E Test Infrastructure|E2E Test Infrastructure]]
-- [[_COMMUNITY_Script Execution Engine|Script Execution Engine]]
-- [[_COMMUNITY_Crash Diagnostics|Crash Diagnostics]]
-- [[_COMMUNITY_Documentation & Skills|Documentation & Skills]]
-- [[_COMMUNITY_autoui User Commands|autoui User Commands]]
-- [[_COMMUNITY_RadioGroup Proxy|RadioGroup Proxy]]
-- [[_COMMUNITY_Proxy & Reflection|Proxy & Reflection]]
-- [[_COMMUNITY_Doc Generation Templates|Doc Generation Templates]]
-- [[_COMMUNITY_State Exporter|State Exporter]]
-- [[_COMMUNITY_Widget State Extraction|Widget State Extraction]]
-- [[_COMMUNITY_Custom Data Extraction|Custom Data Extraction]]
-- [[_COMMUNITY_autoui Highlight System|autoui Highlight System]]
-- [[_COMMUNITY_Docgen Context|Docgen Context]]
-- [[_COMMUNITY_Custom Commands Demo|Custom Commands Demo]]
-- [[_COMMUNITY_Script Parser|Script Parser]]
-- [[_COMMUNITY_Demo Commands|Demo Commands]]
-- [[_COMMUNITY_Build Tags|Build Tags]]
-- [[_COMMUNITY_Docgen Game Session|Docgen Game Session]]
-- [[_COMMUNITY_autoui Design Specs|autoui Design Specs]]
-- [[_COMMUNITY_Custom Command Types|Custom Command Types]]
-- [[_COMMUNITY_Test Games|Test Games]]
-- [[_COMMUNITY_Documentation Plans|Documentation Plans]]
-- [[_COMMUNITY_Config Testing|Config Testing]]
-- [[_COMMUNITY_Carriage Return & Diagnostics|Carriage Return & Diagnostics]]
-- [[_COMMUNITY_RPC Messages Test|RPC Messages Test]]
-- [[_COMMUNITY_Custom Server Handler|Custom Server Handler]]
-- [[_COMMUNITY_testkit Documentation|testkit Documentation]]
-- [[_COMMUNITY_testkit Errors|testkit Errors]]
-- [[_COMMUNITY_autoui Caller Export Test|autoui Caller Export Test]]
-- [[_COMMUNITY_autoui Documentation|autoui Documentation]]
-- [[_COMMUNITY_autoui Internal Doc|autoui Internal Doc]]
-- [[_COMMUNITY_Main CLI Entry|Main CLI Entry]]
-- [[_COMMUNITY_Docgen CLI Entry|Docgen CLI Entry]]
-- [[_COMMUNITY_Output Manager Test|Output Manager Test]]
-- [[_COMMUNITY_Output Testing|Output Testing]]
-- [[_COMMUNITY_Test Error Types|Test Error Types]]
-- [[_COMMUNITY_RPC Socket Utilities|RPC Socket Utilities]]
-- [[_COMMUNITY_Custom Commands Example|Custom Commands Example]]
-- [[_COMMUNITY_Crash Diagnostic Example|Crash Diagnostic Example]]
-- [[_COMMUNITY_Simple Game Example|Simple Game Example]]
-- [[_COMMUNITY_testkit Error States|testkit Error States]]
-- [[_COMMUNITY_autoui Command Docs|autoui Command Docs]]
-- [[_COMMUNITY_TabInfo Type|TabInfo Type]]
-- [[_COMMUNITY_autoui Internal Docs|autoui Internal Docs]]
-- [[_COMMUNITY_CLAUDE.md Project Doc|CLAUDE.md Project Doc]]
-- [[_COMMUNITY_autoui At Command|autoui At Command]]
-- [[_COMMUNITY_Input Command Type|Input Command Type]]
-- [[_COMMUNITY_Mouse Command Type|Mouse Command Type]]
-- [[_COMMUNITY_Wheel Command Type|Wheel Command Type]]
-- [[_COMMUNITY_XPath 1.0 Support|XPath 1.0 Support]]
-- [[_COMMUNITY_Tick System|Tick System]]
+- [[_COMMUNITY_Community 0|Community 0]]
+- [[_COMMUNITY_Community 1|Community 1]]
+- [[_COMMUNITY_Community 2|Community 2]]
+- [[_COMMUNITY_Community 3|Community 3]]
+- [[_COMMUNITY_Community 4|Community 4]]
+- [[_COMMUNITY_Community 5|Community 5]]
+- [[_COMMUNITY_Community 6|Community 6]]
+- [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 8|Community 8]]
+- [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
+- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 14|Community 14]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
+- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 38|Community 38]]
+- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 40|Community 40]]
+- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 43|Community 43]]
+- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
+- [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
+- [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 64|Community 64]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `contains()` - 82 edges
@@ -83,16 +89,16 @@
 10. `Handler` - 25 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Mock` --semantically_similar_to--> `testkit.Launch`  [INFERRED] [semantically similar]
+  testkit/mock.go → skills/using-autoebiten/SKILL.md
+- `state_exporter.go - State query via reflection` --rationale_for--> `Rationale: JSON Tags Ignored for Path Navigation`  [INFERRED]
+  state_exporter.go → skills/using-autoebiten/references/integration.md
+- `Mock` --describes--> `using-autoebiten Skill`  [EXTRACTED]
+  testkit/mock.go → skills/using-autoebiten/SKILL.md
+- `state_exporter.go - State query via reflection` --enables--> `State Queries`  [INFERRED]
+  state_exporter.go → skills/using-autoebiten/SKILL.md
 - `readme_doc` ----> `custom_command.go - Custom command registration wrapper`  [EXTRACTED]
   README.md → custom_command.go
-- `TestParsePath()` --calls--> `parsePath()`  [INFERRED]
-  state_exporter_test.go → state_exporter.go
-- `Capture()` --calls--> `Capture()`  [INFERRED]
-  autoebiten_default.go → integrate/integrate.go
-- `TestStateExporterJSONTags()` --calls--> `navigatePath()`  [INFERRED]
-  state_exporter_edge_test.go → state_exporter.go
-- `TestStateExporterInterfaceField()` --calls--> `navigatePath()`  [INFERRED]
-  state_exporter_edge_test.go → state_exporter.go
 
 ## Hyperedges (group relationships)
 - **cli_architecture** — cli_commandexecutor, cli_writer, cli_launchcommand, cli_launchoptions, cli_condition, cli_waitlogger, cli_schemavalidator [0.8]
@@ -161,309 +167,347 @@
 
 ## Communities
 
-### Community 0 - "Core Input & Server"
+### Community 0 - "Community 0"
+Cohesion: 0.04
+Nodes (96): CommandExecutor, Condition, waitLogger, Writer, detectProxyOrDirect(), NewCommandExecutor(), captureOutput(), TestHandleResponseBothDiffAndProxyError() (+88 more)
+
+### Community 1 - "Community 1"
+Cohesion: 0.04
+Nodes (126): CallRequest, CallResponse, CoordinateRequest, ExistsResponse, HighlightRequest, mockCommandContext, RegisterOptions, GetCustomCommand() (+118 more)
+
+### Community 2 - "Community 2"
 Cohesion: 0.03
 Nodes (87): Capture(), CursorPosition(), IsKeyJustPressed(), IsKeyJustReleased(), IsKeyPressed(), IsMouseButtonJustPressed(), IsMouseButtonJustReleased(), IsMouseButtonPressed() (+79 more)
 
-### Community 1 - "CLI Commands & Recording"
+### Community 3 - "Community 3"
+Cohesion: 0.03
+Nodes (103): ae Tags, autoui.at Command, autoui.call Command, autoui_exists, autoui.exists Command, autoui_find, autoui.find Command, finder.go (+95 more)
+
+### Community 4 - "Community 4"
 Cohesion: 0.05
-Nodes (74): CommandExecutor, Condition, waitLogger, Writer, detectProxyOrDirect(), NewCommandExecutor(), captureOutput(), TestHandleResponseBothDiffAndProxyError() (+66 more)
+Nodes (86): stringKeyValue, WidgetNode, filterWidgets(), FindAt(), FindByQuery(), FindByQueryJSON(), getWidgetAttributeValue(), matchesCriteria() (+78 more)
 
-### Community 2 - "autoui Widget Search"
-Cohesion: 0.04
-Nodes (97): autoui, stringKeyValue, WidgetNode, xpath.go, Caller Whitelist, ExtractCustomData, filterWidgets(), FindAt() (+89 more)
-
-### Community 3 - "autoui Command Handlers"
+### Community 5 - "Community 5"
 Cohesion: 0.05
-Nodes (85): CallRequest, CallResponse, CoordinateRequest, ExistsResponse, HighlightRequest, mockCommandContext, RegisterOptions, GetCustomCommand() (+77 more)
+Nodes (64): Mode, LaunchCommand, LaunchOptions, delayedMockClient, handleTestConnection(), mustMarshal(), newTestClient(), newTestHandler() (+56 more)
 
-### Community 4 - "Launch & Game Management"
-Cohesion: 0.04
-Nodes (66): Mode, LaunchCommand, LaunchOptions, handleTestConnection(), mustMarshal(), newTestClient(), newTestHandler(), sendRequest() (+58 more)
+### Community 6 - "Community 6"
+Cohesion: 0.06
+Nodes (82): WidgetInfo, convertArg(), convertArgs(), InvokeMethod(), isWhitelistedSignature(), TestConvertArg_AnyParam(), TestConvertArg_IntToEnum(), TestConvertArg_NonEmptyInterfaceNotImplemented() (+74 more)
 
-### Community 5 - "Black-box Testing"
+### Community 7 - "Community 7"
 Cohesion: 0.05
-Nodes (60): Config, getStateExporterGameBinary(), TestEnemyStateQuery(), TestHealthModification(), TestPlayerMovement(), TestScreenshotCapture(), blackbox_test, DefaultConfig() (+52 more)
+Nodes (59): Config, getStateExporterGameBinary(), TestEnemyStateQuery(), TestHealthModification(), TestPlayerMovement(), TestScreenshotCapture(), blackbox_test, DefaultConfig() (+51 more)
 
-### Community 6 - "autoui Demo Game"
+### Community 8 - "Community 8"
+Cohesion: 0.06
+Nodes (41): testHandler, decodeParams(), ErrorResponse(), marshalResult(), ProcessRequest(), TestConcurrentProxyRequests(), TestProxyServerCleanup(), delayedMockClient (+33 more)
+
+### Community 9 - "Community 9"
 Cohesion: 0.04
 Nodes (36): autoebiten, Game, PlayerCard, Game, Game, CustomGame, Documentation Template System, docgen (+28 more)
 
-### Community 7 - "autoui Registry & Proxy"
-Cohesion: 0.08
-Nodes (64): WidgetInfo, convertArg(), convertArgs(), InvokeMethod(), isWhitelistedSignature(), TestConvertArg_AnyParam(), TestConvertArg_IntToEnum(), TestConvertArg_NonEmptyInterfaceNotImplemented() (+56 more)
+### Community 10 - "Community 10"
+Cohesion: 0.04
+Nodes (65): ae_tag, autoui, autoui_call, caller.go, handlers.go, Highlight, highlightManager, autoui_internal_customdata (+57 more)
 
-### Community 8 - "E2E Test Infrastructure"
+### Community 11 - "Community 11"
+Cohesion: 0.06
+Nodes (46): EnsureTargetPID(), launchSocketPath(), TestExecutableNotFound(), TestLaunchExitsAfterCLIQuery(), TestLaunchSocketExistsBeforeGameStart(), TestMultipleCLIQueriesAfterCrash(), TestPreRPCCrashDiagnostics(), persistentPreRunRootCommand() (+38 more)
+
+### Community 12 - "Community 12"
 Cohesion: 0.07
-Nodes (37): testHandler, decodeParams(), ErrorResponse(), marshalResult(), ProcessRequest(), delayedMockClient, GameClient, Handler (+29 more)
+Nodes (42): autoui_internal_reflection, ProxyHandler, TabInfo, GetProxyHandler(), handleSetTabByIndex(), handleSetTabByLabel(), handleTabIndex(), handleTabLabel() (+34 more)
 
-### Community 9 - "Script Execution Engine"
-Cohesion: 0.06
-Nodes (41): unmarshalCommand(), unmarshalRepeat(), TestScriptExecutorEndToEnd(), formatCustomCmd(), formatInputCmd(), formatMouseCmd(), formatScreenshotCmd(), formatWheelCmd() (+33 more)
+### Community 13 - "Community 13"
+Cohesion: 0.07
+Nodes (44): RadioGroupElementInfo, RadioGroupHandler, schemaValidator, runSchemaCommand(), handleRadioGroupActiveIndex(), handleRadioGroupActiveLabel(), handleRadioGroupElements(), handleRadioGroupSetActiveByIndex() (+36 more)
 
-### Community 10 - "Crash Diagnostics"
-Cohesion: 0.06
-Nodes (45): EnsureTargetPID(), launchSocketPath(), TestExecutableNotFound(), TestLaunchExitsAfterCLIQuery(), TestLaunchSocketExistsBeforeGameStart(), TestMultipleCLIQueriesAfterCrash(), TestPreRPCCrashDiagnostics(), persistentPreRunRootCommand() (+37 more)
-
-### Community 11 - "Documentation & Skills"
-Cohesion: 0.05
-Nodes (48): autoui_exists, Black-Box Testing, build_tags, carriage_return_writer, commands_doc, crash_diagnostics, custom_command.go - Custom command registration wrapper, e2e_crash_tests (+40 more)
-
-### Community 12 - "autoui User Commands"
-Cohesion: 0.05
-Nodes (49): ae_tag, autoui_call, caller.go, autoui_find, finder.go, handlers.go, Highlight, autoui_internal_customdata (+41 more)
-
-### Community 13 - "RadioGroup Proxy"
-Cohesion: 0.08
-Nodes (42): RadioGroupElementInfo, RadioGroupHandler, schemaValidator, runSchemaCommand(), handleRadioGroupActiveIndex(), handleRadioGroupActiveLabel(), handleRadioGroupElements(), handleRadioGroupSetActiveByIndex() (+34 more)
-
-### Community 14 - "Proxy & Reflection"
-Cohesion: 0.08
-Nodes (38): ProxyHandler, TabInfo, GetProxyHandler(), handleSetTabByIndex(), handleSetTabByLabel(), handleTabIndex(), handleTabLabel(), handleTabs() (+30 more)
-
-### Community 15 - "Doc Generation Templates"
+### Community 14 - "Community 14"
 Cohesion: 0.09
-Nodes (42): commandFunc(), configFunc(), delayFunc(), dictFunc(), endGameFunc(), FuncMap(), gocodeFunc(), launchGameFunc() (+34 more)
+Nodes (18): unmarshalCommand(), unmarshalRepeat(), Entry, CommandSchema, CommandWrapper, CustomCmd, DelayCmd, InputCmd (+10 more)
 
-### Community 16 - "State Exporter"
+### Community 15 - "Community 15"
 Cohesion: 0.12
 Nodes (25): gameWithInterface, taggedGameState, taggedPlayer, TestStateExporterInterfaceField(), TestStateExporterInterfaceWithPointer(), TestStateExporterJSONTags(), TestStateExporterNilInterface(), getFieldByName() (+17 more)
 
-### Community 17 - "Widget State Extraction"
-Cohesion: 0.14
-Nodes (21): extractButtonState(), extractCheckboxState(), extractComboButtonState(), extractLabelState(), extractListComboButtonState(), extractListState(), extractProgressBarState(), extractScrollContainerState() (+13 more)
-
-### Community 18 - "Custom Data Extraction"
+### Community 16 - "Community 16"
 Cohesion: 0.15
 Nodes (24): ExtractCustomData(), extractSliceElements(), extractStructFields(), getXMLAttributeName(), TestExtractCustomData_AETag(), TestExtractCustomData_AETagIgnore(), TestExtractCustomData_Bool(), TestExtractCustomData_EmptySlice() (+16 more)
 
-### Community 19 - "autoui Highlight System"
-Cohesion: 0.22
-Nodes (14): highlightManager, AddHighlight(), ClearHighlights(), DrawHighlights(), drawHighlightsCallback(), newHighlightManager(), SetHighlightDuration(), TestAddHighlight() (+6 more)
+### Community 17 - "Community 17"
+Cohesion: 0.09
+Nodes (26): autoui.at Command, autoui.call Command, autoui.exists Command, autoui.find Command, autoui.highlight Command, autoui.xpath Command, ae Tags (Custom Attributes), RadioGroup Operations (+18 more)
 
-### Community 20 - "Docgen Context"
+### Community 18 - "Community 18"
 Cohesion: 0.18
 Nodes (8): TestContextAddOutput(), TestContextGetOutputsEmpty(), TestContextGetOutputsReturnsCopy(), TestContextSetConfig(), TestNewContext(), Config, Context, NormalizeRule
 
-### Community 21 - "Custom Commands Demo"
+### Community 19 - "Community 19"
 Cohesion: 0.13
 Nodes (15): command_console, command_list, custom_commands_demo, damage_cmd, dark_blue_theme, deferred_cmd, ebitengine_game, echo_cmd (+7 more)
 
-### Community 22 - "Script Parser"
+### Community 20 - "Community 20"
 Cohesion: 0.31
 Nodes (9): Parse(), ParseBytes(), ParseString(), stripComments(), TestParseComments(), TestParseCustom(), TestParseInvalid(), TestParseRepeat() (+1 more)
 
-### Community 23 - "Demo Commands"
+### Community 21 - "Community 21"
 Cohesion: 0.2
 Nodes (10): damage Command, deferred Command, echo Command, getPlayerInfo Command, heal Command, Custom Commands Demo, Command List, Health Display (+2 more)
 
-### Community 24 - "Build Tags"
+### Community 22 - "Community 22"
 Cohesion: 0.33
 Nodes (9): autoebiten_default.go - non-release build with integration, autoebiten.go - Mode constants and management, autoebiten_release.go - release build stubs, internal/input/input.go - VirtualInput state management, internal/input/input_time.go - InputTime tick/subtick, internal/input/keys.go - Key constants and lookup, internal/input/mouse_buttons.go - Mouse button constants, integrate/integrate.go - Ebiten integration layer (+1 more)
 
-### Community 25 - "Docgen Game Session"
+### Community 23 - "Community 23"
 Cohesion: 0.25
 Nodes (8): Delay, EndGame, ExecuteCommand, ExtractGoCode, LaunchGame, Normalize, FuncMap, VerifyOutputs
 
-### Community 26 - "autoui Design Specs"
+### Community 24 - "Community 24"
 Cohesion: 0.25
 Nodes (8): autoui Bug Fixes Design, autoui.call Extended Type Support Design, autoui.exists Command Design, autoui.exists Command Implementation Plan, autoui RadioGroup & TabBook Support Design, autoui RadioGroup & TabBook Support Implementation Plan, integrate.AfterDraw() Design, Widget State Extraction Expansion Design
 
-### Community 27 - "Custom Command Types"
+### Community 25 - "Community 25"
 Cohesion: 0.43
 Nodes (8): Damage Command, Deferred Command, Echo Command, GetPlayerInfo Command, Heal Command, Command Processing System, Custom Commands Demo, Player Stats Display
 
-### Community 28 - "Test Games"
+### Community 26 - "Community 26"
 Cohesion: 0.33
 Nodes (6): integration_test, inventory_item, player, testgame_custom, testgame_simple, testgame_stateful
 
-### Community 29 - "Documentation Plans"
+### Community 27 - "Community 27"
 Cohesion: 0.5
 Nodes (4): Doc Example Automation Design, Document Template Rewrite Workflow Design, Documentation Template System Rewrite Design, Documentation Rewrite Design
 
-### Community 30 - "Config Testing"
+### Community 28 - "Community 28"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 31 - "Carriage Return & Diagnostics"
+### Community 29 - "Community 29"
 Cohesion: 0.67
 Nodes (3): Carriage Return Interpretation + Mutex-Protected Output Design, Game Output Capture Design, Launch Socket for Crash Diagnostics Design
 
-### Community 32 - "RPC Messages Test"
+### Community 30 - "Community 30"
+Cohesion: 0.67
+Nodes (3): autoui.tree Command, XML Format, WidgetInfo
+
+### Community 31 - "Community 31"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 33 - "Custom Server Handler"
+### Community 32 - "Community 32"
+Cohesion: 1.0
+Nodes (2): Writing Documentation Rules, autoebiten Overview
+
+### Community 33 - "Community 33"
+Cohesion: 1.0
+Nodes (2): state Command, State Exporter
+
+### Community 34 - "Community 34"
+Cohesion: 1.0
+Nodes (2): Thread Safety, EbitenUI Integration
+
+### Community 35 - "Community 35"
+Cohesion: 1.0
+Nodes (2): launch Command, Crash Diagnostics
+
+### Community 36 - "Community 36"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 34 - "testkit Documentation"
+### Community 37 - "Community 37"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 35 - "testkit Errors"
+### Community 38 - "Community 38"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 36 - "autoui Caller Export Test"
+### Community 39 - "Community 39"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 37 - "autoui Documentation"
+### Community 40 - "Community 40"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 38 - "autoui Internal Doc"
+### Community 41 - "Community 41"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 39 - "Main CLI Entry"
+### Community 42 - "Community 42"
 Cohesion: 1.0
 Nodes (1): cmd/autoebiten/main.go - CLI entry point with cobra
 
-### Community 40 - "Docgen CLI Entry"
+### Community 43 - "Community 43"
 Cohesion: 1.0
 Nodes (1): cmd/docgen/main.go - Documentation generator
 
-### Community 41 - "Output Manager Test"
+### Community 44 - "Community 44"
 Cohesion: 1.0
 Nodes (1): internal/output/manager_test.go - Output manager tests
 
-### Community 42 - "Output Testing"
+### Community 45 - "Community 45"
 Cohesion: 1.0
 Nodes (1): internal/output/output_test.go - Output path tests
 
-### Community 43 - "Test Error Types"
+### Community 46 - "Community 46"
 Cohesion: 1.0
 Nodes (1): test_testerror
 
-### Community 44 - "RPC Socket Utilities"
+### Community 47 - "Community 47"
 Cohesion: 1.0
 Nodes (1): SocketPath
 
-### Community 45 - "Custom Commands Example"
+### Community 48 - "Community 48"
 Cohesion: 1.0
 Nodes (1): example_custom_cmd
 
-### Community 46 - "Crash Diagnostic Example"
+### Community 49 - "Community 49"
 Cohesion: 1.0
 Nodes (1): example_crash_diag
 
-### Community 47 - "Simple Game Example"
+### Community 50 - "Community 50"
 Cohesion: 1.0
 Nodes (1): example_simple
 
-### Community 48 - "testkit Error States"
+### Community 51 - "Community 51"
 Cohesion: 1.0
 Nodes (1): testkit_errinvalidstate
 
-### Community 49 - "autoui Command Docs"
+### Community 52 - "Community 52"
 Cohesion: 1.0
 Nodes (1): doc.go
 
-### Community 50 - "TabInfo Type"
+### Community 53 - "Community 53"
 Cohesion: 1.0
 Nodes (1): TabInfo
 
-### Community 51 - "autoui Internal Docs"
+### Community 54 - "Community 54"
 Cohesion: 1.0
 Nodes (1): autoui_internal_doc
 
-### Community 52 - "CLAUDE.md Project Doc"
+### Community 55 - "Community 55"
 Cohesion: 1.0
 Nodes (1): claude_doc
 
-### Community 53 - "autoui At Command"
+### Community 56 - "Community 56"
 Cohesion: 1.0
 Nodes (1): autoui_at
 
-### Community 54 - "Input Command Type"
+### Community 57 - "Community 57"
 Cohesion: 1.0
 Nodes (1): input_command
 
-### Community 55 - "Mouse Command Type"
+### Community 58 - "Community 58"
 Cohesion: 1.0
 Nodes (1): mouse_command
 
-### Community 56 - "Wheel Command Type"
+### Community 59 - "Community 59"
 Cohesion: 1.0
 Nodes (1): wheel_command
 
-### Community 57 - "XPath 1.0 Support"
+### Community 60 - "Community 60"
 Cohesion: 1.0
 Nodes (1): xpath_1_0
 
-### Community 58 - "Tick System"
+### Community 61 - "Community 61"
 Cohesion: 1.0
 Nodes (1): ticks
 
+### Community 62 - "Community 62"
+Cohesion: 1.0
+Nodes (1): Installation Instructions
+
+### Community 63 - "Community 63"
+Cohesion: 1.0
+Nodes (1): Graphify Knowledge Graph
+
+### Community 64 - "Community 64"
+Cohesion: 1.0
+Nodes (1): ping Command
+
 ## Knowledge Gaps
-- **67 isolated node(s):** `testPlayer`, `testInventoryItem`, `testGameState`, `taggedPlayer`, `gameWithInterface` (+62 more)
+- **93 isolated node(s):** `testPlayer`, `testInventoryItem`, `testGameState`, `taggedPlayer`, `gameWithInterface` (+88 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `RPC Messages Test`** (2 nodes): `messages_test.go`, `TestErrorCodes()`
+- **Thin community `Community 31`** (2 nodes): `messages_test.go`, `TestErrorCodes()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Custom Server Handler`** (1 nodes): `custom.go`
+- **Thin community `Community 32`** (2 nodes): `Writing Documentation Rules`, `autoebiten Overview`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `testkit Documentation`** (1 nodes): `doc.go`
+- **Thin community `Community 33`** (2 nodes): `state Command`, `State Exporter`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `testkit Errors`** (1 nodes): `errors.go`
+- **Thin community `Community 34`** (2 nodes): `Thread Safety`, `EbitenUI Integration`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `autoui Caller Export Test`** (1 nodes): `caller_export_test.go`
+- **Thin community `Community 35`** (2 nodes): `launch Command`, `Crash Diagnostics`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `autoui Documentation`** (1 nodes): `doc.go`
+- **Thin community `Community 36`** (1 nodes): `custom.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `autoui Internal Doc`** (1 nodes): `doc.go`
+- **Thin community `Community 37`** (1 nodes): `doc.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Main CLI Entry`** (1 nodes): `cmd/autoebiten/main.go - CLI entry point with cobra`
+- **Thin community `Community 38`** (1 nodes): `errors.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Docgen CLI Entry`** (1 nodes): `cmd/docgen/main.go - Documentation generator`
+- **Thin community `Community 39`** (1 nodes): `caller_export_test.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Output Manager Test`** (1 nodes): `internal/output/manager_test.go - Output manager tests`
+- **Thin community `Community 40`** (1 nodes): `doc.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Output Testing`** (1 nodes): `internal/output/output_test.go - Output path tests`
+- **Thin community `Community 41`** (1 nodes): `doc.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Test Error Types`** (1 nodes): `test_testerror`
+- **Thin community `Community 42`** (1 nodes): `cmd/autoebiten/main.go - CLI entry point with cobra`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `RPC Socket Utilities`** (1 nodes): `SocketPath`
+- **Thin community `Community 43`** (1 nodes): `cmd/docgen/main.go - Documentation generator`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Custom Commands Example`** (1 nodes): `example_custom_cmd`
+- **Thin community `Community 44`** (1 nodes): `internal/output/manager_test.go - Output manager tests`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Crash Diagnostic Example`** (1 nodes): `example_crash_diag`
+- **Thin community `Community 45`** (1 nodes): `internal/output/output_test.go - Output path tests`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Simple Game Example`** (1 nodes): `example_simple`
+- **Thin community `Community 46`** (1 nodes): `test_testerror`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `testkit Error States`** (1 nodes): `testkit_errinvalidstate`
+- **Thin community `Community 47`** (1 nodes): `SocketPath`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `autoui Command Docs`** (1 nodes): `doc.go`
+- **Thin community `Community 48`** (1 nodes): `example_custom_cmd`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `TabInfo Type`** (1 nodes): `TabInfo`
+- **Thin community `Community 49`** (1 nodes): `example_crash_diag`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `autoui Internal Docs`** (1 nodes): `autoui_internal_doc`
+- **Thin community `Community 50`** (1 nodes): `example_simple`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `CLAUDE.md Project Doc`** (1 nodes): `claude_doc`
+- **Thin community `Community 51`** (1 nodes): `testkit_errinvalidstate`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `autoui At Command`** (1 nodes): `autoui_at`
+- **Thin community `Community 52`** (1 nodes): `doc.go`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Input Command Type`** (1 nodes): `input_command`
+- **Thin community `Community 53`** (1 nodes): `TabInfo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Mouse Command Type`** (1 nodes): `mouse_command`
+- **Thin community `Community 54`** (1 nodes): `autoui_internal_doc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Wheel Command Type`** (1 nodes): `wheel_command`
+- **Thin community `Community 55`** (1 nodes): `claude_doc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `XPath 1.0 Support`** (1 nodes): `xpath_1_0`
+- **Thin community `Community 56`** (1 nodes): `autoui_at`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Tick System`** (1 nodes): `ticks`
+- **Thin community `Community 57`** (1 nodes): `input_command`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 58`** (1 nodes): `mouse_command`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 59`** (1 nodes): `wheel_command`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 60`** (1 nodes): `xpath_1_0`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 61`** (1 nodes): `ticks`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 62`** (1 nodes): `Installation Instructions`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 63`** (1 nodes): `Graphify Knowledge Graph`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 64`** (1 nodes): `ping Command`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `contains()` connect `autoui Command Handlers` to `CLI Commands & Recording`, `autoui Widget Search`, `Launch & Game Management`, `Black-box Testing`, `autoui Demo Game`, `autoui Registry & Proxy`, `E2E Test Infrastructure`, `Crash Diagnostics`, `RadioGroup Proxy`, `Proxy & Reflection`, `Doc Generation Templates`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
-- **Why does `Game` connect `Black-box Testing` to `CLI Commands & Recording`, `Crash Diagnostics`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
-- **Why does `main()` connect `autoui Demo Game` to `Core Input & Server`, `CLI Commands & Recording`, `autoui Command Handlers`, `Script Execution Engine`, `Crash Diagnostics`, `Documentation & Skills`, `State Exporter`, `Script Parser`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **Why does `contains()` connect `Community 1` to `Community 0`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 13`?**
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
+- **Why does `main()` connect `Community 9` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 11`, `Community 15`, `Community 20`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
+- **Why does `Executor` connect `Community 0` to `Community 3`, `Community 14`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **Are the 77 inferred relationships involving `contains()` (e.g. with `main()` and `TestOutputManagerDiffAndUpdateSnapshot()`) actually correct?**
   _`contains()` has 77 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 45 inferred relationships involving `WalkTree()` (e.g. with `TestHandleExistsCommand_Found()` and `TestHandleExistsCommand_NotFound()`) actually correct?**

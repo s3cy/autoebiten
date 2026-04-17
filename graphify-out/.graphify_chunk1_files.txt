@@ -1,0 +1,6 @@
+README.md
+CLAUDE.md
+docs/integration.md
+docs/commands.md
+docs/autoui-reference.md
+docs/autoui-commands.md
