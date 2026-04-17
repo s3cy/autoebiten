@@ -20,6 +20,7 @@ import (
 	"image/color"
 	"log"
 
+	ebitenuiImage "github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -36,10 +37,22 @@ func main() {
 	root := widget.NewContainer()
 	root.GetWidget().Rect = image.Rect(0, 0, 640, 480)
 
+	// Create button images
+	buttonImage := createButtonImage()
+
 	// Create toggle buttons for radio group
-	btn1 := widget.NewButton(widget.ButtonOpts.ToggleMode())
-	btn2 := widget.NewButton(widget.ButtonOpts.ToggleMode())
-	btn3 := widget.NewButton(widget.ButtonOpts.ToggleMode())
+	btn1 := widget.NewButton(
+		widget.ButtonOpts.ToggleMode(),
+		widget.ButtonOpts.Image(buttonImage),
+	)
+	btn2 := widget.NewButton(
+		widget.ButtonOpts.ToggleMode(),
+		widget.ButtonOpts.Image(buttonImage),
+	)
+	btn3 := widget.NewButton(
+		widget.ButtonOpts.ToggleMode(),
+		widget.ButtonOpts.Image(buttonImage),
+	)
 
 	// Position buttons
 	btn1.GetWidget().Rect = image.Rect(100, 50, 200, 90)
@@ -99,4 +112,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return outsideWidth, outsideHeight
+}
+
+func createButtonImage() *widget.ButtonImage {
+	return &widget.ButtonImage{
+		Idle:     ebitenuiImage.NewNineSliceColor(color.NRGBA{R: 170, G: 170, B: 180, A: 255}),
+		Hover:    ebitenuiImage.NewNineSliceColor(color.NRGBA{R: 130, G: 130, B: 150, A: 255}),
+		Pressed:  ebitenuiImage.NewNineSliceColor(color.NRGBA{R: 255, G: 100, B: 120, A: 255}),
+		Disabled: ebitenuiImage.NewNineSliceColor(color.NRGBA{R: 120, G: 120, B: 120, A: 255}),
+	}
 }

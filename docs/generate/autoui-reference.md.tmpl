@@ -70,23 +70,56 @@ disabled      → "true" or "false"
 
 Select entries in a List widget by index:
 
+{{ config "examples/list_widget" }}
+
 **CLI Usage:**
+
+Get list entries:
 ```bash
-# Get list entries
 autoebiten custom autoui.call --request '{"target":"type=List","method":"Entries"}'
-# Response: {"success":true,"result":["Option A","Option B","Option C"]}
+```
 
-# Select entry by index
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=List\",\"method\":\"Entries\"}") }}
+{{ end_game }}
+```
+
+Select entry by index:
+```bash
 autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
-# Response: {"success":true}
+```
 
-# Get selected entry index
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=List\",\"method\":\"SelectEntryByIndex\",\"args\":[1]}") }}
+{{ end_game }}
+```
+
+Get selected entry index:
+```bash
 autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntryIndex"}'
-# Response: {"success":true,"result":1}
+```
 
-# Get selected entry value
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=List\",\"method\":\"SelectedEntryIndex\"}") }}
+{{ end_game }}
+```
+
+Get selected entry value:
+```bash
 autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntry"}'
-# Response: {"success":true,"result":"Option B"}
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=List\",\"method\":\"SelectedEntry\"}") }}
+{{ end_game }}
 ```
 
 **Available Methods:**
@@ -106,9 +139,17 @@ go build -o list_demo
 autoebiten launch -- ./list_demo &
 ```
 
+{{ config "examples/list_widget" }}
 ```bash
 # Select the second item in the list
 autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=List\",\"method\":\"SelectEntryByIndex\",\"args\":[1]}") }}
+{{ end_game }}
 ```
 
 ---
@@ -125,13 +166,32 @@ settingsGroup := widget.NewRadioGroup(widget.RadioGroupOpts.Elements(btn1, btn2,
 autoui.RegisterRadioGroup("settings-group", settingsGroup)
 ```
 
-**CLI Usage:**
-```bash
-# Get elements list
-autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"Elements"}'
+{{ config "examples/radiogroup_widget" }}
 
-# Set active by index
+**CLI Usage:**
+
+Get elements list:
+```bash
+autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"Elements"}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"radiogroup=settings-group\",\"method\":\"Elements\"}") }}
+{{ end_game }}
+```
+
+Set active by index:
+```bash
 autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"SetActiveByIndex","args":[1]}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"radiogroup=settings-group\",\"method\":\"SetActiveByIndex\",\"args\":[1]}") }}
+{{ end_game }}
 ```
 
 **Available Methods:**
@@ -150,9 +210,17 @@ go build -o radiogroup_demo
 autoebiten launch -- ./radiogroup_demo &
 ```
 
+{{ config "examples/radiogroup_widget" }}
 ```bash
 # Select the second radio button
 autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"SetActiveByIndex","args":[1]}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"radiogroup=settings-group\",\"method\":\"SetActiveByIndex\",\"args\":[1]}") }}
+{{ end_game }}
 ```
 
 ---
@@ -163,13 +231,32 @@ autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","
 >
 > **Note:** The methods below are **proxy methods** provided by autoui, not native ebitenui methods. See `autoui/proxy_tabbook.go` for implementation details.
 
-**CLI Usage:**
-```bash
-# Get tabs list
-autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"Tabs"}'
+{{ config "examples/tabbook_widget" }}
 
-# Set active tab by index
+**CLI Usage:**
+
+Get tabs list:
+```bash
+autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"Tabs"}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=TabBook\",\"method\":\"Tabs\"}") }}
+{{ end_game }}
+```
+
+Set active tab by index:
+```bash
 autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"SetTabByIndex","args":[1]}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=TabBook\",\"method\":\"SetTabByIndex\",\"args\":[1]}") }}
+{{ end_game }}
 ```
 
 **Available Methods:**
@@ -188,9 +275,17 @@ go build -o tabbook_demo
 autoebiten launch -- ./tabbook_demo &
 ```
 
+{{ config "examples/tabbook_widget" }}
 ```bash
 # Switch to the second tab
 autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"SetTabByIndex","args":[1]}'
+```
+
+**Output:**
+```json
+{{ launch_game }}
+{{ command "custom" (dict "name" "autoui.call" "request" "{\"target\":\"type=TabBook\",\"method\":\"SetTabByIndex\",\"args\":[1]}") }}
+{{ end_game }}
 ```
 
 ---
