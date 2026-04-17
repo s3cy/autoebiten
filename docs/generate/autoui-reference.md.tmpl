@@ -64,9 +64,60 @@ disabled      → "true" or "false"
 
 ---
 
+### List Selection Operations
+
+> **Note:** The methods `SelectEntryByIndex()` and `SelectedEntryIndex()` are **proxy methods** provided by autoui, not native ebitenui methods. See `autoui/proxy.go` for implementation details.
+
+Select entries in a List widget by index:
+
+**CLI Usage:**
+```bash
+# Get list entries
+autoebiten custom autoui.call --request '{"target":"type=List","method":"Entries"}'
+# Response: {"success":true,"result":["Option A","Option B","Option C"]}
+
+# Select entry by index
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
+# Response: {"success":true}
+
+# Get selected entry index
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntryIndex"}'
+# Response: {"success":true,"result":1}
+
+# Get selected entry value
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntry"}'
+# Response: {"success":true,"result":"Option B"}
+```
+
+**Available Methods:**
+- `Entries()` - Return list of entries
+- `SelectEntryByIndex(int)` - Select entry at position (proxy method)
+- `SelectedEntryIndex()` - Return current selection index, -1 if none (proxy method)
+- `SelectedEntry()` - Return currently selected entry value
+
+**Error:** `{"success":false,"error":"method 'X' not found"}`
+
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/list_widget
+go build -o list_demo
+autoebiten launch -- ./list_demo &
+```
+
+```bash
+# Select the second item in the list
+autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
+```
+
+---
+
 ### RadioGroup Operations
 
-**Note:** RadioGroup requires explicit registration. It is not discoverable via tree traversal because it is not a PreferredSizeLocateableWidget.
+> **Note:** RadioGroup requires explicit registration. It is not discoverable via tree traversal because it is not a PreferredSizeLocateableWidget.
+>
+> **Note:** The methods below are **proxy methods** provided by autoui, not native ebitenui methods. See `autoui/proxy_radiogroup.go` for implementation details.
 
 **Registration:**
 ```go
@@ -90,11 +141,27 @@ autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","
 - `ActiveLabel()` - Return label of active element
 - `SetActiveByLabel(string)` - Set active by matching label
 
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/radiogroup_widget
+go build -o radiogroup_demo
+autoebiten launch -- ./radiogroup_demo &
+```
+
+```bash
+# Select the second radio button
+autoebiten custom autoui.call --request '{"target":"radiogroup=settings-group","method":"SetActiveByIndex","args":[1]}'
+```
+
 ---
 
 ### TabBook Operations
 
-TabBook is discoverable via tree traversal (no registration needed). TabBookTab elements appear as synthetic children of TabBook.
+> **Note:** TabBook is discoverable via tree traversal (no registration needed). TabBookTab elements appear as synthetic children of TabBook.
+>
+> **Note:** The methods below are **proxy methods** provided by autoui, not native ebitenui methods. See `autoui/proxy_tabbook.go` for implementation details.
 
 **CLI Usage:**
 ```bash
@@ -107,10 +174,24 @@ autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"SetT
 
 **Available Methods:**
 - `Tabs()` - Return tab list with index, label, disabled status
-- `TabIndex()` - Return index of active tab
+- `TabIndex()` - Return index of active tab (-1 if none)
 - `SetTabByIndex(int)` - Set active tab by position (fails if disabled)
 - `TabLabel()` - Return label of active tab
 - `SetTabByLabel(string)` - Set tab by matching label (fails if disabled)
+
+**Runnable Example:**
+
+```bash
+# Build and run the demo
+cd examples/tabbook_widget
+go build -o tabbook_demo
+autoebiten launch -- ./tabbook_demo &
+```
+
+```bash
+# Switch to the second tab
+autoebiten custom autoui.call --request '{"target":"type=TabBook","method":"SetTabByIndex","args":[1]}'
+```
 
 ---
 

@@ -329,39 +329,6 @@ autoebiten custom autoui.call --request '{"target":"id=name-input","method":"Set
 
 ---
 
-### List Selection Operations
-
-Select entries in a List widget by index:
-
-**CLI Usage:**
-```bash
-# Get list entries
-autoebiten custom autoui.call --request '{"target":"type=List","method":"Entries"}'
-# Response: {"success":true,"result":["Option A","Option B","Option C"]}
-
-# Select entry by index
-autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectEntryByIndex","args":[1]}'
-# Response: {"success":true}
-
-# Get selected entry index
-autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntryIndex"}'
-# Response: {"success":true,"result":1}
-
-# Get selected entry value
-autoebiten custom autoui.call --request '{"target":"type=List","method":"SelectedEntry"}'
-# Response: {"success":true,"result":"Option B"}
-```
-
-**Available Methods:**
-- `Entries()` - Return list of entries
-- `SelectEntryByIndex(int)` - Select entry at position
-- `SelectedEntryIndex()` - Return current selection index (-1 if none)
-- `SelectedEntry()` - Return currently selected entry value
-
-**Error:** `{"success":false,"error":"method 'X' not found"}`
-
----
-
 ### autoui.highlight
 
 Add visual highlight rectangles (red, 3-second duration).
