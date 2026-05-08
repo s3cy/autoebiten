@@ -1,176 +1,742 @@
 {
-  "autoebiten_release.go": 1776412503.9968915,
-  "state_exporter_test.go": 1776412504.1068635,
-  "autoebiten_default.go": 1776412503.996523,
-  "autoebiten.go": 1776412503.9962106,
-  "state_exporter_edge_test.go": 1776412504.1066942,
-  "state_exporter.go": 1776412504.1064887,
-  "custom_command.go": 1776412504.0085366,
-  "cmd/autoebiten/main.go": 1776412504.0080206,
-  "cmd/docgen/main.go": 1776412504.0082505,
-  "integrate/integrate.go": 1776412504.0892155,
-  "integrate/integrate_test.go": 1776412504.0894406,
-  "internal/proxy/server.go": 1776412504.0991583,
-  "internal/proxy/server_test.go": 1776412504.0993793,
-  "internal/input/input_time.go": 1776412504.0973227,
-  "internal/input/mouse_buttons.go": 1776412504.0976877,
-  "internal/input/keys.go": 1776412504.0975564,
-  "internal/input/input.go": 1776412504.0970995,
-  "internal/recording/recording_test.go": 1776412504.1001608,
-  "internal/recording/recorder.go": 1776412504.0999215,
-  "internal/recording/reader.go": 1776412504.0997255,
-  "internal/recording/scriptgen.go": 1776412504.1004071,
-  "internal/output/manager_test.go": 1776412504.0983665,
-  "internal/output/output_test.go": 1776412504.098912,
-  "internal/output/output.go": 1776412504.0987074,
-  "internal/output/manager.go": 1776412504.0980232,
-  "internal/server/custom.go": 1776412504.1034186,
-  "internal/server/server.go": 1776412504.1045218,
-  "internal/server/mouse.go": 1776412504.1042063,
-  "internal/server/input.go": 1776412504.103885,
-  "internal/server/wheel.go": 1776412504.104641,
-  "internal/server/screenshot.go": 1776412504.104322,
-  "internal/cli/schema_test.go": 1776412504.091031,
-  "internal/cli/commands_response_test.go": 1776412504.0900621,
-  "internal/cli/wait.go": 1776412504.0921357,
-  "internal/cli/writer.go": 1776412504.0926893,
-  "internal/cli/launch.go": 1776412504.0903432,
-  "internal/cli/state_test.go": 1776412504.0918422,
-  "internal/cli/schema.go": 1776412504.0908241,
-  "internal/cli/state.go": 1776412504.0914042,
-  "internal/cli/launch_test.go": 1776412504.090612,
-  "internal/cli/commands.go": 1776412504.089854,
-  "internal/cli/wait_test.go": 1776412504.0923173,
-  "internal/script/executor_test.go": 1776412504.1023784,
-  "internal/script/parser_test.go": 1776412504.1031525,
-  "internal/script/ast.go": 1776412504.1020458,
-  "internal/script/parser.go": 1776412504.1026518,
-  "internal/script/executor.go": 1776412504.102205,
-  "internal/version/version.go": 1776412504.1050103,
-  "internal/docgen/config.go": 1776412504.093206,
-  "internal/docgen/game_test.go": 1776412504.0949633,
-  "internal/docgen/template_test.go": 1776412504.0962973,
-  "internal/docgen/normalize.go": 1776412504.0956402,
-  "internal/docgen/game.go": 1776412504.094666,
-  "internal/docgen/context_test.go": 1776412504.0942075,
-  "internal/docgen/normalize_test.go": 1776412504.0958161,
-  "internal/docgen/template.go": 1776412504.0961359,
-  "internal/docgen/context.go": 1776412504.0938635,
-  "internal/docgen/gocode_test.go": 1776412504.0954292,
-  "internal/docgen/verify_test.go": 1776412504.096729,
-  "internal/docgen/config_test.go": 1776412504.0934727,
-  "internal/docgen/gocode.go": 1776412504.0952456,
-  "internal/docgen/verify.go": 1776412504.0965562,
-  "internal/rpc/messages_test.go": 1776412504.1012368,
-  "internal/rpc/handlers.go": 1776412504.1007237,
-  "internal/rpc/messages.go": 1776412504.1009881,
-  "internal/rpc/socket_discovery_test.go": 1776412504.1016333,
-  "internal/rpc/socket.go": 1776412504.1014256,
-  "internal/custom/custom.go": 1776412504.0929222,
-  "testkit/options.go": 1776412504.1104412,
-  "testkit/game_test.go": 1776412504.1079948,
-  "testkit/game_mouse_test.go": 1776412504.107784,
-  "testkit/game.go": 1776412504.1075757,
-  "testkit/doc.go": 1776412504.107078,
-  "testkit/mock.go": 1776412504.1096325,
-  "testkit/mock_test.go": 1776412504.109863,
-  "testkit/integration_test.go": 1776412504.1082556,
-  "testkit/errors.go": 1776412504.1073456,
-  "testkit/internal/testgames/stateful/main.go": 1776412504.1094272,
-  "testkit/internal/testgames/simple/main.go": 1776412504.1091254,
-  "testkit/internal/testgames/custom/main.go": 1776412504.108788,
-  "examples/list_widget/main.go": 1776412504.02758,
-  "examples/custom_commands/main.go": 1776412504.024923,
-  "examples/tabbook_widget/main.go": 1776412504.0357802,
-  "examples/crash_diagnostic/main.go": 1776412504.0241249,
-  "examples/radiogroup_widget/main.go": 1776412504.0309744,
-  "examples/testkit/black_box_test.go": 1776412504.036155,
-  "examples/testkit/white_box_test.go": 1776412504.0364394,
-  "examples/simple/main.go": 1776412504.0334918,
-  "examples/autoui/main.go": 1776412504.0239148,
-  "examples/state_exporter/game.go": 1776412504.0340183,
-  "examples/state_exporter/cmd/main.go": 1776412504.0336862,
-  "autoui/register.go": 1776412504.0051262,
-  "autoui/config.go": 1776412503.998196,
-  "autoui/handlers_test.go": 1776412503.9997587,
-  "autoui/caller_export_test.go": 1776412503.997568,
-  "autoui/proxy_tabbook.go": 1776412504.0038908,
-  "autoui/proxy_radiogroup.go": 1776412504.0034385,
-  "autoui/tree.go": 1776412504.0065372,
-  "autoui/caller.go": 1776412503.9972615,
-  "autoui/finder.go": 1776412503.9988234,
-  "autoui/proxy_radiogroup_test.go": 1776412504.0035865,
-  "autoui/xpath_test.go": 1776412504.0076272,
-  "autoui/register_test.go": 1776412504.0053408,
-  "autoui/xml.go": 1776412504.0069098,
-  "autoui/proxy_tabbook_test.go": 1776412504.0041788,
-  "autoui/handlers.go": 1776412503.999459,
-  "autoui/proxy.go": 1776412504.0031168,
-  "autoui/caller_test.go": 1776412503.997776,
-  "autoui/registry.go": 1776412504.0058486,
-  "autoui/xpath.go": 1776412504.007432,
-  "autoui/finder_test.go": 1776412503.9991148,
-  "autoui/doc.go": 1776412503.998522,
-  "autoui/registry_test.go": 1776412504.0061963,
-  "autoui/tree_test.go": 1776412504.0067716,
-  "autoui/proxy_test.go": 1776412504.0047817,
-  "autoui/xml_test.go": 1776412504.0071406,
-  "autoui/integration_test.go": 1776412504.0007386,
-  "autoui/highlight_test.go": 1776412504.000318,
-  "autoui/highlight.go": 1776412504.00004,
-  "autoui/internal/reflection_test.go": 1776412504.0020816,
-  "autoui/internal/widgetstate.go": 1776412504.0024383,
-  "autoui/internal/reflection.go": 1776412504.0018892,
-  "autoui/internal/doc.go": 1776412504.0016272,
-  "autoui/internal/widgetstate_test.go": 1776412504.0026536,
-  "autoui/internal/customdata.go": 1776412504.0011024,
-  "autoui/internal/customdata_test.go": 1776412504.0013154,
-  "e2e/e2e_test.go": 1776412504.02263,
-  "e2e/output_manager_test.go": 1776412504.0233324,
-  "e2e/launch_test.go": 1776412504.0229928,
-  "e2e/crash_diagnostics_test.go": 1776412504.0223074,
-  "README.md": 1776412503.995901,
-  "CLAUDE.md": 1776412503.9946165,
-  "docs/integration.md": 1776412504.0123339,
-  "docs/commands.md": 1776412504.0102584,
-  "docs/autoui-reference.md": 1776412504.0096257,
-  "docs/tutorial.md": 1776412504.0220516,
-  "docs/autoui-commands.md": 1776412504.009375,
-  "docs/SPEC.md": 1776412504.008911,
-  "docs/testkit.md": 1776412504.0218813,
-  "docs/superpowers/plans/2026-04-09-widget-state-extraction.md": 1776412504.0161915,
-  "docs/superpowers/plans/2026-04-08-launch-socket-crash-diagnostics.md": 1776412504.0144348,
-  "docs/superpowers/plans/2026-04-07-carriage-return-interpretation-plan.md": 1776412504.0132556,
-  "docs/superpowers/plans/2026-04-06-documentation-rewrite.md": 1776412504.0128865,
-  "docs/superpowers/plans/2026-04-08-autoui.md": 1776412504.0140069,
-  "docs/superpowers/plans/2026-04-10-doc-template-system.md": 1776412504.0165493,
-  "docs/superpowers/plans/2026-04-09-doc-example-automation.md": 1776412504.0155447,
-  "docs/superpowers/plans/2026-04-11-autoui-call-type-support.md": 1776412504.0169106,
-  "docs/superpowers/plans/2026-04-09-integrate-afterdraw.md": 1776412504.015854,
-  "docs/superpowers/plans/2026-04-07-game-output-capture.md": 1776412504.0135984,
-  "docs/superpowers/plans/2026-04-09-autoui-bugfixes.md": 1776412504.0148513,
-  "docs/superpowers/plans/2026-04-11-autoui-radiogroup-tabbook-support.md": 1776412504.017207,
-  "docs/superpowers/plans/2026-04-09-autoui-exists.md": 1776412504.015188,
-  "docs/superpowers/specs/2026-04-09-integrate-afterdraw-design.md": 1776412504.020434,
-  "docs/superpowers/specs/2026-04-09-autoui-bugfixes-design.md": 1776412504.0191934,
-  "docs/superpowers/specs/2026-04-11-autoui-radiogroup-tabbook-support-design.md": 1776412504.021607,
-  "docs/superpowers/specs/2026-04-09-doc-example-automation-design.md": 1776412504.0197794,
-  "docs/superpowers/specs/2026-04-07-game-output-capture-design.md": 1776412504.0181327,
-  "docs/superpowers/specs/2026-04-06-documentation-rewrite-design.md": 1776412504.0174677,
-  "docs/superpowers/specs/2026-04-07-carriage-return-interpretation-design.md": 1776412504.0178814,
-  "docs/superpowers/specs/2026-04-11-autoui-call-type-support-design.md": 1776412504.021379,
-  "docs/superpowers/specs/2026-04-09-doc-template-rewrite-workflow-design.md": 1776412504.020105,
-  "docs/superpowers/specs/2026-04-08-launch-socket-crash-diagnostics-design.md": 1776412504.0187712,
-  "docs/superpowers/specs/2026-04-10-doc-template-system-design.md": 1776412504.0210836,
-  "docs/superpowers/specs/2026-04-09-widget-state-extraction-design.md": 1776412504.02076,
-  "docs/superpowers/specs/2026-04-09-autoui-exists-design.md": 1776412504.0194292,
-  "docs/superpowers/specs/2026-04-08-autoui-design.md": 1776412504.0184526,
-  "graphify-out/GRAPH_REPORT.md": 1776413919.330178,
-  "skills/using-autoebiten/SKILL.md": 1776412504.1053836,
-  "skills/using-autoebiten/references/integration.md": 1776412504.1058803,
-  "skills/using-autoebiten/references/commands.md": 1776412504.1057744,
-  "skills/using-autoebiten/references/autoui-reference.md": 1776412504.1056619,
-  "skills/using-autoebiten/references/tutorial.md": 1776412504.1060658,
-  "skills/using-autoebiten/references/autoui-commands.md": 1776412504.1055279,
-  "skills/using-autoebiten/references/testkit.md": 1776412504.1059732
+  "/Users/s3cy/Desktop/go/autoebiten/autoebiten_release.go": {
+    "mtime": 1775005385.5027184,
+    "hash": "dad5b94a88a33e13be7aafb79b6feb3b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/state_exporter_test.go": {
+    "mtime": 1775385930.753169,
+    "hash": "406a493ad0d4738af8bfe0be3eed1ad3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoebiten_default.go": {
+    "mtime": 1775054372.3602238,
+    "hash": "43d598e405405112c92f515723d1e5e8"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoebiten.go": {
+    "mtime": 1774870960.6574569,
+    "hash": "be6983f4f358aa336c6b67e5c9c9452c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/state_exporter_edge_test.go": {
+    "mtime": 1775463989.3688498,
+    "hash": "1915294e56d2e6348d616ba8872a6c2b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/state_exporter.go": {
+    "mtime": 1775449447.3511102,
+    "hash": "6f3f32febc728679f74c8aaba7dac89d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/custom_command.go": {
+    "mtime": 1775694331.8579655,
+    "hash": "0528719dfd13e6c7ae6a338996b61727"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/cmd/autoebiten/main.go": {
+    "mtime": 1775784117.852114,
+    "hash": "afa6548f29a803180e6d69294e25819c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/cmd/docgen/main.go": {
+    "mtime": 1775824558.1905203,
+    "hash": "d5ee2db41e279c3df151f4ce81c7cc25"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/integrate/integrate.go": {
+    "mtime": 1775716706.8552952,
+    "hash": "38d608eccd5f50caac356d6ad3b2db03"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/integrate/integrate_test.go": {
+    "mtime": 1775716070.4912171,
+    "hash": "3980859ac6e51a8eab30db790111ff9b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/proxy/server.go": {
+    "mtime": 1775627517.41236,
+    "hash": "a15b05267537c78ccea489932ee5eeaa"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/proxy/server_test.go": {
+    "mtime": 1775627609.7397912,
+    "hash": "71d444ab145bca54ef0d5a431f9c3f17"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/input/input_time.go": {
+    "mtime": 1774870960.6648326,
+    "hash": "94d92017e33107937423920575bac232"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/input/mouse_buttons.go": {
+    "mtime": 1774884896.4149506,
+    "hash": "d07fdbd114be1c525f2a49bf0ae57d1e"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/input/keys.go": {
+    "mtime": 1774884811.5462484,
+    "hash": "1165d870337f03e6435d492e521f966e"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/input/input.go": {
+    "mtime": 1775402441.509357,
+    "hash": "6af51ce6ca28f83e983094bf2906eba3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/recording/recording_test.go": {
+    "mtime": 1775448273.9382846,
+    "hash": "54c6616afb612e8a799276dfe9125e93"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/recording/recorder.go": {
+    "mtime": 1775451755.0711746,
+    "hash": "275bdb413e929e2562afae10c8664852"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/recording/reader.go": {
+    "mtime": 1775448474.0825543,
+    "hash": "622f051d4813f06c798085040ad5eaf1"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/recording/scriptgen.go": {
+    "mtime": 1775441599.87242,
+    "hash": "431e129ea5126ccd578b4ee003069ba5"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/output/manager_test.go": {
+    "mtime": 1775567934.5375905,
+    "hash": "58a1ae24f6797b94eb19f1ed582a6dcc"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/output/output_test.go": {
+    "mtime": 1775568098.4014184,
+    "hash": "693219ade9c0769635825d726b2a42cc"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/output/output.go": {
+    "mtime": 1775568002.5874732,
+    "hash": "0f3202fab813403ae0d69b63a735bb85"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/output/manager.go": {
+    "mtime": 1775574976.94954,
+    "hash": "21f7288a299306bea995ba6c49a28230"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/server/custom.go": {
+    "mtime": 1774970148.8944728,
+    "hash": "7a2756e28e51bbefb38b3a40f4026306"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/server/server.go": {
+    "mtime": 1775402284.9179282,
+    "hash": "f38db8bc5651e47f65b05d6f67f318ac"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/server/mouse.go": {
+    "mtime": 1774971715.1914358,
+    "hash": "afd01515f2a98bef10e7d522ef1f9568"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/server/input.go": {
+    "mtime": 1774969988.0726392,
+    "hash": "e911e08aa3d49a0ef22cf88bace13ff6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/server/wheel.go": {
+    "mtime": 1774970060.0579095,
+    "hash": "d05ebb8fde3f9023e2c235653d64ce34"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/server/screenshot.go": {
+    "mtime": 1774973313.1734378,
+    "hash": "fd6bddde7a0915985ea71083dbc7eea4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/schema_test.go": {
+    "mtime": 1774946365.718333,
+    "hash": "d5d43e5e280184d1bf6d668d4e047ecd"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/commands_response_test.go": {
+    "mtime": 1775706177.8377385,
+    "hash": "32549fe4b19e03d9b96700d98ea7b3de"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/wait.go": {
+    "mtime": 1775735466.8598185,
+    "hash": "3111650dab194c363de79ea4f8da3466"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/writer.go": {
+    "mtime": 1775629059.3306684,
+    "hash": "d55fd2692d5282fc95435afb66f37d08"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/launch.go": {
+    "mtime": 1775637590.4744375,
+    "hash": "480c366e00e3c2e5cf11e1b0f7e459fa"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/state_test.go": {
+    "mtime": 1775452030.7312753,
+    "hash": "fafa14b517f4ea4896c81e40a1878619"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/schema.go": {
+    "mtime": 1774950136.185049,
+    "hash": "eaade4d31d7c867540f4979fb16fe3d1"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/state.go": {
+    "mtime": 1775451780.9879014,
+    "hash": "16eb4c2754f218e82392866cef881af4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/launch_test.go": {
+    "mtime": 1775636636.8498862,
+    "hash": "0d0c7a47337004eaed19e0e5c82462d8"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/commands.go": {
+    "mtime": 1775786820.1275866,
+    "hash": "1f3307d661617bcb75d7b4df1d648ea9"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/cli/wait_test.go": {
+    "mtime": 1775735466.8602881,
+    "hash": "8a85f4f2a569f7f460e9ec1d40d1e271"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/script/executor_test.go": {
+    "mtime": 1775453069.905303,
+    "hash": "49bc431ec085b15467543561f8f15479"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/script/parser_test.go": {
+    "mtime": 1775367608.7465498,
+    "hash": "5850ef37937d995425f82691788e3721"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/script/ast.go": {
+    "mtime": 1775453054.0364187,
+    "hash": "fdc59c4acf9c31894e2af2a47900dc62"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/script/parser.go": {
+    "mtime": 1775367615.4868784,
+    "hash": "b004b40fe138c6a6a7bc1b7dcb29fef2"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/script/executor.go": {
+    "mtime": 1775453055.8342378,
+    "hash": "e0d466481d11503a4f4e3ac6d43ab416"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/version/version.go": {
+    "mtime": 1775051904.1223953,
+    "hash": "ef8672f99683d9e691cd121ab8f80ae0"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/config.go": {
+    "mtime": 1775821809.6820464,
+    "hash": "c85b30133fcf898d96d5d92bde646d76"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/game_test.go": {
+    "mtime": 1775821809.6836731,
+    "hash": "bd3bc3fd9b614539b64e194b2c02c1c7"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/template_test.go": {
+    "mtime": 1775821809.685344,
+    "hash": "9e4cd066d2a0e136337e75b47d91895a"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/normalize.go": {
+    "mtime": 1775821809.6844993,
+    "hash": "463617e8a620a525a8f4bf71d50c8903"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/game.go": {
+    "mtime": 1775821809.6835182,
+    "hash": "15a0527357eeaee62f22ec5b12bb4a11"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/context_test.go": {
+    "mtime": 1775821863.6827688,
+    "hash": "f324b36cd7e097b4cf54851f3865145c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/normalize_test.go": {
+    "mtime": 1775821809.6846776,
+    "hash": "70d30a323860633e29e8a01fa28bb99b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/template.go": {
+    "mtime": 1775821809.6850617,
+    "hash": "ebf7e137520751a0f3be177ad4a03ed5"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/context.go": {
+    "mtime": 1775821858.0940332,
+    "hash": "ef79cae6da6db12f63b28975ce764e3b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/gocode_test.go": {
+    "mtime": 1775821809.6841183,
+    "hash": "1459d4d0967ae124e6c2776b011b1b73"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/verify_test.go": {
+    "mtime": 1775821809.685748,
+    "hash": "cfcb941008d59752f3f8526f09da94d4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/config_test.go": {
+    "mtime": 1775821809.6823092,
+    "hash": "e444b6801dd8a0f1b09dcf87077b6e61"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/gocode.go": {
+    "mtime": 1775821809.6838863,
+    "hash": "63e94be0cff81fd1533a50f6524a2abf"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/docgen/verify.go": {
+    "mtime": 1775821809.6855354,
+    "hash": "8828e9af1854223d89306f9e8d2ed708"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/rpc/messages_test.go": {
+    "mtime": 1775626667.4076154,
+    "hash": "1020ceede4f6114cdeb5654f3742f521"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/rpc/handlers.go": {
+    "mtime": 1775561520.4108067,
+    "hash": "7d5757fe7e15b42bac092e94377b4655"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/rpc/messages.go": {
+    "mtime": 1775626678.1206748,
+    "hash": "99521c0a6a8799b89cc09c08d7327c97"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/rpc/socket_discovery_test.go": {
+    "mtime": 1775636523.0408685,
+    "hash": "bc7d6d2fa91a76ec2e03beda1bf67361"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/rpc/socket.go": {
+    "mtime": 1775636437.6884458,
+    "hash": "f9c765cb4b9498271276c53e2c185cfa"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/internal/custom/custom.go": {
+    "mtime": 1776402818.9045043,
+    "hash": "95203bf5a2f9e9142b4fa7e5ce4064da"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/options.go": {
+    "mtime": 1775376507.8994067,
+    "hash": "ad4f2ed322cc02817582bf7a14329d41"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/game_test.go": {
+    "mtime": 1775461156.7541122,
+    "hash": "b63fce0d3c05721b6681da7e6c189c12"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/game_mouse_test.go": {
+    "mtime": 1775549846.2095406,
+    "hash": "43c53d3d81b46961bbae175c9c73a17d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/game.go": {
+    "mtime": 1775783479.8499105,
+    "hash": "22580e9174f10ffef66310876779831c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/doc.go": {
+    "mtime": 1775393993.2897525,
+    "hash": "351834e701c334d66a2584800ad8cfff"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/mock.go": {
+    "mtime": 1775403258.924926,
+    "hash": "3454b1d9f71d5ce8580a06789ec052ec"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/mock_test.go": {
+    "mtime": 1775403403.7604432,
+    "hash": "d4ef452720fc28768d590c835185b476"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/integration_test.go": {
+    "mtime": 1775461163.3742366,
+    "hash": "f1a24c31ca33ce95caea643966b24630"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/errors.go": {
+    "mtime": 1775385974.0736508,
+    "hash": "e73b8a9a87e0ed71f6af13ff6bfb477a"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/internal/testgames/stateful/main.go": {
+    "mtime": 1775822791.707929,
+    "hash": "917066a43efd717231c3e15bacfb7187"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/internal/testgames/simple/main.go": {
+    "mtime": 1775822780.6130738,
+    "hash": "89d225c778fdd5b76c540b96ae0ccdb9"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/testkit/internal/testgames/custom/main.go": {
+    "mtime": 1775822766.8315184,
+    "hash": "3a46511536b6f5349cfdaab980054e75"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/list_widget/main.go": {
+    "mtime": 1776401060.7088442,
+    "hash": "0201219e7c1cf3d8dc394ad5faa60419"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/custom_commands/main.go": {
+    "mtime": 1775823432.4379063,
+    "hash": "c2095efc863cdfedfcde8bb931af055a"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/tabbook_widget/main.go": {
+    "mtime": 1776401839.0986373,
+    "hash": "1d5ac73b688aa4ebec85d3832a69c8b3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/crash_diagnostic/main.go": {
+    "mtime": 1775822734.741244,
+    "hash": "cab07283134625166ea4a49e5f1ff7fc"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/radiogroup_widget/main.go": {
+    "mtime": 1776401487.1813638,
+    "hash": "180ed7c876a7a092b5ed3828ac3b41c8"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/testkit/black_box_test.go": {
+    "mtime": 1775461406.8041546,
+    "hash": "8bc0207ab8de227ff3ab14543222c27c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/testkit/white_box_test.go": {
+    "mtime": 1775457220.2345283,
+    "hash": "e194ae41a2f9644be8f4a892a470074f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/simple/main.go": {
+    "mtime": 1775822754.8068159,
+    "hash": "12d882fa0d9e02a5412c050de60d8e23"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/autoui/main.go": {
+    "mtime": 1775822887.9089336,
+    "hash": "2b3077a357f4ad720d616dc7fb673d79"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/state_exporter/game.go": {
+    "mtime": 1775457167.2336822,
+    "hash": "3dbddb2db81d57e97e9a52e0c0649dec"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/examples/state_exporter/cmd/main.go": {
+    "mtime": 1775823462.948156,
+    "hash": "d97984c8112080e1140a1f765387a1cb"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/register.go": {
+    "mtime": 1775740040.2333984,
+    "hash": "972a607416384336655f3f51bae53650"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/config.go": {
+    "mtime": 1775665087.4960463,
+    "hash": "66462a77dae73841c28090f63f21500f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/handlers_test.go": {
+    "mtime": 1775895431.8448665,
+    "hash": "b2aa0e64c56869767742488cda7d4297"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/caller_export_test.go": {
+    "mtime": 1775885223.520792,
+    "hash": "25796f33b28972b673db0c77f57e38a4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/proxy_tabbook.go": {
+    "mtime": 1775895414.104369,
+    "hash": "155aba899645afcf3bb6320b8e53dc27"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/proxy_radiogroup.go": {
+    "mtime": 1775895414.1039379,
+    "hash": "9301ba15603b75b19b2822122e6bdc8c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/tree.go": {
+    "mtime": 1775895414.105878,
+    "hash": "bd588c48768cfd9b9a7f23e6d176af28"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/caller.go": {
+    "mtime": 1775885223.5203574,
+    "hash": "ad3d78a65b5382ab8544243750fafc71"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/finder.go": {
+    "mtime": 1775706463.4639766,
+    "hash": "636b0fe1b280fb0fde45627be787e5a7"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/proxy_radiogroup_test.go": {
+    "mtime": 1775895414.104145,
+    "hash": "0bbaa262e57677f1b3ba25d875813f1d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/xpath_test.go": {
+    "mtime": 1775740040.2359588,
+    "hash": "0dd572a33dd021b5bc690b9035192f4a"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/register_test.go": {
+    "mtime": 1775740040.2335632,
+    "hash": "c7b13cbf6350eed3e0ba626fbb6a0441"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/xml.go": {
+    "mtime": 1775895414.1066492,
+    "hash": "eed70390265c59284f1d1b7e59dbcbe1"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/proxy_tabbook_test.go": {
+    "mtime": 1775895414.105025,
+    "hash": "b21bb8715de8d88640c50adcb99d6c1d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/handlers.go": {
+    "mtime": 1775897598.4050617,
+    "hash": "0bb561c3d621ab2bd21d0817be38b47a"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/proxy.go": {
+    "mtime": 1775895431.8454115,
+    "hash": "15af4edc15c4972c55d9deb300de5df8"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/caller_test.go": {
+    "mtime": 1775885223.5213149,
+    "hash": "0f2c3cf3afb94f5495f0f4300338953b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/registry.go": {
+    "mtime": 1775895414.1052632,
+    "hash": "ef5aa936fb065c3c0b6dcee23e3d314c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/xpath.go": {
+    "mtime": 1775740040.2357125,
+    "hash": "0ff120e3eb7228c0a33c80883420fe7f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/finder_test.go": {
+    "mtime": 1775665087.4971058,
+    "hash": "0f2299543f0bbbbcbfdce831f78a4fe3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/doc.go": {
+    "mtime": 1775665087.4965646,
+    "hash": "a706d7ba4ad7ea36015c210fe2bf0198"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/registry_test.go": {
+    "mtime": 1775895414.105499,
+    "hash": "a535a8e98f8c3c023d521aabcd3829b9"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/tree_test.go": {
+    "mtime": 1775895414.1063526,
+    "hash": "8431e7bdd5d5fc6de4f8c84d01392cd0"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/proxy_test.go": {
+    "mtime": 1775885223.5234084,
+    "hash": "1859975c03e2cc302155f1fa3e02b2c0"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/xml_test.go": {
+    "mtime": 1775895414.107041,
+    "hash": "d0c3f3f90713ff2e1c5b3f369375d62b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/integration_test.go": {
+    "mtime": 1775895431.8451276,
+    "hash": "7cc3cf482c6b8a5eb7f8ba7d41beb589"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/highlight_test.go": {
+    "mtime": 1775665087.4980395,
+    "hash": "11cf683f18c377df37324c3434c31574"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/highlight.go": {
+    "mtime": 1775716070.48958,
+    "hash": "6fdfc64132bb8d149ee8aa58b9000254"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/reflection_test.go": {
+    "mtime": 1775895414.102693,
+    "hash": "3469a2a2a2278c863c6184f0485c178b"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/widgetstate.go": {
+    "mtime": 1775895414.1033518,
+    "hash": "be197bcc344427c5f56cf1b772f5c894"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/reflection.go": {
+    "mtime": 1775895414.1025007,
+    "hash": "2631b055dae5ff0dfa02c1609325ba50"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/doc.go": {
+    "mtime": 1775665087.4993749,
+    "hash": "660fe63ed403899e648391623fd50fc2"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/widgetstate_test.go": {
+    "mtime": 1775716947.9185617,
+    "hash": "c200501e91b93dd4e67140e06a85f6e1"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/customdata.go": {
+    "mtime": 1775740040.2326484,
+    "hash": "f0f02474a0256b2bfcb64c4bdd16380f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/autoui/internal/customdata_test.go": {
+    "mtime": 1775740040.2331922,
+    "hash": "1101f252e141270442f0de8a8aee7b64"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/e2e/e2e_test.go": {
+    "mtime": 1774970658.1822684,
+    "hash": "7e3c383397294f46a1bc23908941bf13"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/e2e/output_manager_test.go": {
+    "mtime": 1775568491.1881356,
+    "hash": "3402f9435935bed25ede8de6ee150209"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/e2e/launch_test.go": {
+    "mtime": 1775576764.0956688,
+    "hash": "95dcf0c186d212b5a016e2f17c4d2f65"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/e2e/crash_diagnostics_test.go": {
+    "mtime": 1775706193.1744967,
+    "hash": "e3d01d5e9f71080946eb8bd848b77ffa"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/README.md": {
+    "mtime": 1776392349.5724256,
+    "hash": "265c20da6953ef3a3ab15c9d611e1403"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/CLAUDE.md": {
+    "mtime": 1776398885.289709,
+    "hash": "0c82a6862060fefecd720e9517b2e44e"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/integration.md": {
+    "mtime": 1776404395.2109287,
+    "hash": "531774685d3f8b67d5c5bbfab1ddfaa3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/commands.md": {
+    "mtime": 1776404395.2106879,
+    "hash": "22e2f7c9ae61dc073e55c6ae9ab4ef3f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/autoui-reference.md": {
+    "mtime": 1776404143.0623565,
+    "hash": "29a0f94535ecce6ca79d9ed922a83a9d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/tutorial.md": {
+    "mtime": 1776404200.3222055,
+    "hash": "bd2f00fa1b28e886dc6dd6f7da228ae6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/autoui-commands.md": {
+    "mtime": 1776404115.6956515,
+    "hash": "d963bd27e3b6a36b1f320313f56ecabb"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/SPEC.md": {
+    "mtime": 1775444718.4696894,
+    "hash": "e4810b633ddbb8d84c0ca47e4f0ef35d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/testkit.md": {
+    "mtime": 1776404184.728408,
+    "hash": "f060ba536fd730c7e021859c1ffe3dd4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-09-widget-state-extraction.md": {
+    "mtime": 1775715222.6139247,
+    "hash": "6a9b3948ac4fd3ba5bc63dd50a4e5696"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-08-launch-socket-crash-diagnostics.md": {
+    "mtime": 1775626533.820361,
+    "hash": "59607b4f0934994802b277a5be30f2b6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-07-carriage-return-interpretation-plan.md": {
+    "mtime": 1775567463.6371086,
+    "hash": "1d4ecad83812c6996fb923f0ff1f4b45"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-06-documentation-rewrite.md": {
+    "mtime": 1775454882.4908044,
+    "hash": "0a8b28b71a76bfdd86c2608b7ddcbc34"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-08-autoui.md": {
+    "mtime": 1775658026.1670349,
+    "hash": "810cb87171a7576c572a8ddb5eb9ef27"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-10-doc-template-system.md": {
+    "mtime": 1775800732.0306568,
+    "hash": "7046fcfd5546579d288f657f1a3ca0fc"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-09-doc-example-automation.md": {
+    "mtime": 1775782046.8743315,
+    "hash": "a1ea7aee425bdc2a935984c1de458143"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-11-autoui-call-type-support.md": {
+    "mtime": 1775885223.5249512,
+    "hash": "b1f79d42336b370198e0a6376ecdbd5f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-09-integrate-afterdraw.md": {
+    "mtime": 1775715180.814878,
+    "hash": "db7fc2c7cb936abbea32ad7d19645e37"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-07-game-output-capture.md": {
+    "mtime": 1775550914.5179985,
+    "hash": "56db7f9ddecf34dbd5c61d1fe713c8e4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-09-autoui-bugfixes.md": {
+    "mtime": 1775725328.776414,
+    "hash": "ab9edc56c82768df6f5941ffd939805c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-11-autoui-radiogroup-tabbook-support.md": {
+    "mtime": 1775885223.5252647,
+    "hash": "ff3b9b032ee6c56408f8c86d2f95bae9"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/plans/2026-04-09-autoui-exists.md": {
+    "mtime": 1775727645.868433,
+    "hash": "6a1e1b87dd8b58377320e3c567e12c6a"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-09-integrate-afterdraw-design.md": {
+    "mtime": 1775714975.9633744,
+    "hash": "242837a1ae17553503425db878f381f3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-09-autoui-bugfixes-design.md": {
+    "mtime": 1775724790.2544856,
+    "hash": "e9031bfb86db23e1b5ab2f927756aea6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-11-autoui-radiogroup-tabbook-support-design.md": {
+    "mtime": 1775885223.5258267,
+    "hash": "81f995c4000fbcb3a2ed8ba7ef9b94f9"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-09-doc-example-automation-design.md": {
+    "mtime": 1775782046.8745306,
+    "hash": "0c285fc82014ab2eb72ad23aab56bda0"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-07-game-output-capture-design.md": {
+    "mtime": 1775550859.6079443,
+    "hash": "2d266c2d882c6fde3756dac36e479586"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-06-documentation-rewrite-design.md": {
+    "mtime": 1775453891.1669014,
+    "hash": "8a680dcb14c373f9b9e44d7d0b584378"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-07-carriage-return-interpretation-design.md": {
+    "mtime": 1775567084.1406667,
+    "hash": "d02c2823932064095c16046e3b2ff176"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-11-autoui-call-type-support-design.md": {
+    "mtime": 1775885223.5255756,
+    "hash": "6fa04a6b3415a906b7fe4bf5a1900095"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-09-doc-template-rewrite-workflow-design.md": {
+    "mtime": 1775782046.874674,
+    "hash": "8e85f096161556352eb3eff8baa53fe8"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-08-launch-socket-crash-diagnostics-design.md": {
+    "mtime": 1775621182.0152454,
+    "hash": "b240988c993fe3d5926d10d8ac448c7d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-10-doc-template-system-design.md": {
+    "mtime": 1775800051.1707149,
+    "hash": "f5124338db2acf966df71942e8d847da"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-09-widget-state-extraction-design.md": {
+    "mtime": 1775714979.4795785,
+    "hash": "4523b8a12c43f95a55f17c955863c54c"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-09-autoui-exists-design.md": {
+    "mtime": 1775727325.6181917,
+    "hash": "d629be5295f7a3f90604fa3387123f15"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/docs/superpowers/specs/2026-04-08-autoui-design.md": {
+    "mtime": 1775656297.7066493,
+    "hash": "da3c6069a8b4a7dfcff417eb911447b5"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/SKILL.md": {
+    "mtime": 1776392349.5764759,
+    "hash": "5b98d9e1b856188e21be74211142a4c5"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/references/integration.md": {
+    "mtime": 1776404395.211284,
+    "hash": "531774685d3f8b67d5c5bbfab1ddfaa3"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/references/commands.md": {
+    "mtime": 1776404395.2110844,
+    "hash": "22e2f7c9ae61dc073e55c6ae9ab4ef3f"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/references/autoui-reference.md": {
+    "mtime": 1776404143.0624664,
+    "hash": "29a0f94535ecce6ca79d9ed922a83a9d"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/references/tutorial.md": {
+    "mtime": 1776404200.3223448,
+    "hash": "bd2f00fa1b28e886dc6dd6f7da228ae6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/references/autoui-commands.md": {
+    "mtime": 1776404115.695806,
+    "hash": "d963bd27e3b6a36b1f320313f56ecabb"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/skills/using-autoebiten/references/testkit.md": {
+    "mtime": 1776404184.7285793,
+    "hash": "f060ba536fd730c7e021859c1ffe3dd4"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417121016.png": {
+    "mtime": 1776399016.7073112,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417120043.png": {
+    "mtime": 1776398443.3704884,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417133629.png": {
+    "mtime": 1776404189.1361291,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260410204940.png": {
+    "mtime": 1775825380.4220958,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417120003.png": {
+    "mtime": 1776398403.2827492,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417121054.png": {
+    "mtime": 1776399054.8619986,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417125959.png": {
+    "mtime": 1776401999.432398,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417133551.png": {
+    "mtime": 1776404151.0728993,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260411170519.png": {
+    "mtime": 1775898319.3490567,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260410204901.png": {
+    "mtime": 1775825341.398771,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260417125917.png": {
+    "mtime": 1776401957.5172462,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  },
+  "/Users/s3cy/Desktop/go/autoebiten/screenshot_20260411170441.png": {
+    "mtime": 1775898282.041828,
+    "hash": "15984f656cac7beb7ec913dd69a3b6f6"
+  }
 }
